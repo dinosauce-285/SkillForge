@@ -1,0 +1,573 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql" 
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  STUDENT
+  INSTRUCTOR
+  ADMIN
+}
+
+enum Provider {
+  LOCAL
+  GOOGLE
+  FACEBOOK
+}
+
+enum CourseStatus {
+  DRAFT
+  PENDING
+  PUBLISHED
+}
+
+enum MaterialType {
+  VIDEO
+  PDF
+  DOC
+}
+
+enum MaterialStatus {
+  UPLOADING
+  PROCESSING
+  READY
+  FAILED
+}
+
+enum CourseLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  ALL_LEVELS
+}
+
+enum EnrollmentStatus {
+  ACTIVE
+  COMPLETED
+  REVOKED     // Bị thu hồi quyền do hoàn tiền hoặc vi phạm
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentGateway {
+  VNPAY
+  MOMO
+  STRIPE
+  SYSTEM      // Dùng cho khóa học miễn phí (Enroll trực tiếp)
+}
+
+enum WithdrawalStatus {
+  PENDING     // Chờ duyệt
+  APPROVED    // Đã duyệt & chuyển tiền
+  REJECTED    // Bị từ chối
+}
+
+enum AttemptStatus {
+  IN_PROGRESS   // Đang làm bài
+  COMPLETED     // Đã nộp bài
+  TIMEOUT       // Hết giờ, hệ thống tự thu bài
+}
+
+enum ReportStatus {
+  PENDING
+  RESOLVED
+  REJECTED
+}
+
+enum ReportType {
+  COURSE_VIOLATION
+  USER_VIOLATION
+  REVIEW_VIOLATION
+}
+
+enum ActionType {
+  APPROVE_COURSE
+  REJECT_COURSE
+  BAN_USER
+  UNBAN_USER
+  PROCESS_WITHDRAWAL
+  RESOLVE_REPORT
+}
+
+model User {
+  id                  String       @id @default(uuid())
+  email               String       @unique
+  password            String?      
+  fullName            String       @map("full_name")
+  role                Role         @default(STUDENT)
+  provider            Provider     @default(LOCAL)
+  isActive            Boolean      @default(false) @map("is_active")
+  failedLoginAttempts Int          @default(0) @map("failed_login_attempts")
+  lockedUntil         DateTime?    @map("locked_until")
+
+
+  createdAt           DateTime     @default(now()) @map("created_at")
+  updatedAt           DateTime     @updatedAt @map("updated_at")
+
+  profile             UserProfile?
+  coursesCreated      Course[]     @relation("CourseInstructor")
+  enrollments         Enrollment[]
+  orders              Order[]
+  wallet              Wallet?
+  courseProgresses    CourseProgress[]
+  lessonProgresses    LessonProgress[]
+  quizAttempts        QuizAttempt[]
+  discussions         Discussion[]
+  reviews             Review[]
+  certificates        Certificate[]
+  reports             Report[]     @relation("ReportedBy")
+  auditLogs           AuditLog[]   @relation("AdminLogs")
+
+  @@map("users")
+}
+
+model UserProfile {
+  id             String   @id @default(uuid())
+  userId         String   @unique @map("user_id")
+  avatarUrl      String?  @map("avatar_url")
+  skills         String[] 
+  learningGoals  String?  @db.Text @map("learning_goals")
+
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_profiles")
+}
+
+model Category {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  
+  courses   Course[]
+
+  @@map("categories")
+}
+
+model Course {
+  id             String       @id @default(uuid())
+  instructorId   String       @map("instructor_id")
+  categoryId     String       @map("category_id")
+  title          String
+  subtitle       String?
+  summary        String?      @db.Text
+  thumbnailUrl   String?      @map("thumbnail_url")
+  promoVideoUrl  String?      @map("promo_video_url")
+  price          Decimal      @default(0) @db.Decimal(10, 2)
+  isFree         Boolean      @default(false) @map("is_free")
+  status         CourseStatus @default(DRAFT)
+  level          CourseLevel @default(ALL_LEVELS)
+  averageRating  Float       @default(0) @map("average_rating")
+  studentCount   Int         @default(0) @map("student_count")
+  tags           Tag[]
+  enrollments    Enrollment[]
+  orders         Order[]
+  
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+
+  instructor     User         @relation("CourseInstructor", fields: [instructorId], references: [id])
+  category       Category     @relation(fields: [categoryId], references: [id])
+  chapters       Chapter[]
+  courseProgresses CourseProgress[]
+  reviews        Review[]
+  certificates   Certificate[]
+  statistics     CourseStatistic[]
+
+  @@index([categoryId, level]) // Đánh index để filter tìm kiếm siêu tốc
+  @@index([title])             // Index cho thanh công cụ tìm kiếm
+
+  @@map("courses")
+}
+
+model Chapter {
+  id          String    @id @default(uuid())
+  courseId    String    @map("course_id")
+  title       String
+  orderIndex  Int       @default(0) @map("order_index")
+  deletedAt   DateTime? @map("deleted_at")
+
+
+  course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessons     Lesson[]
+
+  @@map("chapters")
+}
+
+model Lesson {
+  id          String    @id @default(uuid())
+  chapterId   String    @map("chapter_id")
+  title       String
+  orderIndex  Int       @default(0) @map("order_index")
+  deletedAt   DateTime? @map("deleted_at") 
+
+  chapter     Chapter   @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  materials   LessonMaterial[]
+  quiz        Quiz?
+  lessonProgresses LessonProgress[]
+  discussions Discussion[]
+
+  @@map("lessons")
+}
+
+model LessonMaterial {
+  id          String         @id @default(uuid())
+  lessonId    String         @map("lesson_id")
+  type        MaterialType
+  fileUrl     String         @map("file_url")
+  fileSize    Int            @map("file_size")
+  status      MaterialStatus @default(UPLOADING)
+
+  lesson      Lesson         @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@map("lesson_materials")
+}
+
+model Tag {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  
+  // Quan hệ nhiều-nhiều với Course
+  courses   Course[]
+
+  @@map("tags")
+}
+
+model Enrollment {
+  id          String           @id @default(uuid())
+  userId      String           @map("user_id")
+  courseId    String           @map("course_id")
+  status      EnrollmentStatus @default(ACTIVE)
+  progress    Float            @default(0) // % Tiến độ hoàn thành khóa học
+  enrolledAt  DateTime         @default(now()) @map("enrolled_at")
+
+  user        User             @relation(fields: [userId], references: [id])
+  course      Course           @relation(fields: [courseId], references: [id])
+
+  // Đảm bảo 1 user chỉ đăng ký 1 khóa học 1 lần
+  @@unique([userId, courseId]) 
+  @@map("enrollments")
+}
+
+model Order {
+  id          String      @id @default(uuid())
+  orderCode   String      @unique @map("order_code") // Mã đơn hàng (VD: ORD-1234)
+  userId      String      @map("user_id")
+  courseId    String      @map("course_id")
+  amount      Decimal     @db.Decimal(10, 2) // Giá tiền lúc mua (có thể khác giá khóa học nếu có giảm giá)
+  status      OrderStatus @default(PENDING)
+  
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+
+  user        User        @relation(fields: [userId], references: [id])
+  course      Course      @relation(fields: [courseId], references: [id])
+  transaction Transaction?
+
+  @@map("orders")
+}
+
+model Transaction {
+  id                    String         @id @default(uuid())
+  orderId               String         @unique @map("order_id")
+  gateway               PaymentGateway
+  externalTransactionId String?        @map("external_transaction_id") // Mã giao dịch trả về từ Momo, VNPay
+  amount                Decimal        @db.Decimal(10, 2)
+  
+  createdAt             DateTime       @default(now()) @map("created_at")
+
+  order                 Order          @relation(fields: [orderId], references: [id])
+
+  @@map("transactions")
+}
+
+// 3. VÍ VÀ RÚT TIỀN (Instructor Payment)
+model Wallet {
+  id                String    @id @default(uuid())
+  userId            String    @unique @map("user_id")
+  
+  // Tiền có thể rút ngay
+  availableBalance  Decimal   @default(0) @db.Decimal(10, 2) @map("available_balance") 
+  
+  // Tiền đang chờ hết hạn hoàn tiền (VD: 30 ngày bảo hành)
+  pendingBalance    Decimal   @default(0) @db.Decimal(10, 2) @map("pending_balance") 
+
+  user              User      @relation(fields: [userId], references: [id])
+  withdrawals       WithdrawalRequest[]
+
+  @@map("wallets")
+}
+
+model WithdrawalRequest {
+  id          String           @id @default(uuid())
+  walletId    String           @map("wallet_id")
+  amount      Decimal          @db.Decimal(10, 2)
+  bankInfo    String           @db.Text @map("bank_info") // Chuỗi JSON chứa tên ngân hàng, số tài khoản...
+  status      WithdrawalStatus @default(PENDING)
+  note        String?          @db.Text // Quản trị viên ghi chú khi từ chối
+  
+  createdAt   DateTime         @default(now()) @map("created_at")
+  processedAt DateTime?        @map("processed_at") // Thời gian được Admin duyệt
+
+  wallet      Wallet           @relation(fields: [walletId], references: [id])
+
+  @@map("withdrawal_requests")
+}
+
+model CourseProgress {
+  id            String   @id @default(uuid())
+  userId        String   @map("user_id")
+  courseId      String   @map("course_id")
+  progress      Float    @default(0) // Tỷ lệ % hoàn thành
+  isCompleted   Boolean  @default(false) @map("is_completed")
+  lastAccessed  DateTime @default(now()) @map("last_accessed")
+
+  // Quan hệ
+  user          User     @relation(fields: [userId], references: [id])
+  course        Course   @relation(fields: [courseId], references: [id])
+
+  @@unique([userId, courseId])
+  @@map("course_progresses")
+}
+
+model LessonProgress {
+  id                  String   @id @default(uuid())
+  userId              String   @map("user_id")
+  lessonId            String   @map("lesson_id")
+  isCompleted         Boolean  @default(false) @map("is_completed")
+  lastWatchedPosition Int      @default(0) @map("last_watched_position") // Lưu mốc thời gian xem video (tính bằng giây)
+
+  // Quan hệ
+  user                User     @relation(fields: [userId], references: [id])
+  lesson              Lesson   @relation(fields: [lessonId], references: [id])
+
+  @@unique([userId, lessonId])
+  @@map("lesson_progresses")
+}
+
+// ---------------------------------------------------------
+// 2. NGÂN HÀNG CÂU HỎI & CẤU TRÚC ĐỀ (Quiz Builder)
+// ---------------------------------------------------------
+
+// Lưu ý: Trong model Lesson (ở Giai đoạn 1), cần thêm trường liên kết `quiz Quiz?` 
+// để đánh dấu một Lesson có thể là một Bài kiểm tra.
+
+model Quiz {
+  id                 String     @id @default(uuid())
+  lessonId           String     @unique @map("lesson_id") 
+  timeLimit          Int        @map("time_limit") // Thời gian làm bài (Phút)
+  passingScore       Float      @map("passing_score") // Điểm tối thiểu để Đạt
+  randomizeQuestions Boolean    @default(false) @map("randomize_questions") // Trộn đề
+
+  // Quan hệ
+  lesson             Lesson     @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  questions          Question[]
+  attempts           QuizAttempt[]
+
+  @@map("quizzes")
+}
+
+model Question {
+  id          String         @id @default(uuid())
+  quizId      String         @map("quiz_id")
+  content     String         @db.Text  // Hỗ trợ Rich text, công thức toán học
+  explanation String?        @db.Text  // Giải thích đáp án (hiện sau khi nộp bài)
+  orderIndex  Int            @default(0) @map("order_index")
+
+  // Quan hệ
+  quiz        Quiz           @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  choices     AnswerChoice[]
+  studentAnswers StudentAnswer[]
+
+  @@map("questions")
+}
+
+model AnswerChoice {
+  id          String   @id @default(uuid())
+  questionId  String   @map("question_id")
+  content     String   @db.Text
+  isCorrect   Boolean  @default(false) @map("is_correct") // Chỉ định đáp án đúng
+  orderIndex  Int      @default(0) @map("order_index")
+
+  // Quan hệ
+  question    Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  studentAnswers StudentAnswer[]
+
+  @@map("answer_choices")
+}
+
+// ---------------------------------------------------------
+// 3. LÀM BÀI & CHẤM ĐIỂM (Assessments & Quizzes)
+// ---------------------------------------------------------
+
+model QuizAttempt {
+  id          String        @id @default(uuid())
+  studentId   String        @map("student_id")
+  quizId      String        @map("quiz_id")
+  startTime   DateTime      @default(now()) @map("start_time")
+  endTime     DateTime?     @map("end_time") // Null nếu đang làm
+  score       Float?        // Điểm số hệ thống chấm
+  isPassed    Boolean?      @map("is_passed")
+  status      AttemptStatus @default(IN_PROGRESS)
+
+  // Quan hệ
+  student     User          @relation(fields: [studentId], references: [id])
+  quiz        Quiz          @relation(fields: [quizId], references: [id])
+  answers     StudentAnswer[]
+
+  @@map("quiz_attempts")
+}
+
+model StudentAnswer {
+  id               String       @id @default(uuid())
+  attemptId        String       @map("attempt_id")
+  questionId       String       @map("question_id")
+  selectedChoiceId String?      @map("selected_choice_id") // Bỏ trống nếu không chọn đáp án
+
+  // Quan hệ
+  attempt          QuizAttempt  @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question         Question     @relation(fields: [questionId], references: [id])
+  choice           AnswerChoice? @relation(fields: [selectedChoiceId], references: [id])
+
+  @@unique([attemptId, questionId]) // Mỗi lần thi, 1 câu hỏi chỉ có 1 bản ghi trả lời
+  @@map("student_answers")
+}
+
+// ---------------------------------------------------------
+// 4. TƯƠNG TÁC HỎI ĐÁP BÀI GIẢNG (Interactive Learning & Q&A)
+// ---------------------------------------------------------
+
+model Discussion {
+  id             String       @id @default(uuid())
+  lessonId       String       @map("lesson_id")
+  userId         String       @map("user_id")
+  
+  // Dùng cho Reply bình luận (Self-referencing relation)
+  parentId       String?      @map("parent_id") 
+  
+  content        String       @db.Text
+  timestampTag   Int?         @map("timestamp_tag") // Ví dụ: Giây thứ 200 (03:20) của video
+  isPinned       Boolean      @default(false) @map("is_pinned") // Giảng viên ghim lên đầu
+
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+
+  lesson         Lesson       @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id])
+  
+  // Định nghĩa quan hệ cha - con cho bình luận
+  parent         Discussion?  @relation("DiscussionReplies", fields: [parentId], references: [id])
+  replies        Discussion[] @relation("DiscussionReplies")
+
+  @@index([lessonId, parentId]) // Tối ưu query khi load danh sách bình luận (Phân trang)
+  @@map("discussions")
+}
+
+// ---------------------------------------------------------
+// 1. ĐÁNH GIÁ KHÓA HỌC (Course Review)
+// ---------------------------------------------------------
+model Review {
+  id              String   @id @default(uuid())
+  studentId       String   @map("student_id")
+  courseId        String   @map("course_id")
+  rating          Int      // Thang điểm từ 1 đến 5
+  content         String   @db.Text
+  instructorReply String?  @db.Text @map("instructor_reply") // Phản hồi của giảng viên
+  helpfulCount    Int      @default(0) @map("helpful_count") // Số lượt nhấn "Hữu ích"
+
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  // Quan hệ
+  student         User     @relation(fields: [studentId], references: [id])
+  course          Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  // Đảm bảo mỗi học viên chỉ được đánh giá 1 khóa học 1 lần
+  @@unique([studentId, courseId])
+  @@map("reviews")
+}
+
+// ---------------------------------------------------------
+// 2. CHỨNG CHỈ (Certification)
+// ---------------------------------------------------------
+model Certificate {
+  id              String   @id @default(uuid())
+  certificateCode String   @unique @map("certificate_code") // Mã ID/Mã vạch duy nhất để tra cứu
+  studentId       String   @map("student_id")
+  courseId        String   @map("course_id")
+  pdfUrl          String?  @map("pdf_url") // Đường dẫn file PDF render sẵn
+  imageUrl        String?  @map("image_url") // Đường dẫn file Ảnh chia sẻ lên MXH
+
+  issuedAt        DateTime @default(now()) @map("issued_at")
+
+  // Quan hệ
+  student         User     @relation(fields: [studentId], references: [id])
+  course          Course   @relation(fields: [courseId], references: [id])
+
+  @@unique([studentId, courseId])
+  @@map("certificates")
+}
+
+// ---------------------------------------------------------
+// 3. BẢNG THỐNG KÊ (Analytics - Materialized Data)
+// ---------------------------------------------------------
+model CourseStatistic {
+  id                String   @id @default(uuid())
+  courseId          String   @map("course_id")
+  date              DateTime @db.Date // Lưu trữ dữ liệu tổng hợp theo từng ngày
+  revenue           Decimal  @default(0) @db.Decimal(10, 2)
+  enrollmentCount   Int      @default(0) @map("enrollment_count")
+  avgCompletionRate Float    @default(0) @map("avg_completion_rate")
+
+  // Quan hệ
+  course            Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([courseId, date]) // Mỗi ngày chỉ có 1 dòng thống kê cho 1 khóa học
+  @@index([date])
+  @@map("course_statistics")
+}
+
+// ---------------------------------------------------------
+// 4. QUẢN TRỊ VIÊN & NHẬT KÝ HỆ THỐNG (Admin Portal)
+// ---------------------------------------------------------
+model Report {
+  id             String       @id @default(uuid())
+  reporterId     String       @map("reporter_id")
+  targetId       String       @map("target_id") // ID của khóa học, đánh giá hoặc user bị báo cáo
+  type           ReportType
+  reason         String       @db.Text
+  status         ReportStatus @default(PENDING)
+  adminNote      String?      @db.Text @map("admin_note") // Ghi chú của Admin khi xử lý
+
+  createdAt      DateTime     @default(now()) @map("created_at")
+  resolvedAt     DateTime?    @map("resolved_at")
+
+  // Quan hệ
+  reporter       User         @relation("ReportedBy", fields: [reporterId], references: [id])
+
+  @@map("reports")
+}
+
+model AuditLog {
+  id          String     @id @default(uuid())
+  adminId     String     @map("admin_id")
+  action      ActionType
+  entityType  String     @map("entity_type") // Tên thực thể tác động (VD: 'Course', 'User')
+  entityId    String     @map("entity_id")
+  details     Json?      // Lưu snapshot dữ liệu cũ/mới dạng JSON để truy vết
+
+  createdAt   DateTime   @default(now()) @map("created_at") // Không có updatedAt vì Log không được sửa
+
+  // Quan hệ
+  admin       User       @relation("AdminLogs", fields: [adminId], references: [id])
+
+  @@map("audit_logs")
+}
