@@ -1,29 +1,43 @@
-package com.example.skillforge // Đổi tên package này cho đúng với dòng đầu tiên trong file cũ của bạn nhé!
+package com.example.skillforge
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import com.example.skillforge.feature.instructor_portal.ui.SkillforgeCourseFormScreen
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
 
-// CẢNH BÁO: Dòng import dưới đây có thể cần chỉnh lại đường dẫn
-// cho khớp với nơi bạn lưu file SkillforgeInstructorDashboardScreen.kt
-import com.example.skillforge.feature.instructor_portal.ui.SkillforgeInstructorDashboardScreen
+// Import giao diện
+import com.example.skillforge.core.designsystem.SkillforgeTheme
+import com.example.skillforge.feature.auth.ui.LoginScreen
+
+// Import ViewModel và Factory
+import com.example.skillforge.feature.auth.viewmodel.LoginViewModel
+import com.example.skillforge.feature.auth.viewmodel.LoginViewModelFactory
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            MaterialTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    // Gọi hàm giao diện của bạn ra đây!
-                    SkillforgeCourseFormScreen()
+            SkillforgeTheme(dynamicColor = false) {
+                // Lấy AppContainer từ Application
+                val appContainer = (LocalContext.current.applicationContext as SkillforgeApplication).container
+
+                // Khởi tạo ViewModel thông qua Factory
+                val loginViewModel: LoginViewModel = viewModel(
+                    factory = LoginViewModelFactory(appContainer.loginUseCase)
+                )
+
+                Surface(modifier = Modifier.fillMaxSize()) {
+                    LoginScreen(
+                        viewModel = loginViewModel,
+                        onLoginSuccess = {
+                            // TODO: Viết code chuyển sang màn hình chính (HomeScreen) ở đây
+                            println("Đăng nhập thành công, chuyển màn hình!")
+                        }
+                    )
                 }
             }
         }
