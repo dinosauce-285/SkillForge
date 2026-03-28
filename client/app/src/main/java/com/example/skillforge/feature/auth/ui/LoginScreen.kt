@@ -39,7 +39,8 @@ import com.example.skillforge.feature.auth.viewmodel.LoginState
 @Composable
 fun LoginScreen(
     viewModel: LoginViewModel, // Truyền ViewModel vào đây
-    onLoginSuccess: () -> Unit // Hàm callback để chuyển màn hình khi thành công
+    onLoginSuccess: () -> Unit, // Hàm callback để chuyển màn hình khi thành công
+    onNavigateToRegister: () -> Unit
 ) {
     // Biến lưu trạng thái ô nhập liệu
     var email by remember { mutableStateOf("") }
@@ -253,17 +254,18 @@ fun LoginScreen(
                 Spacer(modifier = Modifier.height(defaultPadding))
 
                 // 9. Nút Đăng ký
-                Row {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         "Don't have an account? ",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    Text(
-                        "Sign up",
-                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                        color = PrimaryOrangeLight
-                    )
+                    TextButton(onClick = onNavigateToRegister) {
+                        Text(
+                            "Sign up",
+                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                            color = PrimaryOrangeLight)
+                    }
                 }
             }
         }
