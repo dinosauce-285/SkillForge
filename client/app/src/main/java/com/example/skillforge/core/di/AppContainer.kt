@@ -8,9 +8,9 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 class AppContainer {
-    // 1. Khởi tạo Retrofit (Cần thêm thư viện Gson và Retrofit vào build.gradle)
+    // Android Emulator phải dùng 10.0.2.2 để truy cập localhost của máy chạy backend.
     private val retrofit = Retrofit.Builder()
-        .baseUrl("http://192.168.15.159:3000/") // TODO: Thay bằng URL API thực tế của đồ án
+        .baseUrl("http://10.0.2.2:3000/")
         .addConverterFactory(GsonConverterFactory.create())
         .build()
 

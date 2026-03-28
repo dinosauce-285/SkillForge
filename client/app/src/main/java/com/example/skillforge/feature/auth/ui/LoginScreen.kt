@@ -15,31 +15,27 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.skillforge.R // Thay bằng package R của dự án
 import com.example.skillforge.core.designsystem.PrimaryOrange
 import com.example.skillforge.core.designsystem.PrimaryOrangeLight
 import com.example.skillforge.core.designsystem.SocialButtonBorderColor
 import com.example.skillforge.core.designsystem.SocialButtonTextColor
 import com.example.skillforge.core.designsystem.TextFieldBackgroundColor
 import androidx.compose.runtime.collectAsState
-import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.skillforge.domain.model.AuthSession
 import com.example.skillforge.feature.auth.viewmodel.LoginViewModel
 import com.example.skillforge.feature.auth.viewmodel.LoginState
 
 @Composable
 fun LoginScreen(
     viewModel: LoginViewModel, // Truyền ViewModel vào đây
-    onLoginSuccess: () -> Unit // Hàm callback để chuyển màn hình khi thành công
+    onLoginSuccess: (AuthSession) -> Unit
 ) {
     // Biến lưu trạng thái ô nhập liệu
     var email by remember { mutableStateOf("") }
@@ -119,13 +115,18 @@ fun LoginScreen(
                 // 3. Ô nhập Email
                 OutlinedTextField(
                     value = email,
-                    onValueChange = { email = it },
+                    onValueChange = {
+                        email = it
+                        viewModel.clearError()
+                    },
                     placeholder = { Text("Email Address") },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = TextFieldBackgroundColor,
                         unfocusedContainerColor = TextFieldBackgroundColor, // Dùng màu custom từ Color.kt
                         unfocusedBorderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f),
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
                         unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant
                     ),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
@@ -136,13 +137,18 @@ fun LoginScreen(
                 // 4. Ô nhập Password với icon con mắt
                 OutlinedTextField(
                     value = password,
-                    onValueChange = { password = it },
+                    onValueChange = {
+                        password = it
+                        viewModel.clearError()
+                    },
                     placeholder = { Text("Password") },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = TextFieldBackgroundColor,
                         unfocusedContainerColor = TextFieldBackgroundColor,
                         unfocusedBorderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f),
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
                         unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant
                     ),
                     visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
@@ -177,7 +183,10 @@ fun LoginScreen(
                         text = (loginState as LoginState.Error).message,
                         color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.padding(bottom = 8.dp)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 8.dp),
+                        textAlign = TextAlign.Start
                     )
                 }
 
@@ -270,8 +279,9 @@ fun LoginScreen(
     }
 
     LaunchedEffect(loginState) {
-        if (loginState is LoginState.Success) {
-            onLoginSuccess() // Ví dụ: Chuyển sang màn hình Home
+        val currentState = loginState
+        if (currentState is LoginState.Success) {
+            onLoginSuccess(currentState.session)
         }
     }
 }
