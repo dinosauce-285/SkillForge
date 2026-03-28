@@ -4,6 +4,7 @@ import com.example.skillforge.domain.model.AuthSession
 
 sealed interface AppRoute {
     data object Login : AppRoute
+    data object Register : AppRoute
 
     data class StudentCourseListing(
         val session: AuthSession,

@@ -6,7 +6,6 @@ import retrofit2.http.POST
 
 data class LoginRequest(val email: String, val password: String)
 
-// Thêm class này để hứng cục "user"
 data class UserInfo(
     val id: String,
     val email: String,
@@ -14,14 +13,27 @@ data class UserInfo(
     val role: String
 )
 
-// Cập nhật lại LoginResponse cho khớp 100% với JSON của server
 data class LoginResponse(
     val message: String,
     val accessToken: String, // Đổi từ token -> accessToken
     val user: UserInfo       // Hứng luôn thông tin user
 )
 
+data class RegisterRequest(
+    val email: String,
+    val password: String,
+    val fullName: String
+)
+
+data class RegisterResponse(
+    val message: String,
+    val user: UserInfo       // Hứng luôn thông tin user
+)
+
 interface AuthApi {
-    @POST("auth/login") // TODO: Nhớ check lại endpoint của bạn (vd: /auth/login, /api/login...)
+    @POST("auth/login")
     suspend fun login(@Body request: LoginRequest): Response<LoginResponse>
+
+    @POST("auth/register")
+    suspend fun register(@Body request: RegisterRequest): Response<RegisterResponse>
 }

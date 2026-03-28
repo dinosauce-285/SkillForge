@@ -4,4 +4,5 @@ import com.example.skillforge.domain.model.AuthSession
 
 interface AuthRepository {
     suspend fun login(email: String, password: String): Result<AuthSession>
+    suspend fun register(fullName: String, email: String, password: String): Result<String>
 }
