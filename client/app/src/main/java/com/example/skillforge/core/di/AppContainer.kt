@@ -4,6 +4,7 @@ import com.example.skillforge.data.remote.AuthApi
 import com.example.skillforge.data.repository.AuthRepositoryImpl
 import com.example.skillforge.domain.repository.AuthRepository
 import com.example.skillforge.domain.usecase.LoginUseCase
+import com.example.skillforge.domain.usecase.RegisterUseCase
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
@@ -22,4 +23,5 @@ class AppContainer {
 
     // 4. Khởi tạo UseCase (Cái này sẽ được truyền vào ViewModel)
     val loginUseCase = LoginUseCase(authRepository)
+    val registerUseCase = RegisterUseCase(authRepository)
 }
