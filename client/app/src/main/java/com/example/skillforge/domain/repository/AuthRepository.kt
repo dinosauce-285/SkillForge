@@ -1,7 +1,8 @@
 package com.example.skillforge.domain.repository
 
-interface AuthRepository {
-    suspend fun login(email: String, password: String): Result<String> // Trả về Token hoặc Lỗi
+import com.example.skillforge.domain.model.AuthSession
 
-    suspend fun register(fullName: String, email: String, password: String): Result<String> // Trả về Token hoặc Lỗi
+interface AuthRepository {
+    suspend fun login(email: String, password: String): Result<AuthSession>
+    suspend fun register(fullName: String, email: String, password: String): Result<String>
 }

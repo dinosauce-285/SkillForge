@@ -1,91 +1,95 @@
 package com.example.skillforge
 
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.skillforge.core.designsystem.SkillforgeTheme
+import com.example.skillforge.core.navigation.AppRoute
 import com.example.skillforge.feature.auth.ui.LoginScreen
 import com.example.skillforge.feature.auth.ui.RegisterScreen
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.compose.ui.platform.LocalContext
 import com.example.skillforge.feature.auth.viewmodel.LoginViewModel
 import com.example.skillforge.feature.auth.viewmodel.LoginViewModelFactory
 import com.example.skillforge.feature.auth.viewmodel.RegisterViewModel
 import com.example.skillforge.feature.auth.viewmodel.RegisterViewModelFactory
+import com.example.skillforge.feature.instructor_portal.ui.SkillforgeInstructorDashboardScreen
+import com.example.skillforge.feature.student_courses.ui.StudentCourseDetailsRoute
+import com.example.skillforge.feature.student_courses.ui.StudentCourseListingRoute
+import com.example.skillforge.feature.student_courses.viewmodel.StudentCoursesViewModel
+import com.example.skillforge.feature.student_courses.viewmodel.StudentCoursesViewModelFactory
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            SkillforgeTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    // 1. Tạo chiếc Xe (NavController)
-                    val navController = rememberNavController()
+            SkillforgeTheme(dynamicColor = false) {
+                val appContainer = (LocalContext.current.applicationContext as SkillforgeApplication).container
+                val loginViewModel: LoginViewModel = viewModel(
+                    factory = LoginViewModelFactory(appContainer.loginUseCase)
+                )
+                val registerViewModel: RegisterViewModel = viewModel(
+                    factory = RegisterViewModelFactory(appContainer.registerUseCase)
+                )
+                val studentCoursesViewModel: StudentCoursesViewModel = viewModel(
+                    factory = StudentCoursesViewModelFactory(appContainer.courseRepository)
+                )
+                var currentRoute by remember { mutableStateOf<AppRoute>(AppRoute.Login) }
 
-                    // 2. Vẽ Bản đồ (NavHost) với trạm xuất phát là "login"
-                    NavHost(navController = navController, startDestination = "login") {
-
-                        // Trạm 1: Màn hình Đăng nhập
-                        composable("login") {
-                            // 1. Lấy AppContainer ra từ Application
-                            val context = LocalContext.current
-                            val appContainer =
-                                (context.applicationContext as SkillforgeApplication).container
-
-                            // 2. Nhờ Factory tạo ra LoginViewModel
-                            val loginViewModel: LoginViewModel = viewModel(
-                                factory = LoginViewModelFactory(appContainer.loginUseCase)
-                            )
-
-                            // 3. Gắn ViewModel vào Screen
-                            LoginScreen(
-                                viewModel = loginViewModel,
-                                onLoginSuccess = {
-                                    // Tạm thời báo Toast, lát nữa làm chuyển màn hình Học viên sau
-                                    Toast.makeText(
-                                        context,
-                                        "Đăng nhập thành công!",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                },
-                                onNavigateToRegister = {
-                                    navController.navigate("register")
+                Surface(modifier = Modifier.fillMaxSize()) {
+                    when (val route = currentRoute) {
+                        AppRoute.Login -> LoginScreen(
+                            viewModel = loginViewModel,
+                            onLoginSuccess = { session ->
+                                currentRoute = if (session.user.role.equals("STUDENT", ignoreCase = true)) {
+                                    AppRoute.StudentCourseListing(session)
+                                } else {
+                                    AppRoute.InstructorPortal(session)
                                 }
-                            )
-                        }
+                            },
+                            onNavigateToRegister = {
+                                currentRoute = AppRoute.Register
+                            }
+                        )
 
-                        // Trạm 2: Màn hình Đăng ký
-                        composable("register") {
-                            val context = LocalContext.current
-                            val appContainer = (context.applicationContext as SkillforgeApplication).container
+                        AppRoute.Register -> RegisterScreen(
+                            viewModel = registerViewModel,
+                            onRegisterSuccess = {
+                                currentRoute = AppRoute.Login
+                            },
+                            onBackToLogin = {
+                                currentRoute = AppRoute.Login
+                            }
+                        )
 
-                            // 2. Nhờ Factory tạo RegisterViewModel
-                            val registerViewModel: RegisterViewModel = viewModel(
-                                factory = RegisterViewModelFactory(appContainer.registerUseCase)
-                            )
+                        is AppRoute.StudentCourseListing -> StudentCourseListingRoute(
+                            session = route.session,
+                            viewModel = studentCoursesViewModel,
+                            onCourseSelected = { courseId ->
+                                currentRoute = AppRoute.StudentCourseDetails(
+                                    session = route.session,
+                                    courseId = courseId,
+                                )
+                            },
+                            onLogout = { currentRoute = AppRoute.Login }
+                        )
 
-                            RegisterScreen(
-                                viewModel = registerViewModel,
-                                onRegisterSuccess = { message ->
-                                    Toast.makeText(context, message, Toast.LENGTH_LONG).show()
-                                    navController.popBackStack()
-                                },
-                                onBackToLogin = {
-                                    navController.popBackStack()
-                                }
-                            )
-                        }
+                        is AppRoute.StudentCourseDetails -> StudentCourseDetailsRoute(
+                            courseId = route.courseId,
+                            viewModel = studentCoursesViewModel,
+                            onBack = {
+                                currentRoute = AppRoute.StudentCourseListing(route.session)
+                            }
+                        )
+
+                        is AppRoute.InstructorPortal -> SkillforgeInstructorDashboardScreen()
                     }
                 }
             }

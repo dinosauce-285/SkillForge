@@ -2,6 +2,7 @@ package com.example.skillforge.feature.auth.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.skillforge.domain.model.AuthSession
 import com.example.skillforge.domain.usecase.LoginUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -11,7 +12,7 @@ import kotlinx.coroutines.launch
 sealed class LoginState {
     object Idle : LoginState()
     object Loading : LoginState()
-    data class Success(val token: String) : LoginState()
+    data class Success(val session: AuthSession) : LoginState()
     data class Error(val message: String) : LoginState()
 }
 
@@ -26,12 +27,18 @@ class LoginViewModel(private val loginUseCase: LoginUseCase) : ViewModel() {
 
             val result = loginUseCase(email, password)
 
-            result.onSuccess { token ->
-                _loginState.value = LoginState.Success(token)
+            result.onSuccess { session ->
+                _loginState.value = LoginState.Success(session)
             }
             result.onFailure { exception ->
                 _loginState.value = LoginState.Error(exception.message ?: "Lỗi không xác định")
             }
+        }
+    }
+
+    fun clearError() {
+        if (_loginState.value is LoginState.Error) {
+            _loginState.value = LoginState.Idle
         }
     }
 }
