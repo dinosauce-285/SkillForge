@@ -14,11 +14,16 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.skillforge.core.designsystem.SkillforgeTheme
 import com.example.skillforge.core.navigation.AppRoute
+import com.example.skillforge.domain.model.AuthSession
+import com.example.skillforge.domain.model.AuthUser
 import com.example.skillforge.feature.auth.ui.LoginScreen
 import com.example.skillforge.feature.auth.viewmodel.LoginViewModel
 import com.example.skillforge.feature.auth.viewmodel.LoginViewModelFactory
 import com.example.skillforge.feature.instructor_portal.ui.SkillforgeInstructorDashboardScreen
-import com.example.skillforge.feature.student_courses.ui.StudentCourseListingScreen
+import com.example.skillforge.feature.student_courses.ui.StudentCourseDetailsRoute
+import com.example.skillforge.feature.student_courses.ui.StudentCourseListingRoute
+import com.example.skillforge.feature.student_courses.viewmodel.StudentCoursesViewModel
+import com.example.skillforge.feature.student_courses.viewmodel.StudentCoursesViewModelFactory
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -29,7 +34,23 @@ class MainActivity : ComponentActivity() {
                 val loginViewModel: LoginViewModel = viewModel(
                     factory = LoginViewModelFactory(appContainer.loginUseCase)
                 )
-                var currentRoute by remember { mutableStateOf<AppRoute>(AppRoute.Login) }
+                val studentCoursesViewModel: StudentCoursesViewModel = viewModel(
+                    factory = StudentCoursesViewModelFactory(appContainer.courseRepository)
+                )
+                val previewStudentSession = remember {
+                    AuthSession(
+                        accessToken = "mock-access-token",
+                        user = AuthUser(
+                            id = "student-preview",
+                            email = "preview@skillforge.dev",
+                            fullName = "Samantha Lee",
+                            role = "STUDENT",
+                        ),
+                    )
+                }
+                var currentRoute by remember {
+                    mutableStateOf<AppRoute>(AppRoute.StudentCourseListing(previewStudentSession))
+                }
 
                 Surface(modifier = Modifier.fillMaxSize()) {
                     when (val route = currentRoute) {
@@ -43,9 +64,23 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
                         )
-                        is AppRoute.StudentCourseListing -> StudentCourseListingScreen(
+                        is AppRoute.StudentCourseListing -> StudentCourseListingRoute(
                             session = route.session,
+                            viewModel = studentCoursesViewModel,
+                            onCourseSelected = { courseId ->
+                                currentRoute = AppRoute.StudentCourseDetails(
+                                    session = route.session,
+                                    courseId = courseId,
+                                )
+                            },
                             onLogout = { currentRoute = AppRoute.Login }
+                        )
+                        is AppRoute.StudentCourseDetails -> StudentCourseDetailsRoute(
+                            courseId = route.courseId,
+                            viewModel = studentCoursesViewModel,
+                            onBack = {
+                                currentRoute = AppRoute.StudentCourseListing(route.session)
+                            }
                         )
                         is AppRoute.InstructorPortal -> SkillforgeInstructorDashboardScreen()
                     }
