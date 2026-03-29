@@ -57,39 +57,34 @@ model Category {
 }
 
 model Course {
-  id             String       @id @default(uuid())
-  instructorId   String       @map("instructor_id")
-  categoryId     String       @map("category_id")
-  title          String
-  subtitle       String?
-  summary        String?      @db.Text
-  thumbnailUrl   String?      @map("thumbnail_url")
-  promoVideoUrl  String?      @map("promo_video_url")
-  price          Decimal      @default(0) @db.Decimal(10, 2)
-  isFree         Boolean      @default(false) @map("is_free")
-  status         CourseStatus @default(DRAFT)
-  level          CourseLevel @default(ALL_LEVELS)
-  averageRating  Float       @default(0) @map("average_rating")
-  studentCount   Int         @default(0) @map("student_count")
-  tags           Tag[]
-  enrollments    Enrollment[]
-  orders         Order[]
-  deletedAt      DateTime?    @map("deleted_at")
-  
-  createdAt      DateTime     @default(now()) @map("created_at")
-  updatedAt      DateTime     @updatedAt @map("updated_at")
+  id               String            @id @default(uuid())
+  instructorId     String            @map("instructor_id")
+  categoryId       String            @map("category_id")
+  title            String
+  subtitle         String?
+  summary          String?           @db.Text
+  thumbnailUrl     String?           @map("thumbnail_url")
+  promoVideoUrl    String?           @map("promo_video_url")
+  price            Decimal           @default(0) @db.Decimal(10, 2)
+  isFree           Boolean           @default(false) @map("is_free")
+  status           CourseStatus      @default(DRAFT)
+  level            CourseLevel       @default(ALL_LEVELS)
+  averageRating    Float             @default(0) @map("average_rating")
+  studentCount     Int               @default(0) @map("student_count")
+  deletedAt        DateTime?         @map("deleted_at")
+  createdAt        DateTime          @default(now()) @map("created_at")
+  updatedAt        DateTime          @updatedAt @map("updated_at")
 
-  instructor     User         @relation("CourseInstructor", fields: [instructorId], references: [id])
-  category       Category     @relation(fields: [categoryId], references: [id])
-  chapters       Chapter[]
+  instructor       User              @relation("CourseInstructor", fields: [instructorId], references: [id])
+  category         Category          @relation(fields: [categoryId], references: [id])
+  chapters         Chapter[]
   courseProgresses CourseProgress[]
   statistics       CourseStatistic[]
-  category         Category          @relation(fields: [categoryId], references: [id])
-  instructor       User              @relation("CourseInstructor", fields: [instructorId], references: [id])
   enrollments      Enrollment[]
   orders           Order[]
   reviews          Review[]
   tags             Tag[]             @relation("CourseToTag")
+  certificates     Certificate[]
 
   @@index([categoryId, level])
   @@index([title])
@@ -396,6 +391,10 @@ model AuditLog {
   @@map("audit_logs")
 }
 
+// =======================
+// ENUMS
+// =======================
+
 enum Role {
   STUDENT
   INSTRUCTOR
@@ -412,4 +411,80 @@ enum CourseStatus {
   DRAFT
   PENDING
   PUBLISHED
+  REJECTED
+}
+
+enum CourseLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  ALL_LEVELS
+}
+
+enum MaterialType {
+  VIDEO
+  DOCUMENT
+  LINK
+  SOURCE_CODE
+}
+
+enum MaterialStatus {
+  UPLOADING
+  PROCESSING
+  READY
+  FAILED
+}
+
+enum EnrollmentStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum OrderStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum PaymentGateway {
+  STRIPE
+  PAYPAL
+  VNPAY
+  MOMO
+}
+
+enum WithdrawalStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  REJECTED
+}
+
+enum AttemptStatus {
+  IN_PROGRESS
+  SUBMITTED
+  GRADED
+}
+
+enum ReportType {
+  COURSE
+  USER
+  REVIEW
+  DISCUSSION
+}
+
+enum ReportStatus {
+  PENDING
+  RESOLVED
+  DISMISSED
+}
+
+enum ActionType {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  LOGOUT
 }
