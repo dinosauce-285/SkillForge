@@ -4,39 +4,36 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add // Đã đổi sang Icon Add cơ bản
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
-private val SkillForgePrimary = Color(0xFFD84B1E)
-private val SkillForgePrimaryContainer = Color(0xFFFFEAD8)
-private val SkillForgeSurfaceVariant = Color(0xFFF0F0F0)
-
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SkillforgeCourseFormScreen(
     isEditMode: Boolean = false,
     onNavigateBack: () -> Unit = {},
-    onSaveClick: () -> Unit = {}
+    // Trả dữ liệu ra ngoài khi bấm Save (Tạm thời là các trường cơ bản)
+    onSaveClick: (title: String, description: String, price: String, category: String) -> Unit = { _, _, _, _ -> }
 ) {
     var courseTitle by remember { mutableStateOf("") }
     var courseDescription by remember { mutableStateOf("") }
     var coursePrice by remember { mutableStateOf("") }
-    var selectedCategory by remember { mutableStateOf("Design") }
+    var selectedCategory by remember { mutableStateOf("Development") }
 
     Scaffold(
         topBar = {
@@ -44,23 +41,27 @@ fun SkillforgeCourseFormScreen(
                 title = {
                     Text(
                         text = if (isEditMode) "Edit Course" else "Create New Course",
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.White,
-                    titleContentColor = Color.Black
+                    containerColor = MaterialTheme.colorScheme.surface
                 )
             )
         },
         bottomBar = {
             Surface(
-                color = Color.White,
+                color = MaterialTheme.colorScheme.surface,
                 shadowElevation = 8.dp
             ) {
                 Row(
@@ -72,14 +73,19 @@ fun SkillforgeCourseFormScreen(
                     OutlinedButton(
                         onClick = onNavigateBack,
                         modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Gray)
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     ) {
                         Text("Cancel")
                     }
                     Button(
-                        onClick = onSaveClick,
+                        onClick = { onSaveClick(courseTitle, courseDescription, coursePrice, selectedCategory) },
                         modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(containerColor = SkillForgePrimary)
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
+                        )
                     ) {
                         Text(if (isEditMode) "Save Changes" else "Publish Course")
                     }
@@ -91,34 +97,36 @@ fun SkillforgeCourseFormScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+                .background(MaterialTheme.colorScheme.background)
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
+            // 1. Cover Image Placeholder
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(180.dp)
                     .clip(RoundedCornerShape(12.dp))
-                    .background(SkillForgeSurfaceVariant)
-                    .border(2.dp, SkillForgePrimaryContainer, RoundedCornerShape(12.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .border(2.dp, MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(12.dp))
                     .clickable { /* Mở thư viện ảnh */ },
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    // Đã thay AddPhotoAlternate bằng Add (có sẵn trong Core)
                     Icon(
                         imageVector = Icons.Default.Add,
                         contentDescription = "Upload cover",
                         modifier = Modifier.size(48.dp),
-                        tint = SkillForgePrimary
+                        tint = MaterialTheme.colorScheme.primary
                     )
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text("Upload Course Cover", color = SkillForgePrimary, fontWeight = FontWeight.Medium)
-                    Text("16:9 ratio recommended", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                    Text("Upload Course Cover", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Medium)
+                    Text("16:9 ratio recommended", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
 
+            // 2. Title
             OutlinedTextField(
                 value = courseTitle,
                 onValueChange = { courseTitle = it },
@@ -128,11 +136,12 @@ fun SkillforgeCourseFormScreen(
                 singleLine = true,
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = SkillForgePrimary,
-                    focusedLabelColor = SkillForgePrimary
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    focusedLabelColor = MaterialTheme.colorScheme.primary
                 )
             )
 
+            // 3. Description
             OutlinedTextField(
                 value = courseDescription,
                 onValueChange = { courseDescription = it },
@@ -143,22 +152,22 @@ fun SkillforgeCourseFormScreen(
                     .height(120.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = SkillForgePrimary,
-                    focusedLabelColor = SkillForgePrimary
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    focusedLabelColor = MaterialTheme.colorScheme.primary
                 )
             )
 
+            // 4. Price
             OutlinedTextField(
                 value = coursePrice,
                 onValueChange = { coursePrice = it },
                 label = { Text("Price") },
                 placeholder = { Text("0.00") },
-                // Đã thay AttachMoney bằng text "$" cho gọn và không cần import thêm icon
                 leadingIcon = {
                     Text(
                         text = "$",
                         style = MaterialTheme.typography.titleMedium,
-                        color = Color.Gray,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(start = 8.dp)
                     )
                 },
@@ -167,18 +176,22 @@ fun SkillforgeCourseFormScreen(
                 singleLine = true,
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = SkillForgePrimary,
-                    focusedLabelColor = SkillForgePrimary
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    focusedLabelColor = MaterialTheme.colorScheme.primary
                 )
             )
 
-            // 5. Chọn Danh mục (Category) - Đã sửa lỗi bằng LazyRow
+            // 5. Category (Dùng LazyRow không crash)
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Category", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                val categories = listOf("Design", "Development", "Business", "Marketing", "Data Science", "Photography")
+                Text(
+                    text = "Category",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                val categories = listOf("Design", "Development", "Business", "Marketing", "Photography")
 
-                // Thay thế FlowRow bằng LazyRow (Hỗ trợ tốt cho mọi phiên bản Compose)
-                androidx.compose.foundation.lazy.LazyRow(
+                LazyRow(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
@@ -189,8 +202,9 @@ fun SkillforgeCourseFormScreen(
                             onClick = { selectedCategory = category },
                             label = { Text(category) },
                             colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = SkillForgePrimaryContainer,
-                                selectedLabelColor = SkillForgePrimary
+                                selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                selectedLabelColor = MaterialTheme.colorScheme.primary,
+                                labelColor = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         )
                     }
@@ -202,10 +216,10 @@ fun SkillforgeCourseFormScreen(
     }
 }
 
-@Preview(showBackground = true, device = "spec:width=411dp,height=891dp,dpi=420")
+@Preview(showBackground = true)
 @Composable
 fun SkillforgeCourseFormPreview() {
     MaterialTheme {
-        SkillforgeCourseFormScreen(isEditMode = false)
+        SkillforgeCourseFormScreen()
     }
 }
