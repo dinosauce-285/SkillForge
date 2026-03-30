@@ -20,7 +20,9 @@ import com.example.skillforge.feature.auth.viewmodel.LoginViewModel
 import com.example.skillforge.feature.auth.viewmodel.LoginViewModelFactory
 import com.example.skillforge.feature.auth.viewmodel.RegisterViewModel
 import com.example.skillforge.feature.auth.viewmodel.RegisterViewModelFactory
+import com.example.skillforge.feature.instructor_portal.ui.SkillforgeCourseFormScreen
 import com.example.skillforge.feature.instructor_portal.ui.SkillforgeInstructorDashboardScreen
+import com.example.skillforge.feature.instructor_portal.ui.SkillforgeMaterialUploadScreen
 import com.example.skillforge.feature.student_courses.ui.StudentCourseDetailsRoute
 import com.example.skillforge.feature.student_courses.ui.StudentCourseListingRoute
 import com.example.skillforge.feature.student_courses.viewmodel.StudentCoursesViewModel
@@ -89,7 +91,40 @@ class MainActivity : ComponentActivity() {
                             }
                         )
 
-                        is AppRoute.InstructorPortal -> SkillforgeInstructorDashboardScreen()
+                        is AppRoute.InstructorPortal -> SkillforgeInstructorDashboardScreen(
+                            onNavigateToCreateCourse = {
+                                currentRoute = AppRoute.CourseForm(route.session)
+                            },
+                            onLogout = {
+                                currentRoute = AppRoute.Login
+                            }
+                        )
+
+                        is AppRoute.CourseForm -> {
+                            SkillforgeCourseFormScreen(
+                                isEditMode = route.courseId != null,
+                                onNavigateBack = {
+                                    currentRoute = AppRoute.InstructorPortal(route.session)
+                                },
+                                onSaveClick = { title, description, price, category ->
+                                    println("Lưu khóa học: $title - $price")
+                                    currentRoute = AppRoute.InstructorPortal(route.session)
+                                }
+                            )
+                        }
+
+                        is AppRoute.MaterialUpload -> {
+                            SkillforgeMaterialUploadScreen(
+                                courseId = route.courseId,
+                                onNavigateBack = {
+                                    currentRoute = AppRoute.InstructorPortal(route.session)
+                                },
+                                onUploadClick = {title, type, fileUri ->
+                                    println("Uploading file: $title, Type: $type")
+                                    currentRoute = AppRoute.InstructorPortal(route.session)
+                                }
+                            )
+                        }
                     }
                 }
             }

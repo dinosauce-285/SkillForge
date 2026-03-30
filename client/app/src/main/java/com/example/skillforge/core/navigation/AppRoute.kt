@@ -18,4 +18,14 @@ sealed interface AppRoute {
     data class InstructorPortal(
         val session: AuthSession,
     ) : AppRoute
+
+    data class CourseForm(
+        val session: AuthSession ,
+        val courseId: String? = null
+    ) : AppRoute
+
+    data class MaterialUpload(
+        val session: AuthSession,
+        val courseId: String
+    ) : AppRoute
 }
