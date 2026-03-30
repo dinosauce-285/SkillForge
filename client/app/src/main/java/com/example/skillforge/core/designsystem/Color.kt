@@ -18,3 +18,14 @@ val TextSecondaryColor = Color(0xFF757575) // Văn bản phụ, placeholder
 val TextFieldBackgroundColor = Color(0xFFFFFFFF) // Nền ô nhập liệu (mặc định trắng)
 val SocialButtonBorderColor = Color(0xFFE0E0E0) // Viền nút social
 val SocialButtonTextColor = Color(0xFF333333)   // Văn bản nút social
+
+// Màu cho thanh tìm kiếm
+val SearchBarBackgroundColor = Color(0xFFF5F5F5)
+
+// Màu cho Category Chips (khi chưa được chọn)
+val ChipUnselectedTextColor = Color(0xFF64B5F6) // Màu xanh dương nhạt cho chữ
+val ChipUnselectedBorderColor = Color(0xFFE3F2FD) // Màu xanh dương rất nhạt cho viền
+val ChipUnselectedBackgroundColor = Color(0xFFFFFFFF) // Nền trắng
+
+// Thêm vào Color.kt
+val RatingStarColor = Color(0xFFFFC107) // Màu vàng hổ phách
