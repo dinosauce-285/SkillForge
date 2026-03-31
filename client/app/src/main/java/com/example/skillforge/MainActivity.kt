@@ -5,6 +5,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -23,6 +25,9 @@ import com.example.skillforge.feature.auth.viewmodel.RegisterViewModelFactory
 import com.example.skillforge.feature.instructor_portal.ui.SkillforgeCourseFormScreen
 import com.example.skillforge.feature.instructor_portal.ui.SkillforgeInstructorDashboardScreen
 import com.example.skillforge.feature.instructor_portal.ui.SkillforgeMaterialUploadScreen
+import com.example.skillforge.feature.instructor_portal.viewmodel.CourseFormState
+import com.example.skillforge.feature.instructor_portal.viewmodel.CourseFormViewModel
+import com.example.skillforge.feature.instructor_portal.viewmodel.CourseFormViewModelFactory
 import com.example.skillforge.feature.student_courses.ui.StudentCourseDetailsRoute
 import com.example.skillforge.feature.student_courses.ui.StudentCourseListingRoute
 import com.example.skillforge.feature.student_courses.viewmodel.StudentCoursesViewModel
@@ -42,6 +47,12 @@ class MainActivity : ComponentActivity() {
                 )
                 val studentCoursesViewModel: StudentCoursesViewModel = viewModel(
                     factory = StudentCoursesViewModelFactory(appContainer.courseRepository)
+                )
+                val courseFormViewModel: CourseFormViewModel = viewModel(
+                    factory = CourseFormViewModelFactory(
+                        appContainer.courseRepository,
+                        appContainer.categoryRepository
+                    )
                 )
                 var currentRoute by remember { mutableStateOf<AppRoute>(AppRoute.Login) }
 
@@ -95,20 +106,42 @@ class MainActivity : ComponentActivity() {
                             onNavigateToCreateCourse = {
                                 currentRoute = AppRoute.CourseForm(route.session)
                             },
+                            onNavigateToUploadMaterial = {
+                                currentRoute = AppRoute.MaterialUpload(route.session, "123")
+                            },
                             onLogout = {
                                 currentRoute = AppRoute.Login
                             }
                         )
 
                         is AppRoute.CourseForm -> {
+                            val uiState by courseFormViewModel.uiState.collectAsState()
+                            val categories by courseFormViewModel.categories.collectAsState()
+
+                            LaunchedEffect(Unit) {
+                                courseFormViewModel.fetchCategories()
+                            }
+
+                            LaunchedEffect(uiState) {
+                                if (uiState is CourseFormState.Success) {
+                                    courseFormViewModel.resetState()
+                                    currentRoute = AppRoute.InstructorPortal(route.session)
+                                }
+                            }
+
                             SkillforgeCourseFormScreen(
+                                categories = categories,
                                 isEditMode = route.courseId != null,
+                                isLoading = uiState is CourseFormState.Loading,
+                                errorMessage = if (uiState is CourseFormState.Error) (uiState as CourseFormState.Error).message else null,
+                                uiState = uiState,
                                 onNavigateBack = {
+                                    courseFormViewModel.resetState()
                                     currentRoute = AppRoute.InstructorPortal(route.session)
                                 },
-                                onSaveClick = { title, description, price, category ->
-                                    println("Lưu khóa học: $title - $price")
-                                    currentRoute = AppRoute.InstructorPortal(route.session)
+                                onSaveClick = { title, summary, price, categoryId ->
+                                    val myToken = route.session.accessToken
+                                    courseFormViewModel.createCourse(myToken, title, summary, price, categoryId)
                                 }
                             )
                         }
