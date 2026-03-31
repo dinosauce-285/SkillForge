@@ -1,6 +1,7 @@
 package com.example.skillforge.data.repository
 
 import com.example.skillforge.data.remote.CourseApi
+import com.example.skillforge.data.remote.CreateCourseRequest
 import com.example.skillforge.domain.model.CourseChapter
 import com.example.skillforge.domain.model.CourseDetails
 import com.example.skillforge.domain.model.CourseSummary
@@ -80,4 +81,24 @@ class CourseRepositoryImpl(
             Result.failure(Exception(e.message ?: "Failed to load course details"))
         }
     }
+
+    override suspend fun createCourse(
+        token: String, title: String, summary: String, price: Double, categoryId: String
+    ): Result<Unit> {
+        return try {
+            val request = CreateCourseRequest(title, summary, price, categoryId)
+            val bearerToken = if (token.startsWith("Bearer ")) token else "Bearer $token"
+            val response = api.createCourse(bearerToken, request)
+
+            if (response.isSuccessful) {
+                Result.success(Unit)
+            } else {
+                val errorBody = response.errorBody()?.string()
+                Result.failure(Exception("Lỗi từ server: ${response.code()} - $errorBody"))
+            }
+        } catch (e: Exception) {
+            Result.failure(Exception("Lỗi mạng: ${e.message}"))
+        }
+    }
+
 }

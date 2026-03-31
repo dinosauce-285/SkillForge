@@ -7,4 +7,12 @@ interface CourseRepository {
     suspend fun getCourses(): Result<List<CourseSummary>>
 
     suspend fun getCourseDetails(courseId: String): Result<CourseDetails>
+
+    suspend fun createCourse(
+        token: String,
+        title: String,
+        summary: String,
+        price: Double,
+        categoryId: String
+    ): Result<Unit>
 }
