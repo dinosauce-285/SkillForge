@@ -18,4 +18,8 @@ sealed interface AppRoute {
     data class InstructorPortal(
         val session: AuthSession,
     ) : AppRoute
+
+    data class Favorite(
+        val session: AuthSession,
+    ) : AppRoute
 }
