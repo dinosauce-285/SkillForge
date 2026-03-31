@@ -33,6 +33,7 @@ model User {
   reviews             Review[]
   profile             UserProfile?
   wallet              Wallet?
+  favorites           Favorite[]
 
   @@map("users")
 }
@@ -85,6 +86,7 @@ model Course {
   reviews          Review[]
   tags             Tag[]             @relation("CourseToTag")
   certificates     Certificate[]
+  favorites        Favorite[]
 
   @@index([categoryId, level])
   @@index([title])
@@ -389,6 +391,18 @@ model AuditLog {
   admin      User       @relation("AdminLogs", fields: [adminId], references: [id])
 
   @@map("audit_logs")
+}
+
+model Favorite {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  courseId  String   @map("course_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+  @@map("favorites")
 }
 
 // =======================
