@@ -23,17 +23,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-private val SkillForgePrimary = Color(0xFFD84B1E)
-private val SkillForgePrimaryContainer = Color(0xFFFFEAD8)
-private val SkillForgeOnPrimary = Color.White
-private val SkillForgeSurfaceVariant = Color(0xFFF0F0F0)
-
-private val SkillforgeLightColorScheme = lightColorScheme(
-    primary = SkillForgePrimary,
-    primaryContainer = SkillForgePrimaryContainer,
-    onPrimary = SkillForgeOnPrimary,
-    surfaceVariant = SkillForgeSurfaceVariant
-)
+// XÓA BỎ toàn bộ màu hardcode ở đây vì đã dùng SkillforgeTheme từ MainActivity
 
 enum class SkillforgeInstructorRoute(val title: String, val icon: ImageVector) {
     Dashboard("Dashboard", Icons.Default.Home),
@@ -44,128 +34,157 @@ enum class SkillforgeInstructorRoute(val title: String, val icon: ImageVector) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SkillforgeInstructorDashboardScreen() {
-    MaterialTheme(colorScheme = SkillforgeLightColorScheme) {
-        var selectedRoute by remember { mutableStateOf(SkillforgeInstructorRoute.Dashboard) }
+fun SkillforgeInstructorDashboardScreen(
+    onNavigateToCreateCourse: () -> Unit = {},
+    onLogout: () -> Unit = {}
+) {
+    // Không bọc MaterialTheme ở đây nữa vì MainActivity đã bọc SkillforgeTheme rồi
+    var selectedRoute by remember { mutableStateOf(SkillforgeInstructorRoute.Dashboard) }
 
-        Scaffold(
-            topBar = { SkillforgeInstructorTopBar() },
-            bottomBar = {
-                SkillforgeInstructorBottomBar(
-                    selectedRoute = selectedRoute,
-                    onRouteSelected = { selectedRoute = it }
+    Scaffold(
+        topBar = { SkillforgeInstructorTopBar() },
+        bottomBar = {
+            SkillforgeInstructorBottomBar(
+                selectedRoute = selectedRoute,
+                onRouteSelected = { selectedRoute = it }
+            )
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = onNavigateToCreateCourse, // Gọi hàm chuyển trang tạo khóa học
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                shape = CircleShape
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Add Course")
+            }
+        }
+    ) { innerPadding ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .background(MaterialTheme.colorScheme.background)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            item {
+                Text(
+                    text = "INSTRUCTOR PORTAL",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-            },
-            floatingActionButton = {
-                FloatingActionButton(
-                    onClick = { /* Xử lý tạo mới */ },
-                    containerColor = SkillForgePrimary,
-                    contentColor = SkillForgeOnPrimary,
-                    shape = CircleShape
+                Text(
+                    text = "Good Morning,\nCurator.",
+                    style = MaterialTheme.typography.displayMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    lineHeight = 40.sp
+                )
+            }
+
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = "Add")
+                    Button(
+                        onClick = { /* View Reports */ },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    ) {
+                        Text("View Reports")
+                    }
+                    Button(
+                        onClick = onNavigateToCreateCourse, // Gọi hàm tạo khóa học
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
+                        )
+                    ) {
+                        Text("Create New")
+                    }
                 }
             }
-        ) { innerPadding ->
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .background(MaterialTheme.colorScheme.surface)
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                item {
-                    Text("INSTRUCTOR PORTAL", style = MaterialTheme.typography.labelMedium, color = Color.Gray)
-                    Text(
-                        "Good Morning,\nCurator.",
-                        style = MaterialTheme.typography.displayMedium,
-                        fontWeight = FontWeight.Bold,
-                        lineHeight = 40.sp
-                    )
-                }
 
-                item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        Button(
-                            onClick = { /* View Reports */ },
-                            modifier = Modifier.weight(1f),
-                            colors = ButtonDefaults.buttonColors(containerColor = SkillForgeSurfaceVariant)
-                        ) {
-                            Text("View Reports", color = Color.Black)
-                        }
-                        Button(
-                            onClick = { /* Create New Course */ },
-                            modifier = Modifier.weight(1f),
-                            colors = ButtonDefaults.buttonColors(containerColor = SkillForgePrimary)
-                        ) {
-                            Text("Create New Course", color = SkillForgeOnPrimary)
-                        }
-                    }
-                }
+            item {
+                SkillforgeStatCard(
+                    title = "Ready to expand?",
+                    icon = Icons.Default.Star,
+                    description = "Launch a new learning module or curate your existing materials into a specialized workshop.",
+                    actionText = "Quick Start",
+                    hasBadge = false
+                )
+            }
 
-                item {
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
                     SkillforgeStatCard(
-                        title = "Ready to expand?",
-                        icon = Icons.Default.Star,
-                        description = "Launch a new learning module or curate your existing materials into a specialized workshop.",
-                        actionText = "Quick Start",
-                        hasBadge = false
+                        title = "Total Students",
+                        icon = Icons.Default.Person,
+                        modifier = Modifier.weight(1f),
+                        value = "1,284",
+                        badgeText = "+12%",
+                        badgeContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                        badgeContentColor = MaterialTheme.colorScheme.onPrimaryContainer
                     )
-                }
-
-                item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        SkillforgeStatCard(
-                            title = "Total Students",
-                            icon = Icons.Default.Person,
-                            modifier = Modifier.weight(1f),
-                            value = "1,284",
-                            badgeText = "+12%",
-                            badgeColor = SkillForgePrimaryContainer
-                        )
-                        SkillforgeStatCard(
-                            title = "Earnings",
-                            icon = Icons.Default.ShoppingCart,
-                            modifier = Modifier.weight(1f),
-                            value = "$42.1k",
-                            badgeText = "Record",
-                            badgeColor = SkillForgePrimary,
-                            badgeTextColor = SkillForgeOnPrimary
-                        )
-                    }
-                }
-
-                item {
                     SkillforgeStatCard(
-                        title = "Active Courses",
-                        icon = Icons.AutoMirrored.Filled.List, // Đã sửa icon
-                        value = "14",
-                        hasBadge = false
+                        title = "Earnings",
+                        icon = Icons.Default.ShoppingCart,
+                        modifier = Modifier.weight(1f),
+                        value = "$42.1k",
+                        badgeText = "Record",
+                        badgeContainerColor = MaterialTheme.colorScheme.primary,
+                        badgeContentColor = MaterialTheme.colorScheme.onPrimary
                     )
                 }
+            }
 
-                item {
-                    SectionHeader(title = "Recent Activity", actionText = "View History")
-                }
+            item {
+                SkillforgeStatCard(
+                    title = "Active Courses",
+                    icon = Icons.AutoMirrored.Filled.List,
+                    value = "14",
+                    hasBadge = false
+                )
+            }
 
-                items(3) { index ->
-                    SkillforgeActivityItem(index = index)
-                }
+            item {
+                SectionHeader(title = "Recent Activity", actionText = "View History")
+            }
 
-                item {
-                    SectionHeader(title = "Performance")
-                }
+            items(3) { index ->
+                SkillforgeActivityItem(index = index)
+            }
 
-                item {
-                    SkillforgePerformanceCard()
+            item {
+                SectionHeader(title = "Performance")
+            }
+
+            item {
+                SkillforgePerformanceCard()
+            }
+
+            // Thêm nút Đăng xuất ở cuối để test luồng
+            item {
+                Spacer(modifier = Modifier.height(24.dp))
+                OutlinedButton(
+                    onClick = onLogout,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text("Logout")
                 }
+                Spacer(modifier = Modifier.height(24.dp))
             }
         }
     }
@@ -190,10 +209,23 @@ fun SkillforgeInstructorTopBar() {
                 contentScale = ContentScale.Crop
             )
             Spacer(modifier = Modifier.width(12.dp))
-            Text("Digital Curator", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text(
+                text = "Digital Curator",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
         }
-        BadgedBox(badge = { Badge { Text(" ") } }) {
-            Icon(Icons.Default.Notifications, contentDescription = "Notifications")
+        BadgedBox(
+            badge = {
+                Badge(containerColor = MaterialTheme.colorScheme.error) { Text(" ") }
+            }
+        ) {
+            Icon(
+                imageVector = Icons.Default.Notifications,
+                contentDescription = "Notifications",
+                tint = MaterialTheme.colorScheme.onSurface
+            )
         }
     }
 }
@@ -204,8 +236,8 @@ fun SkillforgeInstructorBottomBar(
     onRouteSelected: (SkillforgeInstructorRoute) -> Unit
 ) {
     NavigationBar(
-        containerColor = SkillForgeSurfaceVariant,
-        contentColor = Color.Black
+        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
     ) {
         SkillforgeInstructorRoute.entries.forEach { route ->
             NavigationBarItem(
@@ -214,9 +246,11 @@ fun SkillforgeInstructorBottomBar(
                 label = { Text(route.title) },
                 icon = { Icon(route.icon, contentDescription = null) },
                 colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = SkillForgePrimary,
-                    selectedTextColor = SkillForgePrimary,
-                    indicatorColor = SkillForgePrimaryContainer
+                    selectedIconColor = MaterialTheme.colorScheme.primary,
+                    selectedTextColor = MaterialTheme.colorScheme.primary,
+                    indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             )
         }
@@ -233,16 +267,22 @@ fun SkillforgeStatCard(
     actionText: String? = null,
     hasBadge: Boolean = true,
     badgeText: String? = null,
-    badgeColor: Color = Color.LightGray,
-    badgeTextColor: Color = Color.Black
+    badgeContainerColor: Color = MaterialTheme.colorScheme.surface,
+    badgeContentColor: Color = MaterialTheme.colorScheme.onSurface
 ) {
     ElevatedCard(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = MaterialTheme.colorScheme.surface,
+            contentColor = MaterialTheme.colorScheme.onSurface
+        ),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
     ) {
         Column(
-            modifier = Modifier.padding(24.dp).fillMaxWidth(),
+            modifier = Modifier
+                .padding(24.dp)
+                .fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Row(
@@ -254,13 +294,21 @@ fun SkillforgeStatCard(
                     imageVector = icon,
                     contentDescription = null,
                     modifier = Modifier.size(32.dp),
-                    tint = SkillForgePrimary
+                    tint = MaterialTheme.colorScheme.primary
                 )
                 if (hasBadge && badgeText != null) {
                     SuggestionChip(
                         onClick = {},
-                        label = { Text(badgeText, color = badgeTextColor, style = MaterialTheme.typography.labelSmall) },
-                        colors = SuggestionChipDefaults.suggestionChipColors(containerColor = badgeColor),
+                        label = {
+                            Text(
+                                text = badgeText,
+                                color = badgeContentColor,
+                                style = MaterialTheme.typography.labelSmall
+                            )
+                        },
+                        colors = SuggestionChipDefaults.suggestionChipColors(
+                            containerColor = badgeContainerColor
+                        ),
                         border = null
                     )
                 }
@@ -271,14 +319,23 @@ fun SkillforgeStatCard(
                     value,
                     style = MaterialTheme.typography.displayMedium,
                     fontWeight = FontWeight.Bold,
-                    color = SkillForgePrimary
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
             if (description != null) {
-                Text(description, style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
+                Text(
+                    description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
             if (actionText != null) {
-                Text(actionText, style = MaterialTheme.typography.labelLarge, color = SkillForgePrimary, fontWeight = FontWeight.Bold)
+                Text(
+                    actionText,
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
     }
@@ -296,7 +353,10 @@ fun SkillforgeActivityItem(index: Int) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(SkillForgeSurfaceVariant, RoundedCornerShape(16.dp))
+            .background(
+                MaterialTheme.colorScheme.surfaceVariant,
+                RoundedCornerShape(16.dp)
+            )
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -306,16 +366,29 @@ fun SkillforgeActivityItem(index: Int) {
             modifier = Modifier
                 .size(24.dp)
                 .clip(CircleShape)
-                .background(SkillForgePrimaryContainer)
+                .background(MaterialTheme.colorScheme.primaryContainer)
                 .padding(4.dp),
-            tint = SkillForgePrimary
+            tint = MaterialTheme.colorScheme.primary
         )
         Spacer(modifier = Modifier.width(16.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(data.title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-            Text(data.description, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+            Text(
+                text = data.title,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = data.description,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+            )
         }
-        Text(data.time, style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+        Text(
+            text = data.time,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
 
@@ -331,25 +404,38 @@ fun SkillforgePerformanceCard() {
     ElevatedCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(24.dp)) {
             PerformanceMetric(title = "Course Completion", value = "78%", progress = 0.78f)
             Spacer(modifier = Modifier.height(16.dp))
             PerformanceMetric(title = "Student Retention", value = "92%", progress = 0.92f)
             Spacer(modifier = Modifier.height(24.dp))
-            Text("You're in the top 5% of instructors this month. Keep up the high engagement!", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+            Text(
+                text = "You're in the top 5% of instructors this month. Keep up the high engagement!",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
             Spacer(modifier = Modifier.height(16.dp))
-            Image(
-                imageVector = Icons.Default.Search,
-                contentDescription = "Chart placeholder",
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(150.dp)
-                    .background(Color.White)
-                    .padding(8.dp),
-                contentScale = ContentScale.FillWidth
-            )
+                    .background(
+                        MaterialTheme.colorScheme.surfaceVariant,
+                        RoundedCornerShape(12.dp)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Search, // Tạm dùng icon thay cho biểu đồ
+                    contentDescription = "Chart placeholder",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
     }
 }
@@ -362,15 +448,24 @@ fun PerformanceMetric(title: String, value: String, progress: Float) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(title, style = MaterialTheme.typography.titleSmall)
-            Text(value, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = SkillForgePrimary)
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = value,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
         }
         Spacer(modifier = Modifier.height(8.dp))
         LinearProgressIndicator(
             progress = { progress },
             modifier = Modifier.fillMaxWidth(),
-            color = SkillForgePrimary,
-            trackColor = SkillForgePrimaryContainer,
+            color = MaterialTheme.colorScheme.primary,
+            trackColor = MaterialTheme.colorScheme.primaryContainer,
             strokeCap = StrokeCap.Round
         )
     }
@@ -385,9 +480,18 @@ fun SectionHeader(title: String, actionText: String? = null) {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+        Text(
+            text = title,
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
         if (actionText != null) {
-            Text(actionText, style = MaterialTheme.typography.labelLarge, color = SkillForgePrimary)
+            Text(
+                text = actionText,
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary
+            )
         }
     }
 }
@@ -395,6 +499,7 @@ fun SectionHeader(title: String, actionText: String? = null) {
 @Preview(showBackground = true, device = "spec:width=411dp,height=891dp,dpi=420")
 @Composable
 fun SkillforgeInstructorDashboardPreview() {
+    // Để xem trước được trong IDE, bạn dùng giao diện mặc định của Material
     MaterialTheme {
         SkillforgeInstructorDashboardScreen()
     }
