@@ -2,7 +2,10 @@ package com.example.skillforge.data.remote
 
 import com.google.gson.annotations.SerializedName
 import retrofit2.Response
+import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.Header
+import retrofit2.http.POST
 import retrofit2.http.Path
 
 data class CourseListResponse(
@@ -78,10 +81,31 @@ data class CourseLessonDto(
     val title: String,
 )
 
+data class CreateCourseRequest(
+    val title: String,
+    val summary: String,
+    val price: Double,
+    val categoryId: String,
+    val thumbnailUrl: String? = null
+)
+
+data class CreateCourseResponse(
+    val message: String,
+    val data: CourseSummaryDto
+)
+
 interface CourseApi {
     @GET("courses")
     suspend fun getCourses(): Response<CourseListResponse>
 
     @GET("courses/{id}")
     suspend fun getCourseDetails(@Path("id") courseId: String): Response<CourseDetailsDto>
+
+    @POST("courses")
+    suspend fun createCourse(
+        @Header("Authorization") token: String,
+        @Body request: CreateCourseRequest
+    ): Response<CreateCourseResponse>
+
+    fun getCategories()
 }
