@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service'; // Chỉnh lại đường dẫn nếu cần
+import { PrismaService } from '../prisma/prisma.service'; 
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 
@@ -97,3 +97,4 @@ export class CategoriesService {
     });
   }
 }
+
