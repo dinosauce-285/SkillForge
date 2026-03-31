@@ -5,6 +5,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { OrderModule } from './modules/order/order.module';
 import { CoursesModule } from './modules/courses/courses.module';
+import { CategoriesModule } from './modules/categories/categories.module';
 
 
 @Module({
@@ -18,6 +19,7 @@ import { CoursesModule } from './modules/courses/courses.module';
     UsersModule,
     OrderModule,
     CoursesModule,
+    CategoriesModule,
   ],
   controllers: [],
   providers: [],
