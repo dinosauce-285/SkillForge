@@ -1,10 +1,13 @@
 package com.example.skillforge.core.di
 
 import com.example.skillforge.data.remote.AuthApi
+import com.example.skillforge.data.remote.CategoryApi
 import com.example.skillforge.data.remote.CourseApi
 import com.example.skillforge.data.repository.AuthRepositoryImpl
+import com.example.skillforge.data.repository.CategoryRepositoryImpl
 import com.example.skillforge.data.repository.CourseRepositoryImpl
 import com.example.skillforge.domain.repository.AuthRepository
+import com.example.skillforge.domain.repository.CategoryRepository
 import com.example.skillforge.domain.repository.CourseRepository
 import com.example.skillforge.domain.usecase.LoginUseCase
 import com.example.skillforge.domain.usecase.RegisterUseCase
@@ -20,9 +23,15 @@ class AppContainer {
     private val authApi = retrofit.create(AuthApi::class.java)
     private val courseApi = retrofit.create(CourseApi::class.java)
 
+    private val categoryApi: CategoryApi by lazy {
+        retrofit.create(CategoryApi::class.java)
+    }
     private val authRepository: AuthRepository = AuthRepositoryImpl(authApi)
     val courseRepository: CourseRepository = CourseRepositoryImpl(courseApi)
 
+    val categoryRepository: CategoryRepository by lazy {
+        CategoryRepositoryImpl(categoryApi)
+    }
     val loginUseCase = LoginUseCase(authRepository)
     val registerUseCase = RegisterUseCase(authRepository)
 }
