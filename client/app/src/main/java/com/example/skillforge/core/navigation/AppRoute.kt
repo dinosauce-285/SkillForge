@@ -19,6 +19,10 @@ sealed interface AppRoute {
         val session: AuthSession,
     ) : AppRoute
 
+    data class Favorite(
+        val session: AuthSession,
+    ) : AppRoute
+  
     data class CourseForm(
         val session: AuthSession ,
         val courseId: String? = null
