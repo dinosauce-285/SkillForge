@@ -20,6 +20,7 @@ import com.example.skillforge.feature.auth.viewmodel.LoginViewModel
 import com.example.skillforge.feature.auth.viewmodel.LoginViewModelFactory
 import com.example.skillforge.feature.auth.viewmodel.RegisterViewModel
 import com.example.skillforge.feature.auth.viewmodel.RegisterViewModelFactory
+import com.example.skillforge.feature.favorite.ui.FavoriteScreen
 import com.example.skillforge.feature.instructor_portal.ui.SkillforgeCourseFormScreen
 import com.example.skillforge.feature.instructor_portal.ui.SkillforgeInstructorDashboardScreen
 import com.example.skillforge.feature.instructor_portal.ui.SkillforgeMaterialUploadScreen
@@ -125,6 +126,18 @@ class MainActivity : ComponentActivity() {
                                 }
                             )
                         }
+                        
+                          is AppRoute.Favorite -> FavoriteScreen(
+                            onBackClick = {
+                                currentRoute = AppRoute.StudentCourseListing(route.session)
+                            },
+                            onCourseClick = { courseId ->
+                                currentRoute = AppRoute.StudentCourseDetails(route.session, courseId)
+                            },
+                            onNavigateToDiscovery = {
+                                currentRoute = AppRoute.StudentCourseListing(route.session)
+                            }
+                        )
                     }
                 }
             }
