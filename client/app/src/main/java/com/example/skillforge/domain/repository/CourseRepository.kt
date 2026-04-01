@@ -1,5 +1,7 @@
 package com.example.skillforge.domain.repository
 
+import com.example.skillforge.data.remote.CourseManagerDto
+import com.example.skillforge.data.remote.CourseSummaryDto
 import com.example.skillforge.domain.model.CourseDetails
 import com.example.skillforge.domain.model.CourseSummary
 
@@ -15,4 +17,7 @@ interface CourseRepository {
         price: Double,
         categoryId: String
     ): Result<Unit>
+
+    suspend fun getCourseForManager(token: String, courseId: String): Result<CourseManagerDto>
+    suspend fun getMyCourses(token: String): Result<List<CourseSummaryDto>>
 }

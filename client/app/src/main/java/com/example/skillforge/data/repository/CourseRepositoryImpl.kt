@@ -6,6 +6,8 @@ import com.example.skillforge.domain.model.CourseChapter
 import com.example.skillforge.domain.model.CourseDetails
 import com.example.skillforge.domain.model.CourseSummary
 import com.example.skillforge.domain.repository.CourseRepository
+import com.example.skillforge.data.remote.CourseManagerDto
+import com.example.skillforge.data.remote.CourseSummaryDto
 
 class CourseRepositoryImpl(
     private val api: CourseApi,
@@ -98,6 +100,39 @@ class CourseRepositoryImpl(
             }
         } catch (e: Exception) {
             Result.failure(Exception("Lỗi mạng: ${e.message}"))
+        }
+    }
+
+    override suspend fun getCourseForManager(token: String, courseId: String): Result<CourseManagerDto> {
+        return try {
+            val response = api.getCourseForManager(courseId, "Bearer $token")
+
+            if (response.isSuccessful) {
+                val body = response.body()
+                if (body != null) {
+                    // 3. Bóc thành công cục data (CourseManagerDto) ra và gửi đi
+                    Result.success(body)
+                } else {
+                    Result.failure(Exception("Dữ liệu trả về bị rỗng!"))
+                }
+            } else {
+                Result.failure(Exception("Lỗi server: ${response.code()} - ${response.message()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun getMyCourses(token: String): Result<List<CourseSummaryDto>> {
+        return try {
+            val response = api.getMyCourses("Bearer $token")
+            if (response.isSuccessful) {
+                Result.success(response.body() ?: emptyList())
+            } else {
+                Result.failure(Exception("Lỗi: ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
 

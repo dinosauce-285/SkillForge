@@ -22,6 +22,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.skillforge.data.remote.CourseSummaryDto
+import androidx.compose.foundation.lazy.items
 
 private val SkillForgePrimary = Color(0xFFD84B1E)
 private val SkillForgePrimaryContainer = Color(0xFFFFEAD8)
@@ -38,7 +40,10 @@ enum class SkillforgeInstructorRoute(val title: String, val icon: ImageVector) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SkillforgeInstructorDashboardScreen(
+    courses: List<CourseSummaryDto> = emptyList(), // 🌟 Nhận danh sách khóa học từ API
+    isLoading: Boolean = false, // 🌟 Trạng thái đang tải
     onNavigateToCreateCourse: () -> Unit = {},
+    onCourseClick: (String) -> Unit = {}, // 🌟 Sự kiện khi bấm vào 1 khóa học
     onNavigateToUploadMaterial: () -> Unit = {},
     onLogout: () -> Unit = {}
 ) {
@@ -53,126 +58,210 @@ fun SkillforgeInstructorDashboardScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = onNavigateToCreateCourse, // Nút nổi cũng dẫn tới tạo khóa học
-                containerColor = SkillForgePrimary,
-                contentColor = SkillForgeOnPrimary,
-                shape = CircleShape
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Add")
+            // Chỉ hiện nút Add nếu đang ở tab Dashboard hoặc Courses
+            if (selectedRoute == SkillforgeInstructorRoute.Dashboard || selectedRoute == SkillforgeInstructorRoute.Courses) {
+                FloatingActionButton(
+                    onClick = onNavigateToCreateCourse,
+                    containerColor = SkillForgePrimary,
+                    contentColor = SkillForgeOnPrimary,
+                    shape = CircleShape
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Add Course")
+                }
             }
         }
     ) { innerPadding ->
+
+        // 🌟 "NGƯỜI GÁC CỔNG" ĐIỀU HƯỚNG NỘI DUNG Ở GIỮA
+        Box(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
+            when (selectedRoute) {
+                SkillforgeInstructorRoute.Dashboard -> {
+                    // Gọi hàm chứa giao diện Dashboard cũ của bạn
+                    DashboardTabContent(onNavigateToUploadMaterial, onNavigateToCreateCourse)
+                }
+                SkillforgeInstructorRoute.Courses -> {
+                    // Gọi hàm chứa giao diện Danh sách khóa học mới
+                    CourseListTabContent(courses, isLoading, onCourseClick)
+                }
+                SkillforgeInstructorRoute.Analytics -> {
+                    // Tạm thời để trống
+                    Text("Analytics Tab (Coming Soon)", modifier = Modifier.align(Alignment.Center))
+                }
+                SkillforgeInstructorRoute.Account -> {
+                    // Tạm thời để trống
+                    Text("Account Tab (Coming Soon)", modifier = Modifier.align(Alignment.Center))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun CourseListTabContent(
+    courses: List<CourseSummaryDto>,
+    isLoading: Boolean,
+    onCourseClick: (String) -> Unit
+) {
+    if (isLoading) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator(color = SkillForgePrimary)
+        }
+    } else if (courses.isEmpty()) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text("Bạn chưa tạo khóa học nào.\nHãy bấm nút '+' để bắt đầu nhé!", color = Color.Gray, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+        }
+    } else {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
                 .background(MaterialTheme.colorScheme.surface)
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
-            contentPadding = PaddingValues(vertical = 16.dp)
+            contentPadding = PaddingValues(top = 16.dp, bottom = 80.dp) // Chừa chỗ cho nút FAB
         ) {
             item {
-                Text("INSTRUCTOR PORTAL", style = MaterialTheme.typography.labelMedium, color = Color.Gray)
                 Text(
-                    "Good Morning,\nCurator.",
-                    style = MaterialTheme.typography.displayMedium,
+                    "My Courses",
+                    style = MaterialTheme.typography.displaySmall,
                     fontWeight = FontWeight.Bold,
-                    lineHeight = 40.sp
+                    color = MaterialTheme.colorScheme.onSurface
                 )
+                Text("Manage your curriculum and content.", color = Color.Gray, style = MaterialTheme.typography.bodyMedium)
+                Spacer(modifier = Modifier.height(8.dp))
             }
 
-            // HÀNG NÚT BẤM ĐIỀU HƯỚNG CHÍNH
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    Button(
-                        onClick = onNavigateToUploadMaterial,
-                        modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                        ),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Text("Upload Files")
-                    }
-                    Button(
-                        onClick = onNavigateToCreateCourse,
-                        modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = SkillForgePrimary,
-                            contentColor = SkillForgeOnPrimary
-                        ),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Text("Create New")
-                    }
-                }
-            }
-
-            item {
-                SkillforgeStatCard(
-                    title = "Ready to expand?",
-                    icon = Icons.Default.Star,
-                    description = "Launch a new learning module or curate your existing materials into a specialized workshop.",
-                    actionText = "Quick Start",
-                    hasBadge = false
-                )
-            }
-
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    SkillforgeStatCard(
-                        title = "Total Students",
-                        icon = Icons.Default.Person,
-                        modifier = Modifier.weight(1f),
-                        value = "1,284",
-                        badgeText = "+12%",
-                        badgeColor = SkillForgePrimaryContainer
-                    )
-                    SkillforgeStatCard(
-                        title = "Earnings",
-                        icon = Icons.Default.ShoppingCart,
-                        modifier = Modifier.weight(1f),
-                        value = "$42.1k",
-                        badgeText = "Record",
-                        badgeColor = SkillForgePrimary,
-                        badgeTextColor = SkillForgeOnPrimary
-                    )
-                }
-            }
-
-            item {
-                SkillforgeStatCard(
-                    title = "Active Courses",
-                    icon = Icons.AutoMirrored.Filled.List,
-                    value = "14",
-                    hasBadge = false
-                )
-            }
-
-            item {
-                SectionHeader(title = "Recent Activity", actionText = "View History")
-            }
-
-            items(3) { index ->
-                SkillforgeActivityItem(index = index)
-            }
-
-            item {
-                SectionHeader(title = "Performance")
-            }
-
-            item {
-                SkillforgePerformanceCard()
+            items(courses) { course ->
+                InstructorCourseItemCard(course = course, onClick = { onCourseClick(course.id) })
             }
         }
+    }
+}
+
+@Composable
+fun InstructorCourseItemCard(
+    course: CourseSummaryDto,
+    onClick: () -> Unit
+) {
+    ElevatedCard(
+        modifier = Modifier.fillMaxWidth(),
+        onClick = onClick, // Bấm vào đây bay sang màn Manager
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp).fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Icon đại diện (có thể thay bằng AsyncImage tải thumbnailUrl sau)
+            Box(
+                modifier = Modifier
+                    .size(60.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(SkillForgePrimaryContainer),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(Icons.AutoMirrored.Filled.List, contentDescription = null, tint = SkillForgePrimary)
+            }
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = course.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                // Hiển thị Category và Giá
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(text = course.category.name, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                    Text(" • ", color = Color.Gray)
+                    Text(
+                        text = if (course.isFree) "Free" else "$${course.price}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = SkillForgePrimary,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                // Hiển thị thống kê
+                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.List, contentDescription = "Chapters", modifier = Modifier.size(14.dp), tint = Color.Gray)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("${course.counts.chapters} Chương", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Person, contentDescription = "Students", modifier = Modifier.size(14.dp), tint = Color.Gray)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("${course.counts.enrollments} Học viên", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun DashboardTabContent(
+    onNavigateToUploadMaterial: () -> Unit,
+    onNavigateToCreateCourse: () -> Unit
+) {
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.surface)
+            .padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        contentPadding = PaddingValues(top = 16.dp, bottom = 80.dp)
+    ) {
+        item {
+            Text("INSTRUCTOR PORTAL", style = MaterialTheme.typography.labelMedium, color = Color.Gray)
+            Text(
+                "Good Morning,\nCurator.",
+                style = MaterialTheme.typography.displayMedium,
+                fontWeight = FontWeight.Bold,
+                lineHeight = 40.sp
+            )
+        }
+
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Button(
+                    onClick = onNavigateToUploadMaterial,
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.onSurfaceVariant),
+                    shape = RoundedCornerShape(12.dp)
+                ) { Text("Upload Files") }
+                Button(
+                    onClick = onNavigateToCreateCourse,
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(containerColor = SkillForgePrimary, contentColor = SkillForgeOnPrimary),
+                    shape = RoundedCornerShape(12.dp)
+                ) { Text("Create New") }
+            }
+        }
+
+        item { SkillforgeStatCard(title = "Ready to expand?", icon = Icons.Default.Star, description = "Launch a new learning module...", actionText = "Quick Start", hasBadge = false) }
+
+        item {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                SkillforgeStatCard(title = "Total Students", icon = Icons.Default.Person, modifier = Modifier.weight(1f), value = "1,284", badgeText = "+12%", badgeColor = SkillForgePrimaryContainer)
+                SkillforgeStatCard(title = "Earnings", icon = Icons.Default.ShoppingCart, modifier = Modifier.weight(1f), value = "$42.1k", badgeText = "Record", badgeColor = SkillForgePrimary, badgeTextColor = SkillForgeOnPrimary)
+            }
+        }
+
+        item { SkillforgeStatCard(title = "Active Courses", icon = Icons.AutoMirrored.Filled.List, value = "14", hasBadge = false) }
+
+        item { SectionHeader(title = "Recent Activity", actionText = "View History") }
+        items(3) { index -> SkillforgeActivityItem(index = index) }
+
+        item { SectionHeader(title = "Performance") }
+        item { SkillforgePerformanceCard() }
     }
 }
 

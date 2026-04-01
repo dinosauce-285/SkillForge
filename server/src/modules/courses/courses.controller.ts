@@ -18,6 +18,7 @@ import { UpdateCourseDto } from './dto/update-course.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @Controller('courses')
 export class CoursesController {
@@ -43,7 +44,11 @@ export class CoursesController {
   @Roles('INSTRUCTOR', 'ADMIN')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Patch(':id')
-  update(@Param('id', new ParseUUIDPipe()) id: string, @Request() req, @Body() dto: UpdateCourseDto) {
+  update(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Request() req,
+    @Body() dto: UpdateCourseDto,
+  ) {
     return this.coursesService.update(id, req.user, dto);
   }
 
@@ -52,5 +57,19 @@ export class CoursesController {
   @Delete(':id')
   remove(@Param('id', new ParseUUIDPipe()) id: string, @Request() req) {
     return this.coursesService.remove(id, req.user);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Roles('INSTRUCTOR', 'ADMIN')
+  @Get(':id/manager')
+  getCourseForManager(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.coursesService.getCourseForManager(id, user);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Roles('INSTRUCTOR', 'ADMIN')
+  @Get('instructor/my-courses')
+  findMyCourses(@CurrentUser() user: any) {
+    return this.coursesService.findMyCourses(user.userId);
   }
 }
