@@ -10,11 +10,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import com.example.skillforge.core.designsystem.SkillforgeLayout
 import com.example.skillforge.core.designsystem.SkillforgeSpacing
-import com.example.skillforge.feature.home.ui.mock.Course
+import com.example.skillforge.domain.model.CourseSummary
 
 @Composable
 fun PopularCourseList(
-    courses: List<Course>,
+    courses: List<CourseSummary>,
     onSeeAllClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -23,7 +23,6 @@ fun PopularCourseList(
             .fillMaxWidth()
             .padding(horizontal = SkillforgeLayout.screenHorizontalPadding)
     ) {
-        // Tiêu đề danh sách
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -45,7 +44,6 @@ fun PopularCourseList(
 
         Spacer(modifier = Modifier.height(SkillforgeSpacing.medium))
 
-        // Danh sách các khóa học
         courses.forEach { course ->
             CourseCard(course = course)
             Spacer(modifier = Modifier.height(SkillforgeLayout.listItemGap))

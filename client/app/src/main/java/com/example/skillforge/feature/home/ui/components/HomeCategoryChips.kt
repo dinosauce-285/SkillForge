@@ -15,12 +15,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.skillforge.core.designsystem.*
+import com.example.skillforge.domain.model.Category
 
 @Composable
 fun HomeCategoryChips(
-    categories: List<String>,
-    selectedCategory: String,
-    onCategorySelected: (String) -> Unit
+    categories: List<Category>,
+    selectedCategoryId: String?,
+    onCategorySelected: (String?) -> Unit
 ) {
     LazyRow(
         modifier = Modifier
@@ -29,36 +30,58 @@ fun HomeCategoryChips(
         contentPadding = PaddingValues(horizontal = SkillforgeLayout.screenHorizontalPadding),
         horizontalArrangement = Arrangement.spacedBy(SkillforgeSpacing.medium)
     ) {
-        items(categories) { category ->
-            val isSelected = category == selectedCategory
-
-            Box(
-                modifier = Modifier
-                    .clip(SkillforgeShapes.chip) // Dùng pill shape từ hệ thống
-                    .background(
-                        if (isSelected) MaterialTheme.colorScheme.primary
-                        else ChipUnselectedBackgroundColor
-                    )
-                    .border(
-                        width = 1.dp,
-                        color = if (isSelected) MaterialTheme.colorScheme.primary else ChipUnselectedBorderColor,
-                        shape = SkillforgeShapes.chip
-                    )
-                    .clickable { onCategorySelected(category) }
-                    .padding(
-                        horizontal = SkillforgeSpacing.large,
-                        vertical = SkillforgeSpacing.small
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = category,
-                    color = if (isSelected) MaterialTheme.colorScheme.onPrimary else ChipUnselectedTextColor,
-                    style = MaterialTheme.typography.labelLarge.copy(
-                        fontWeight = FontWeight.SemiBold
-                    )
-                )
-            }
+        item {
+            val isAllSelected = selectedCategoryId == null
+            CategoryChipItem(
+                text = "All",
+                isSelected = isAllSelected,
+                onClick = { onCategorySelected(null) }
+            )
         }
+
+        items(categories) { category ->
+            val isSelected = category.id == selectedCategoryId
+            CategoryChipItem(
+                text = category.name,
+                isSelected = isSelected,
+                onClick = { onCategorySelected(category.id) } // Trả về ID
+            )
+        }
+    }
+}
+
+// Tách Box ra thành một component private nhỏ để tái sử dụng cho gọn code
+@Composable
+private fun CategoryChipItem(
+    text: String,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .clip(SkillforgeShapes.chip)
+            .background(
+                if (isSelected) MaterialTheme.colorScheme.primary
+                else ChipUnselectedBackgroundColor
+            )
+            .border(
+                width = 1.dp,
+                color = if (isSelected) MaterialTheme.colorScheme.primary else ChipUnselectedBorderColor,
+                shape = SkillforgeShapes.chip
+            )
+            .clickable { onClick() }
+            .padding(
+                horizontal = SkillforgeSpacing.large,
+                vertical = SkillforgeSpacing.small
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = text,
+            color = if (isSelected) MaterialTheme.colorScheme.onPrimary else ChipUnselectedTextColor,
+            style = MaterialTheme.typography.labelLarge.copy(
+                fontWeight = FontWeight.SemiBold
+            )
+        )
     }
 }

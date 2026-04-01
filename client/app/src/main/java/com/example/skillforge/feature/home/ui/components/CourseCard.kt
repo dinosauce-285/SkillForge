@@ -19,10 +19,9 @@ import com.example.skillforge.domain.model.CourseSummary
 
 @Composable
 fun CourseCard(
-    course: CourseSummary, // Dùng model thật của bạn
+    course: CourseSummary,
     modifier: Modifier = Modifier
 ) {
-    // Tự tính toán badge Best Seller dựa trên số lượng học viên
     val isBestSeller = course.studentCount > 1000
 
     Card(
@@ -32,7 +31,6 @@ fun CourseCard(
         elevation = CardDefaults.cardElevation(defaultElevation = SkillforgeElevation.low)
     ) {
         Column {
-            // Phần 1: Ảnh Thumbnail và Badge
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -59,7 +57,6 @@ fun CourseCard(
                 }
             }
 
-            // Phần 2: Nội dung chữ
             Column(
                 modifier = Modifier.padding(SkillforgeLayout.cardContentPadding)
             ) {
