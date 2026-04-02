@@ -1,5 +1,6 @@
 package com.example.skillforge
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -38,6 +39,7 @@ import com.example.skillforge.feature.student_courses.ui.StudentCourseDetailsRou
 import com.example.skillforge.feature.student_courses.ui.StudentCourseListingRoute
 import com.example.skillforge.feature.student_courses.viewmodel.StudentCoursesViewModel
 import com.example.skillforge.feature.student_courses.viewmodel.StudentCoursesViewModelFactory
+import io.github.jan.supabase.auth.handleDeeplinks
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -225,5 +227,11 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        val appContainer = (applicationContext as SkillforgeApplication).container
+        appContainer.supabase.handleDeeplinks(intent)
     }
 }
