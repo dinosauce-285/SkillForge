@@ -1,6 +1,5 @@
 package com.example.skillforge.data.repository
 
-import android.util.Log
 import com.example.skillforge.data.remote.AuthApi
 import com.example.skillforge.data.remote.LoginRequest
 import com.example.skillforge.data.remote.RegisterRequest
@@ -9,8 +8,36 @@ import com.example.skillforge.domain.model.AuthUser
 import com.example.skillforge.domain.repository.AuthRepository
 import com.google.gson.Gson
 import com.google.gson.JsonObject
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.auth.providers.Google
+import io.github.jan.supabase.auth.status.SessionStatus
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
-class AuthRepositoryImpl(private val api: AuthApi) : AuthRepository {
+class AuthRepositoryImpl(
+    private val api: AuthApi,
+    private val supabase: SupabaseClient
+) : AuthRepository {
+
+    override val sessionFlow: Flow<AuthSession?> = supabase.auth.sessionStatus.map { status ->
+        when (status) {
+            is SessionStatus.Authenticated -> {
+                val session = status.session
+                AuthSession(
+                    accessToken = session.accessToken,
+                    user = AuthUser(
+                        id = session.user?.id ?: "",
+                        email = session.user?.email ?: "",
+                        fullName = session.user?.userMetadata?.get("full_name")?.toString() ?: "User",
+                        role = "STUDENT" // Mặc định hoặc lấy từ metadata nếu có
+                    )
+                )
+            }
+            else -> null
+        }
+    }
+
     override suspend fun login(email: String, password: String): Result<AuthSession> {
         return try {
             val response = api.login(LoginRequest(email, password))
@@ -36,36 +63,29 @@ class AuthRepositoryImpl(private val api: AuthApi) : AuthRepository {
     }
 
     override suspend fun register(fullName: String, email: String, password: String): Result<String> {
-        Log.d("API_DEBUG", "2. Đã chui vào AuthRepositoryImpl! Chuẩn bị gọi Server...")
-
-        return try {
+        try {
             val response = api.register(RegisterRequest(email, password, fullName))
             if (response.isSuccessful && response.body() != null) {
                 val data = response.body()!!
-                Result.success(data.message)
+                return Result.success(data.message)
             } else {
                 val errorBody = response.errorBody()?.string() ?: "Không có chi tiết"
-                Result.failure(Exception("Server chê: Mã ${response.code()} - $errorBody"))
+                return Result.failure(Exception("Server chê: Mã ${response.code()} - $errorBody"))
             }
         } catch (e: Exception) {
-            Result.failure(Exception("Lỗi Mạng/Crash: ${e.message}"))
+            return Result.failure(Exception("Lỗi Mạng/Crash: ${e.message}"))
         }
     }
 
-    private fun parseErrorMessage(rawError: String?): String {
-        if (rawError.isNullOrBlank()) {
-            return "Đăng nhập thất bại"
-        }
+    override suspend fun loginWithGoogle() {
+        supabase.auth.signInWith(Google)
+    }
 
+    private fun parseErrorMessage(rawError: String?): String {
+        if (rawError.isNullOrBlank()) return "Đăng nhập thất bại"
         return runCatching {
             val json = Gson().fromJson(rawError, JsonObject::class.java)
-            when {
-                json.has("message") && json.get("message").isJsonArray -> {
-                    json.getAsJsonArray("message").joinToString(", ") { it.asString }
-                }
-                json.has("message") -> json.get("message").asString
-                else -> "Đăng nhập thất bại"
-            }
+            json.get("message")?.asString ?: "Đăng nhập thất bại"
         }.getOrElse { "Đăng nhập thất bại" }
     }
 }

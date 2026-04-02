@@ -36,6 +36,16 @@ class LoginViewModel(private val loginUseCase: LoginUseCase) : ViewModel() {
         }
     }
 
+    fun loginWithGoogle() {
+        viewModelScope.launch {
+            try {
+                loginUseCase.loginWithGoogle()
+            } catch (e: Exception) {
+                _loginState.value = LoginState.Error(e.message ?: "Lỗi đăng nhập Google")
+            }
+        }
+    }
+
     fun clearError() {
         if (_loginState.value is LoginState.Error) {
             _loginState.value = LoginState.Idle
