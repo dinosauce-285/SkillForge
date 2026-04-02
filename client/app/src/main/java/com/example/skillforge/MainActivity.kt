@@ -39,6 +39,12 @@ import com.example.skillforge.feature.student_courses.ui.StudentCourseDetailsRou
 import com.example.skillforge.feature.student_courses.ui.StudentCourseListingRoute
 import com.example.skillforge.feature.student_courses.viewmodel.StudentCoursesViewModel
 import com.example.skillforge.feature.student_courses.viewmodel.StudentCoursesViewModelFactory
+
+// IMPORT CỦA FEATURE/HOME-UI
+import com.example.skillforge.domain.model.Category
+import com.example.skillforge.feature.home.ui.HomeScreen
+
+// IMPORT CỦA DEV
 import io.github.jan.supabase.auth.handleDeeplinks
 
 class MainActivity : ComponentActivity() {
@@ -65,163 +71,170 @@ class MainActivity : ComponentActivity() {
                 var currentRoute by remember { mutableStateOf<AppRoute>(AppRoute.Login) }
 
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    when (val route = currentRoute) {
-                        AppRoute.Login -> LoginScreen(
-                            viewModel = loginViewModel,
-                            onLoginSuccess = { session ->
-                                currentRoute = if (session.user.role.equals("STUDENT", ignoreCase = true)) {
-                                    AppRoute.StudentCourseListing(session)
-                                } else {
-                                    AppRoute.InstructorPortal(session)
-                                }
-                            },
-                            onNavigateToRegister = {
-                                currentRoute = AppRoute.Register
-                            }
-                        )
 
-                        AppRoute.Register -> RegisterScreen(
-                            viewModel = registerViewModel,
-                            onRegisterSuccess = {
-                                currentRoute = AppRoute.Login
-                            },
-                            onBackToLogin = {
-                                currentRoute = AppRoute.Login
-                            }
-                        )
+                    // ===================================================================
+                    // CỜ CHUYỂN ĐỔI: ĐỂ TRUE ĐỂ TEST HOMESCREEN, ĐỂ FALSE ĐỂ CHẠY APP THẬT
+                    val isTestingHome = true
+                    // ===================================================================
 
-                        is AppRoute.StudentCourseListing -> StudentCourseListingRoute(
-                            session = route.session,
-                            viewModel = studentCoursesViewModel,
-                            onCourseSelected = { courseId ->
-                                currentRoute = AppRoute.StudentCourseDetails(
-                                    session = route.session,
-                                    courseId = courseId,
-                                )
-                            },
-                            onLogout = { currentRoute = AppRoute.Login }
-                        )
-
-                        is AppRoute.StudentCourseDetails -> StudentCourseDetailsRoute(
-                            courseId = route.courseId,
-                            viewModel = studentCoursesViewModel,
-                            onBack = {
-                                currentRoute = AppRoute.StudentCourseListing(route.session)
-                            }
-                        )
-
-                        is AppRoute.InstructorPortal -> {
-                            // 1. Lấy ViewModel chứa danh sách khóa học
-                            val portalViewModel: InstructorPortalViewModel = viewModel(
-                                factory = InstructorPortalViewModelFactory(appContainer.courseRepository)
-                            )
-
-                            // 2. Thu thập data từ ViewModel
-                            val courses by portalViewModel.courses.collectAsState()
-                            val isLoading by portalViewModel.isLoading.collectAsState()
-
-                            // 3. Kích hoạt lấy dữ liệu khi vừa vào màn hình
-                            LaunchedEffect(Unit) {
-                                portalViewModel.fetchMyCourses(route.session.accessToken)
-                            }
-
-                            // 4. Đổ vào cái UI chuẩn 10 điểm của bạn
-                            SkillforgeInstructorDashboardScreen(
-                                courses = courses,
-                                isLoading = isLoading,
-                                onNavigateToCreateCourse = {
-                                    currentRoute = AppRoute.CourseForm(route.session)
+                    if (isTestingHome) {
+                        // Gọi thẳng HomeScreen, hoàn toàn bỏ qua bước đăng nhập
+                        HomeScreen()
+                    } else {
+                        // LUỒNG CHẠY APP BÌNH THƯỜNG CỦA NHÁNH DEV
+                        when (val route = currentRoute) {
+                            AppRoute.Login -> LoginScreen(
+                                viewModel = loginViewModel,
+                                onLoginSuccess = { session ->
+                                    currentRoute = if (session.user.role.equals("STUDENT", ignoreCase = true)) {
+                                        AppRoute.StudentCourseListing(session)
+                                    } else {
+                                        AppRoute.InstructorPortal(session)
+                                    }
                                 },
-                                onCourseClick = { clickedCourseId ->
-                                    // 🌟 Đây! Bấm vào thẻ là bay sang cái cây bài học lồng nhau!
-                                    currentRoute = AppRoute.CourseManager(route.session, clickedCourseId)
-                                },
-                                onNavigateToUploadMaterial = {
-                                    // Tính năng upload chung (nếu cần)
-                                },
-                                onLogout = {
-                                    // Xử lý đăng xuất
+                                onNavigateToRegister = {
+                                    currentRoute = AppRoute.Register
                                 }
                             )
-                        }
 
-                        is AppRoute.CourseForm -> {
-                            val uiState by courseFormViewModel.uiState.collectAsState()
-                            val categories by courseFormViewModel.categories.collectAsState()
-
-                            LaunchedEffect(Unit) {
-                                courseFormViewModel.fetchCategories()
-                            }
-
-                            LaunchedEffect(uiState) {
-                                if (uiState is CourseFormState.Success) {
-                                    courseFormViewModel.resetState()
-                                    currentRoute = AppRoute.InstructorPortal(route.session)
-                                }
-                            }
-
-                            SkillforgeCourseFormScreen(
-                                categories = categories,
-                                isEditMode = route.courseId != null,
-                                isLoading = uiState is CourseFormState.Loading,
-                                errorMessage = if (uiState is CourseFormState.Error) (uiState as CourseFormState.Error).message else null,
-                                uiState = uiState,
-                                onNavigateBack = {
-                                    courseFormViewModel.resetState()
-                                    currentRoute = AppRoute.InstructorPortal(route.session)
+                            AppRoute.Register -> RegisterScreen(
+                                viewModel = registerViewModel,
+                                onRegisterSuccess = {
+                                    currentRoute = AppRoute.Login
                                 },
-                                onSaveClick = { title, summary, price, categoryId ->
-                                    val myToken = route.session.accessToken
-                                    courseFormViewModel.createCourse(myToken, title, summary, price, categoryId)
+                                onBackToLogin = {
+                                    currentRoute = AppRoute.Login
                                 }
                             )
-                        }
 
-                        is AppRoute.MaterialUpload -> {
-                            SkillforgeMaterialUploadScreen(
+                            is AppRoute.StudentCourseListing -> StudentCourseListingRoute(
+                                session = route.session,
+                                viewModel = studentCoursesViewModel,
+                                onCourseSelected = { courseId ->
+                                    currentRoute = AppRoute.StudentCourseDetails(
+                                        session = route.session,
+                                        courseId = courseId,
+                                    )
+                                },
+                                onLogout = { currentRoute = AppRoute.Login }
+                            )
+
+                            is AppRoute.StudentCourseDetails -> StudentCourseDetailsRoute(
                                 courseId = route.courseId,
-                                onNavigateBack = {
-                                    currentRoute = AppRoute.InstructorPortal(route.session)
-                                },
-                                onUploadClick = {title, type, fileUri ->
-                                    println("Uploading file: $title, Type: $type")
-                                    currentRoute = AppRoute.InstructorPortal(route.session)
-                                }
-                            )
-                        }
-                        
-                        is AppRoute.Favorite -> FavoriteScreen(
-                            onBackClick = {
-                                currentRoute = AppRoute.StudentCourseListing(route.session)
-                            },
-                            onCourseClick = { courseId ->
-                                currentRoute = AppRoute.StudentCourseDetails(route.session, courseId)
-                            },
-                            onNavigateToDiscovery = {
-                                currentRoute = AppRoute.StudentCourseListing(route.session)
-                            }
-                        )
-
-                        is AppRoute.CourseManager -> {
-                            val managerViewModel: CourseManagerViewModel = viewModel(
-                                factory = CourseManagerViewModelFactory(
-                                    appContainer.courseRepository,
-                                    appContainer.chapterRepository,
-                                    appContainer.lessonRepository
-                                )
-                            )
-
-                            SkillforgeCourseManagerScreen(
-                                courseId = route.courseId,
-                                viewModel = managerViewModel,
-                                token = route.session.accessToken,
+                                viewModel = studentCoursesViewModel,
                                 onBack = {
-                                    currentRoute = AppRoute.InstructorPortal(route.session)
-                                },
-                                onNavigateToUpload = { lessonId ->
-                                    currentRoute = AppRoute.MaterialUpload(route.session, lessonId)
+                                    currentRoute = AppRoute.StudentCourseListing(route.session)
                                 }
                             )
+
+                            is AppRoute.InstructorPortal -> {
+                                val portalViewModel: InstructorPortalViewModel = viewModel(
+                                    factory = InstructorPortalViewModelFactory(appContainer.courseRepository)
+                                )
+
+                                val courses by portalViewModel.courses.collectAsState()
+                                val isLoading by portalViewModel.isLoading.collectAsState()
+
+                                LaunchedEffect(Unit) {
+                                    portalViewModel.fetchMyCourses(route.session.accessToken)
+                                }
+
+                                SkillforgeInstructorDashboardScreen(
+                                    courses = courses,
+                                    isLoading = isLoading,
+                                    onNavigateToCreateCourse = {
+                                        currentRoute = AppRoute.CourseForm(route.session)
+                                    },
+                                    onCourseClick = { clickedCourseId ->
+                                        currentRoute = AppRoute.CourseManager(route.session, clickedCourseId)
+                                    },
+                                    onNavigateToUploadMaterial = {
+                                        // Tính năng upload chung (nếu cần)
+                                    },
+                                    onLogout = {
+                                        currentRoute = AppRoute.Login
+                                    }
+                                )
+                            }
+
+                            is AppRoute.CourseForm -> {
+                                val uiState by courseFormViewModel.uiState.collectAsState()
+                                val categories by courseFormViewModel.categories.collectAsState()
+
+                                LaunchedEffect(Unit) {
+                                    courseFormViewModel.fetchCategories()
+                                }
+
+                                LaunchedEffect(uiState) {
+                                    if (uiState is CourseFormState.Success) {
+                                        courseFormViewModel.resetState()
+                                        currentRoute = AppRoute.InstructorPortal(route.session)
+                                    }
+                                }
+
+                                SkillforgeCourseFormScreen(
+                                    categories = categories,
+                                    isEditMode = route.courseId != null,
+                                    isLoading = uiState is CourseFormState.Loading,
+                                    errorMessage = if (uiState is CourseFormState.Error) (uiState as CourseFormState.Error).message else null,
+                                    uiState = uiState,
+                                    onNavigateBack = {
+                                        courseFormViewModel.resetState()
+                                        currentRoute = AppRoute.InstructorPortal(route.session)
+                                    },
+                                    onSaveClick = { title, summary, price, categoryId ->
+                                        val myToken = route.session.accessToken
+                                        courseFormViewModel.createCourse(myToken, title, summary, price, categoryId)
+                                    }
+                                )
+                            }
+
+                            is AppRoute.MaterialUpload -> {
+                                SkillforgeMaterialUploadScreen(
+                                    courseId = route.courseId,
+                                    onNavigateBack = {
+                                        currentRoute = AppRoute.InstructorPortal(route.session)
+                                    },
+                                    onUploadClick = { title, type, fileUri ->
+                                        println("Uploading file: $title, Type: $type")
+                                        currentRoute = AppRoute.InstructorPortal(route.session)
+                                    }
+                                )
+                            }
+
+                            is AppRoute.Favorite -> FavoriteScreen(
+                                onBackClick = {
+                                    currentRoute = AppRoute.StudentCourseListing(route.session)
+                                },
+                                onCourseClick = { courseId ->
+                                    currentRoute = AppRoute.StudentCourseDetails(route.session, courseId)
+                                },
+                                onNavigateToDiscovery = {
+                                    currentRoute = AppRoute.StudentCourseListing(route.session)
+                                }
+                            )
+
+                            is AppRoute.CourseManager -> {
+                                val managerViewModel: CourseManagerViewModel = viewModel(
+                                    factory = CourseManagerViewModelFactory(
+                                        appContainer.courseRepository,
+                                        appContainer.chapterRepository,
+                                        appContainer.lessonRepository
+                                    )
+                                )
+
+                                SkillforgeCourseManagerScreen(
+                                    courseId = route.courseId,
+                                    viewModel = managerViewModel,
+                                    token = route.session.accessToken,
+                                    onBack = {
+                                        currentRoute = AppRoute.InstructorPortal(route.session)
+                                    },
+                                    onNavigateToUpload = { lessonId ->
+                                        currentRoute = AppRoute.MaterialUpload(route.session, lessonId)
+                                    }
+                                )
+                            }
                         }
                     }
                 }

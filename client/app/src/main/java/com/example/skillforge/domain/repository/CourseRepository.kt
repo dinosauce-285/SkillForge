@@ -1,12 +1,16 @@
 package com.example.skillforge.domain.repository
 
+import com.example.skillforge.domain.model.Category
 import com.example.skillforge.data.remote.CourseManagerDto
 import com.example.skillforge.data.remote.CourseSummaryDto
 import com.example.skillforge.domain.model.CourseDetails
 import com.example.skillforge.domain.model.CourseSummary
 
 interface CourseRepository {
-    suspend fun getCourses(): Result<List<CourseSummary>>
+    suspend fun getCourses(
+        searchQuery: String? = null,
+        categoryId: String? = null
+    ): Result<List<CourseSummary>>
 
     suspend fun getCourseDetails(courseId: String): Result<CourseDetails>
 

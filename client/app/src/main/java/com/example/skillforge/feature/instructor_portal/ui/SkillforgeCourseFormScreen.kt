@@ -24,12 +24,13 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 
 import com.example.skillforge.data.remote.CategoryDto
+import com.example.skillforge.domain.model.Category
 import com.example.skillforge.feature.instructor_portal.viewmodel.CourseFormState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SkillforgeCourseFormScreen(
-    categories: List<CategoryDto> = emptyList(),
+    categories: List<Category>,
     isEditMode: Boolean = false,
     isLoading: Boolean = false,
     errorMessage: String? = null,
