@@ -5,7 +5,10 @@ import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { OrderModule } from './modules/order/order.module';
 import { CoursesModule } from './modules/courses/courses.module';
+import { CategoriesModule } from './modules/categories/categories.module';
 import { FavoriteModule } from './modules/favorite/favorite.module';
+import { LessonsModule } from './modules/lessons/lessons.module';
+import { ChaptersModule } from './modules/chapters/chapters.module';
 
 @Module({
   imports: [
@@ -18,7 +21,10 @@ import { FavoriteModule } from './modules/favorite/favorite.module';
     UsersModule,
     OrderModule,
     CoursesModule,
+    CategoriesModule,
     FavoriteModule,
+    ChaptersModule,
+    LessonsModule,
   ],
   controllers: [],
   providers: [],
