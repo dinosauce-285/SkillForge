@@ -12,6 +12,62 @@ import { UpdateLessonDto } from './dto/update-lesson.dto';
 export class LessonsService {
   constructor(private readonly prisma: PrismaService) {}
 
+  async findOne(id: string, user: { userId: string; role: Role }) {
+    const lesson = await this.prisma.lesson.findUnique({
+      where: { id },
+      include: {
+        chapter: {
+          include: {
+            course: true,
+          },
+        },
+        materials: true,
+        quiz: {
+          include: {
+            questions: {
+              include: {
+                choices: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!lesson || lesson.deletedAt) {
+      throw new NotFoundException(`Lesson with id "${id}" not found`);
+    }
+
+    // Check authorization
+    if (user.role === Role.STUDENT) {
+      const isEnrolled = await this.prisma.enrollment.findUnique({
+        where: {
+          userId_courseId: {
+            userId: user.userId,
+            courseId: lesson.chapter.courseId,
+          },
+        },
+      });
+
+      if (!isEnrolled || isEnrolled.status !== 'ACTIVE') {
+        if (!lesson.chapter.course.isFree) {
+          throw new ForbiddenException(
+            'You must be enrolled to view this lesson',
+          );
+        }
+      }
+    } else if (user.role === Role.INSTRUCTOR) {
+      // Instructors can view if they own the course
+      if (lesson.chapter.course.instructorId !== user.userId) {
+        throw new ForbiddenException(
+          'You are not the instructor for this course',
+        );
+      }
+    }
+
+    return lesson;
+  }
+
   async create(user: { userId: string; role: Role }, dto: CreateLessonDto) {
     await this.assertChapterOwnership(dto.chapterId, user);
 
