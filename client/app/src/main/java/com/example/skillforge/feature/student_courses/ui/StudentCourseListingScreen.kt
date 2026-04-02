@@ -75,6 +75,7 @@ import com.example.skillforge.core.designsystem.skillforgePrimaryButtonColors
 import com.example.skillforge.domain.model.AuthSession
 import com.example.skillforge.domain.model.AuthUser
 import com.example.skillforge.domain.model.CourseSummary
+import com.example.skillforge.feature.student_courses.ui.components.StudentBottomNavigationBar
 import com.example.skillforge.feature.student_courses.viewmodel.StudentCourseListUiState
 import com.example.skillforge.feature.student_courses.viewmodel.StudentCoursesViewModel
 
@@ -133,7 +134,7 @@ fun StudentCourseListingScreen(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
-            StudentBottomBar()
+            StudentBottomNavigationBar(currentRoute = "Discover")
         },
     ) { innerPadding ->
         LazyColumn(
@@ -533,39 +534,6 @@ private fun CourseRatingRow(course: CourseSummary) {
             text = "(${course.reviewCount} reviews)",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-    }
-}
-
-@Composable
-private fun StudentBottomBar() {
-    NavigationBar(
-        containerColor = MaterialTheme.colorScheme.surface,
-        tonalElevation = SkillforgeSpacing.xSmall,
-    ) {
-        NavigationBarItem(
-            selected = true,
-            onClick = {},
-            icon = { Icon(Icons.Default.Explore, contentDescription = null) },
-            label = { Text("Discover") },
-        )
-        NavigationBarItem(
-            selected = false,
-            onClick = {},
-            icon = { Icon(Icons.Default.PlayCircleOutline, contentDescription = null) },
-            label = { Text("Learning") },
-        )
-        NavigationBarItem(
-            selected = false,
-            onClick = {},
-            icon = { Icon(Icons.Default.FavoriteBorder, contentDescription = null) },
-            label = { Text("Wishlist") },
-        )
-        NavigationBarItem(
-            selected = false,
-            onClick = {},
-            icon = { Icon(Icons.Default.Person, contentDescription = null) },
-            label = { Text("Profile") },
         )
     }
 }
