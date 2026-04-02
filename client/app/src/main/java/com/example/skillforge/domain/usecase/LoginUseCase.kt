@@ -11,4 +11,8 @@ class LoginUseCase(private val repository: AuthRepository) {
 
         return repository.login(email, password)
     }
+
+    suspend fun loginWithGoogle() {
+        repository.loginWithGoogle()
+    }
 }

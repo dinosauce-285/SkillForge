@@ -1,5 +1,6 @@
 package com.example.skillforge
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -24,19 +25,27 @@ import com.example.skillforge.feature.auth.viewmodel.RegisterViewModel
 import com.example.skillforge.feature.auth.viewmodel.RegisterViewModelFactory
 import com.example.skillforge.feature.favorite.ui.FavoriteScreen
 import com.example.skillforge.feature.instructor_portal.ui.SkillforgeCourseFormScreen
+import com.example.skillforge.feature.instructor_portal.ui.SkillforgeCourseManagerScreen
 import com.example.skillforge.feature.instructor_portal.ui.SkillforgeInstructorDashboardScreen
 import com.example.skillforge.feature.instructor_portal.ui.SkillforgeMaterialUploadScreen
 import com.example.skillforge.feature.instructor_portal.viewmodel.CourseFormState
 import com.example.skillforge.feature.instructor_portal.viewmodel.CourseFormViewModel
 import com.example.skillforge.feature.instructor_portal.viewmodel.CourseFormViewModelFactory
+import com.example.skillforge.feature.instructor_portal.viewmodel.CourseManagerViewModel
+import com.example.skillforge.feature.instructor_portal.viewmodel.CourseManagerViewModelFactory
+import com.example.skillforge.feature.instructor_portal.viewmodel.InstructorPortalViewModel
+import com.example.skillforge.feature.instructor_portal.viewmodel.InstructorPortalViewModelFactory
 import com.example.skillforge.feature.student_courses.ui.StudentCourseDetailsRoute
 import com.example.skillforge.feature.student_courses.ui.StudentCourseListingRoute
 import com.example.skillforge.feature.student_courses.viewmodel.StudentCoursesViewModel
 import com.example.skillforge.feature.student_courses.viewmodel.StudentCoursesViewModelFactory
-import com.example.skillforge.domain.model.Category
 
-// IMPORT HOMESCREEN VÀO ĐÂY ĐỂ DÙNG:
+// IMPORT CỦA FEATURE/HOME-UI
+import com.example.skillforge.domain.model.Category
 import com.example.skillforge.feature.home.ui.HomeScreen
+
+// IMPORT CỦA DEV
+import io.github.jan.supabase.auth.handleDeeplinks
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -72,7 +81,7 @@ class MainActivity : ComponentActivity() {
                         // Gọi thẳng HomeScreen, hoàn toàn bỏ qua bước đăng nhập
                         HomeScreen()
                     } else {
-                        // LUỒNG CHẠY APP BÌNH THƯỜNG CỦA BẠN (Đã được giữ nguyên vẹn)
+                        // LUỒNG CHẠY APP BÌNH THƯỜNG CỦA NHÁNH DEV
                         when (val route = currentRoute) {
                             AppRoute.Login -> LoginScreen(
                                 viewModel = loginViewModel,
@@ -118,17 +127,35 @@ class MainActivity : ComponentActivity() {
                                 }
                             )
 
-                            is AppRoute.InstructorPortal -> SkillforgeInstructorDashboardScreen(
-                                onNavigateToCreateCourse = {
-                                    currentRoute = AppRoute.CourseForm(route.session)
-                                },
-                                onNavigateToUploadMaterial = {
-                                    currentRoute = AppRoute.MaterialUpload(route.session, "123")
-                                },
-                                onLogout = {
-                                    currentRoute = AppRoute.Login
+                            is AppRoute.InstructorPortal -> {
+                                val portalViewModel: InstructorPortalViewModel = viewModel(
+                                    factory = InstructorPortalViewModelFactory(appContainer.courseRepository)
+                                )
+
+                                val courses by portalViewModel.courses.collectAsState()
+                                val isLoading by portalViewModel.isLoading.collectAsState()
+
+                                LaunchedEffect(Unit) {
+                                    portalViewModel.fetchMyCourses(route.session.accessToken)
                                 }
-                            )
+
+                                SkillforgeInstructorDashboardScreen(
+                                    courses = courses,
+                                    isLoading = isLoading,
+                                    onNavigateToCreateCourse = {
+                                        currentRoute = AppRoute.CourseForm(route.session)
+                                    },
+                                    onCourseClick = { clickedCourseId ->
+                                        currentRoute = AppRoute.CourseManager(route.session, clickedCourseId)
+                                    },
+                                    onNavigateToUploadMaterial = {
+                                        // Tính năng upload chung (nếu cần)
+                                    },
+                                    onLogout = {
+                                        currentRoute = AppRoute.Login
+                                    }
+                                )
+                            }
 
                             is AppRoute.CourseForm -> {
                                 val uiState by courseFormViewModel.uiState.collectAsState()
@@ -168,7 +195,7 @@ class MainActivity : ComponentActivity() {
                                     onNavigateBack = {
                                         currentRoute = AppRoute.InstructorPortal(route.session)
                                     },
-                                    onUploadClick = {title, type, fileUri ->
+                                    onUploadClick = { title, type, fileUri ->
                                         println("Uploading file: $title, Type: $type")
                                         currentRoute = AppRoute.InstructorPortal(route.session)
                                     }
@@ -186,10 +213,38 @@ class MainActivity : ComponentActivity() {
                                     currentRoute = AppRoute.StudentCourseListing(route.session)
                                 }
                             )
+
+                            is AppRoute.CourseManager -> {
+                                val managerViewModel: CourseManagerViewModel = viewModel(
+                                    factory = CourseManagerViewModelFactory(
+                                        appContainer.courseRepository,
+                                        appContainer.chapterRepository,
+                                        appContainer.lessonRepository
+                                    )
+                                )
+
+                                SkillforgeCourseManagerScreen(
+                                    courseId = route.courseId,
+                                    viewModel = managerViewModel,
+                                    token = route.session.accessToken,
+                                    onBack = {
+                                        currentRoute = AppRoute.InstructorPortal(route.session)
+                                    },
+                                    onNavigateToUpload = { lessonId ->
+                                        currentRoute = AppRoute.MaterialUpload(route.session, lessonId)
+                                    }
+                                )
+                            }
                         }
                     }
                 }
             }
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        val appContainer = (applicationContext as SkillforgeApplication).container
+        appContainer.supabase.handleDeeplinks(intent)
     }
 }

@@ -9,4 +9,8 @@ class RegisterUseCase(private val repository: AuthRepository) {
         }
         return repository.register(fullName, email, password)
     }
+
+    suspend fun loginWithGoogle() {
+        repository.loginWithGoogle()
+    }
 }

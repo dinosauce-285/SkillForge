@@ -112,4 +112,14 @@ interface CourseApi {
         @Body request: CreateCourseRequest
     ): Response<CreateCourseResponse>
 
+    @GET("courses/{id}/manager")
+    suspend fun getCourseForManager(
+        @Path("id") courseId: String,
+        @Header("Authorization") token: String
+    ): Response<CourseManagerDto>
+
+    @GET("courses/instructor/my-courses")
+    suspend fun getMyCourses(
+        @Header("Authorization") token: String
+    ): Response<List<CourseSummaryDto>> // Trả về List các khóa học của tôi
 }

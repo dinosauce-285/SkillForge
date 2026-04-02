@@ -36,4 +36,14 @@ class RegisterViewModel(private val registerUseCase: RegisterUseCase) : ViewMode
             }
         }
     }
+
+    fun loginWithGoogle() {
+        viewModelScope.launch {
+            try {
+                registerUseCase.loginWithGoogle()
+            } catch (e: Exception) {
+                _registerState.value = RegisterState.Error(e.message ?: "Lỗi đăng nhập Google")
+            }
+        }
+    }
 }

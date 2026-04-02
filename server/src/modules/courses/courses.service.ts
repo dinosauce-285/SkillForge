@@ -14,6 +14,39 @@ import { UpdateCourseDto } from './dto/update-course.dto';
 export class CoursesService {
   constructor(private readonly prisma: PrismaService) {}
 
+  async getCourseForManager(id: string, user: { userId: string; role: Role }) {
+    const course = await this.prisma.course.findFirst({
+      where: {
+        id,
+        deletedAt: null,
+      },
+      include: {
+        category: true,
+        chapters: {
+          where: { deletedAt: null },
+          orderBy: { orderIndex: 'asc' },
+          include: {
+            lessons: {
+              where: { deletedAt: null },
+              orderBy: { orderIndex: 'asc' },
+              include: {
+                materials: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!course) {
+      throw new NotFoundException(`Course with id "${id}" not found`);
+    }
+
+    this.assertCanManageCourse(course.instructorId, user);
+
+    return course;
+  }
+
   async findAll(query: CourseListQueryDto) {
     const page = this.parsePositiveInt(query.page, 1);
     const limit = this.parsePositiveInt(query.limit, 10);
@@ -180,7 +213,11 @@ export class CoursesService {
     return course;
   }
 
-  async update(id: string, user: { userId: string; role: Role }, dto: UpdateCourseDto) {
+  async update(
+    id: string,
+    user: { userId: string; role: Role },
+    dto: UpdateCourseDto,
+  ) {
     const course = await this.prisma.course.findFirst({
       where: {
         id,
@@ -208,9 +245,12 @@ export class CoursesService {
       await this.assertCategoryExists(categoryId);
     }
 
-    const price = dto.price !== undefined ? this.normalizePrice(dto.price) : undefined;
-    const isFree = dto.isFree ?? (price !== undefined ? price === 0 : undefined);
-    const tagIds = dto.tagIds !== undefined ? this.normalizeTagIds(dto.tagIds) : undefined;
+    const price =
+      dto.price !== undefined ? this.normalizePrice(dto.price) : undefined;
+    const isFree =
+      dto.isFree ?? (price !== undefined ? price === 0 : undefined);
+    const tagIds =
+      dto.tagIds !== undefined ? this.normalizeTagIds(dto.tagIds) : undefined;
     await this.assertTagsExist(tagIds);
 
     const updatedCourse = await this.prisma.course.update({
@@ -218,16 +258,26 @@ export class CoursesService {
       data: {
         title: dto.title?.trim(),
         categoryId,
-        subtitle: dto.subtitle === undefined ? undefined : dto.subtitle?.trim() || null,
-        summary: dto.summary === undefined ? undefined : dto.summary?.trim() || null,
+        subtitle:
+          dto.subtitle === undefined ? undefined : dto.subtitle?.trim() || null,
+        summary:
+          dto.summary === undefined ? undefined : dto.summary?.trim() || null,
         thumbnailUrl:
-          dto.thumbnailUrl === undefined ? undefined : dto.thumbnailUrl?.trim() || null,
+          dto.thumbnailUrl === undefined
+            ? undefined
+            : dto.thumbnailUrl?.trim() || null,
         promoVideoUrl:
-          dto.promoVideoUrl === undefined ? undefined : dto.promoVideoUrl?.trim() || null,
+          dto.promoVideoUrl === undefined
+            ? undefined
+            : dto.promoVideoUrl?.trim() || null,
         ...(price !== undefined ? { price } : {}),
         ...(isFree !== undefined ? { isFree } : {}),
-        level: dto.level !== undefined ? this.normalizeLevel(dto.level) : undefined,
-        status: dto.status !== undefined ? this.normalizeStatus(dto.status) : undefined,
+        level:
+          dto.level !== undefined ? this.normalizeLevel(dto.level) : undefined,
+        status:
+          dto.status !== undefined
+            ? this.normalizeStatus(dto.status)
+            : undefined,
         ...(tagIds !== undefined
           ? {
               tags: {
@@ -269,13 +319,34 @@ export class CoursesService {
     });
   }
 
-  private parsePositiveInt(value: string | number | undefined, fallback: number) {
+  async findMyCourses(instructorId: string) {
+    return this.prisma.course.findMany({
+      where: {
+        instructorId: instructorId,
+        deletedAt: null,
+      },
+      include: {
+        category: true,
+        _count: {
+          select: { chapters: true, enrollments: true },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  private parsePositiveInt(
+    value: string | number | undefined,
+    fallback: number,
+  ) {
     if (value === undefined || value === null) {
       return fallback;
     }
 
     const parsed =
-      typeof value === 'number' ? Math.trunc(value) : Number.parseInt(value, 10);
+      typeof value === 'number'
+        ? Math.trunc(value)
+        : Number.parseInt(value, 10);
     return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
   }
 
@@ -331,11 +402,16 @@ export class CoursesService {
     });
 
     if (!category) {
-      throw new BadRequestException(`Category with id "${categoryId}" not found`);
+      throw new BadRequestException(
+        `Category with id "${categoryId}" not found`,
+      );
     }
   }
 
-  private assertCanManageCourse(courseInstructorId: string, user: { userId: string; role: Role }) {
+  private assertCanManageCourse(
+    courseInstructorId: string,
+    user: { userId: string; role: Role },
+  ) {
     if (user.role === Role.ADMIN) {
       return;
     }

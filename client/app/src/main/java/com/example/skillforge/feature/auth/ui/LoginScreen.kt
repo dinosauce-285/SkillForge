@@ -2,6 +2,7 @@ package com.example.skillforge.feature.auth.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -40,6 +41,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -245,14 +247,8 @@ fun LoginScreen(
                     SocialLoginButton(
                         text = "Google",
                         emoji = "G",
-                        modifier = Modifier.weight(1f)
-                    )
-                    Spacer(modifier = Modifier.width(defaultPadding))
-                    SocialLoginButton(
-                        text = "Facebook",
-                        emoji = "f",
-                        iconTint = Color(0xFF1877F2),
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        onClick = { viewModel.loginWithGoogle() }
                     )
                 }
 
@@ -289,16 +285,19 @@ fun SocialLoginButton(
     text: String,
     modifier: Modifier = Modifier,
     emoji: String = "",
-    iconTint: Color = Color.Unspecified
+    iconTint: Color = Color.Unspecified,
+    onClick: () -> Unit = {}
 ) {
     Row(
         modifier = modifier
             .height(56.dp)
+            .clip(RoundedCornerShape(12.dp))
             .border(
                 1.dp,
                 SocialButtonBorderColor,
                 shape = RoundedCornerShape(12.dp)
             )
+            .clickable(onClick = onClick)
             .padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center
