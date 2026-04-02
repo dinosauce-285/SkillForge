@@ -65,7 +65,11 @@ private fun ActiveCourseItem(course: ActiveCourse) {
             .padding(SkillforgeSpacing.small),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(
+        coil.compose.AsyncImage(
+            model = com.example.skillforge.R.drawable.mock_course_thumbnail,
+            placeholder = androidx.compose.ui.res.painterResource(id = com.example.skillforge.R.drawable.mock_course_thumbnail),
+            contentDescription = "Course Thumbnail",
+            contentScale = androidx.compose.ui.layout.ContentScale.Crop,
             modifier = Modifier
                 .size(64.dp)
                 .clip(SkillforgeShapes.medium)

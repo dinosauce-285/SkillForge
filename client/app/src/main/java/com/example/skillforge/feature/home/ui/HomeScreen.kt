@@ -13,7 +13,9 @@ import com.example.skillforge.feature.home.ui.components.*
 import com.example.skillforge.feature.home.ui.mock.HomeMockData
 
 @Composable
-fun HomeScreen() {
+fun HomeScreen(
+    onNavigateToMyCourses: () -> Unit = {}
+) {
     Scaffold { paddingValues ->
         Column(
             modifier = Modifier
@@ -49,7 +51,7 @@ fun HomeScreen() {
             // 4. Danh sách Active Courses
             ActiveCourseList(
                 courses = HomeMockData.mockActiveCourses,
-                onViewAllClick = { /* TODO: Chuyển sang màn My Courses */ }
+                onViewAllClick = { onNavigateToMyCourses() }
             )
 
             Spacer(modifier = Modifier.height(SkillforgeSpacing.large))
