@@ -46,7 +46,6 @@ class AppContainer {
     private val categoryApi = retrofit.create(CategoryApi::class.java)
     private val chapterApi = retrofit.create(ChapterApi::class.java)
     private val lessonApi = retrofit.create(LessonApi::class.java)
-    private val authRepository: AuthRepository = AuthRepositoryImpl(authApi)
     val courseRepository: CourseRepository = CourseRepositoryImpl(courseApi)
     val categoryRepository: CategoryRepository = CategoryRepositoryImpl(categoryApi)
 
