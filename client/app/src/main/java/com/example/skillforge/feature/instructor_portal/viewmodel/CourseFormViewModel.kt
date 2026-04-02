@@ -2,7 +2,7 @@ package com.example.skillforge.feature.instructor_portal.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.skillforge.data.remote.CategoryDto
+import com.example.skillforge.domain.model.Category // Đổi Import thành Category của Domain
 import com.example.skillforge.domain.repository.CategoryRepository
 import com.example.skillforge.domain.repository.CourseRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,19 +17,22 @@ sealed class CourseFormState {
     data class Error(val message: String) : CourseFormState()
 }
 
-class CourseFormViewModel(private val repository: CourseRepository,
-                          private val categoryRepository: CategoryRepository
+class CourseFormViewModel(
+    private val repository: CourseRepository,
+    private val categoryRepository: CategoryRepository
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<CourseFormState>(CourseFormState.Idle)
     val uiState: StateFlow<CourseFormState> = _uiState
-    private val _categories = MutableStateFlow<List<CategoryDto>>(emptyList())
-    val categories: StateFlow<List<CategoryDto>> = _categories
+
+    // Đã đổi CategoryDto thành Category ở 2 dòng dưới đây
+    private val _categories = MutableStateFlow<List<Category>>(emptyList())
+    val categories: StateFlow<List<Category>> = _categories
 
     fun fetchCategories() {
         viewModelScope.launch {
             categoryRepository.getCategories()
                 .onSuccess {
-                    _categories.value = it
+                    _categories.value = it 
                     println("✅ ĐÃ LẤY ĐƯỢC CATEGORY: $it")
                 }
                 .onFailure {

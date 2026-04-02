@@ -7,6 +7,7 @@ import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
 import retrofit2.http.Path
+import retrofit2.http.Query // Import thêm cái này để dùng @Query
 
 data class CourseListResponse(
     val data: List<CourseSummaryDto>,
@@ -95,8 +96,12 @@ data class CreateCourseResponse(
 )
 
 interface CourseApi {
+    // Đã thêm searchQuery và categoryId để khớp với Interface và Repository
     @GET("courses")
-    suspend fun getCourses(): Response<CourseListResponse>
+    suspend fun getCourses(
+        @Query("search") searchQuery: String? = null,
+        @Query("categoryId") categoryId: String? = null
+    ): Response<CourseListResponse>
 
     @GET("courses/{id}")
     suspend fun getCourseDetails(@Path("id") courseId: String): Response<CourseDetailsDto>
@@ -107,5 +112,4 @@ interface CourseApi {
         @Body request: CreateCourseRequest
     ): Response<CreateCourseResponse>
 
-    fun getCategories()
 }

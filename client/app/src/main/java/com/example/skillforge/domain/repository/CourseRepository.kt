@@ -10,8 +10,6 @@ interface CourseRepository {
         categoryId: String? = null
     ): Result<List<CourseSummary>>
 
-    suspend fun getCategories(): Result<List<Category>>
-
     suspend fun getCourseDetails(courseId: String): Result<CourseDetails>
 
     suspend fun createCourse(
@@ -21,4 +19,6 @@ interface CourseRepository {
         price: Double,
         categoryId: String
     ): Result<Unit>
+
+
 }
