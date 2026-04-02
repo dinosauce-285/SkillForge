@@ -43,6 +43,8 @@ import com.example.skillforge.feature.student_courses.viewmodel.StudentCoursesVi
 // IMPORT CỦA FEATURE/HOME-UI
 import com.example.skillforge.domain.model.Category
 import com.example.skillforge.feature.home.ui.HomeScreen
+import com.example.skillforge.feature.student_courses.ui.MyCoursesScreen
+import com.example.skillforge.feature.student_courses.ui.LessonLearningScreen
 
 // IMPORT CỦA DEV
 import io.github.jan.supabase.auth.handleDeeplinks
@@ -79,7 +81,25 @@ class MainActivity : ComponentActivity() {
 
                     if (isTestingHome) {
                         // Gọi thẳng HomeScreen, hoàn toàn bỏ qua bước đăng nhập
-                        HomeScreen()
+                        var showMyCourses by remember { mutableStateOf(false) }
+                        var showLesson by remember { mutableStateOf(false) }
+
+                        if (showLesson) {
+                            LessonLearningScreen(
+                                onNavigateBack = { showLesson = false }
+                            )
+                        } else if (showMyCourses) {
+                            MyCoursesScreen(
+                                onNavigateBack = { showMyCourses = false },
+                                onCourseClick = { courseId ->
+                                    showLesson = true
+                                }
+                            )
+                        } else {
+                            HomeScreen(
+                                onNavigateToMyCourses = { showMyCourses = true }
+                            )
+                        }
                     } else {
                         // LUỒNG CHẠY APP BÌNH THƯỜNG CỦA NHÁNH DEV
                         when (val route = currentRoute) {
