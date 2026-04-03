@@ -18,11 +18,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.media3.common.MediaItem
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.ui.PlayerView
+import android.content.Intent
+import android.net.Uri
 import coil.compose.AsyncImage
 import com.example.skillforge.core.designsystem.PrimaryOrange
 import com.example.skillforge.core.designsystem.SkillforgeLayout
@@ -100,134 +107,36 @@ fun LessonLearningScreen(
 }
 
 @Composable
-fun VideoPlayerSection() {
+fun VideoPlayerSection(videoUrl: String = "https://storage.googleapis.com/exoplayer-test-media-1/mp4/android-screens-10s.mp4") {
+    val context = LocalContext.current
+    val exoPlayer = remember {
+        ExoPlayer.Builder(context).build().apply {
+            setMediaItem(MediaItem.fromUri(videoUrl))
+            prepare()
+            playWhenReady = true
+        }
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            exoPlayer.release()
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .aspectRatio(16f / 9f)
             .background(Color.Black)
     ) {
-        // Thumbnail Image
-        AsyncImage(
-            model = com.example.skillforge.R.drawable.mock_course_thumbnail,
-            placeholder = androidx.compose.ui.res.painterResource(id = com.example.skillforge.R.drawable.mock_course_thumbnail),
-            contentDescription = "Video Thumbnail",
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize(),
-            alpha = 0.8f
+        AndroidView(
+            factory = { ctx ->
+                PlayerView(ctx).apply {
+                    player = exoPlayer
+                }
+            },
+            modifier = Modifier.fillMaxSize()
         )
-
-        // Player Overlay
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.2f))
-                .padding(SkillforgeSpacing.small)
-        ) {
-            // Settings Icon
-            Icon(
-                imageVector = Icons.Default.Settings,
-                contentDescription = "Settings",
-                tint = Color.White,
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(8.dp)
-                    .clickable { /* TODO */ }
-            )
-
-            // Play Button Middle
-            Box(
-                modifier = Modifier
-                    .size(64.dp)
-                    .align(Alignment.Center)
-                    .clip(CircleShape)
-                    .background(PrimaryOrange)
-                    .clickable { /* TODO */ },
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.PlayArrow,
-                    contentDescription = "Play",
-                    tint = Color.White,
-                    modifier = Modifier.size(40.dp)
-                )
-            }
-
-            // Bottom Controls
-            Column(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 4.dp)
-            ) {
-                // Progress Bar
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(6.dp)
-                        .clip(CircleShape)
-                        .background(Color.White.copy(alpha = 0.3f))
-                        .clickable { /* TODO */ }
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth(fraction = 0.33f)
-                            .fillMaxHeight(),
-                        contentAlignment = Alignment.CenterEnd
-                    ) {
-                        // Track
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .clip(CircleShape)
-                                .background(PrimaryOrange)
-                        )
-                        // Thumb
-                        Box(
-                            modifier = Modifier
-                                .size(16.dp)
-                                .offset(x = 8.dp) // shift center to the end
-                                .clip(CircleShape)
-                                .background(PrimaryOrange)
-                                .border(2.dp, Color.White, CircleShape)
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "04:22 / 12:45",
-                        color = Color.White,
-                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold)
-                    )
-
-                    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                        Icon(
-                            imageVector = Icons.Default.ClosedCaption,
-                            contentDescription = "CC",
-                            tint = Color.White,
-                            modifier = Modifier
-                                .size(20.dp)
-                                .clickable { /* TODO */ }
-                        )
-                        Icon(
-                            imageVector = Icons.Default.Fullscreen,
-                            contentDescription = "Fullscreen",
-                            tint = Color.White,
-                            modifier = Modifier
-                                .size(24.dp)
-                                .clickable { /* TODO */ }
-                        )
-                    }
-                }
-            }
-        }
     }
 }
 
@@ -385,12 +294,25 @@ fun LessonContentArea() {
 
 @Composable
 fun LessonPdfCard() {
+    val context = LocalContext.current
+    val pdfUrl = "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"
+    
+    val openPdfIntent = {
+        val intent = Intent(Intent.ACTION_VIEW).apply {
+            setDataAndType(Uri.parse(pdfUrl), "application/pdf")
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        val chooser = Intent.createChooser(intent, "Open PDF with")
+        context.startActivity(chooser)
+    }
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .clip(SkillforgeShapes.card)
             .background(PrimaryOrange.copy(alpha = 0.05f))
             .border(1.dp, PrimaryOrange.copy(alpha = 0.2f), SkillforgeShapes.card)
+            .clickable { openPdfIntent() }
             .padding(SkillforgeSpacing.medium)
     ) {
         Column {
@@ -432,13 +354,13 @@ fun LessonPdfCard() {
                 }
 
                 Button(
-                    onClick = { /* TODO */ },
+                    onClick = openPdfIntent,
                     colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange),
                     shape = SkillforgeShapes.medium,
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp),
                     modifier = Modifier.height(32.dp)
                 ) {
-                    Text("Download", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
+                    Text("View", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
                 }
             }
 
@@ -450,7 +372,8 @@ fun LessonPdfCard() {
                     .fillMaxWidth()
                     .aspectRatio(4f / 3f)
                     .clip(SkillforgeShapes.medium)
-                    .background(Color.LightGray),
+                    .background(Color.LightGray)
+                    .clickable { openPdfIntent() },
                 contentAlignment = Alignment.Center
             ) {
                 AsyncImage(
@@ -471,7 +394,7 @@ fun LessonPdfCard() {
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Tap to preview document",
+                        text = "Tap to view document",
                         style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Medium),
                         color = Color.White
                     )
