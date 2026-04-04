@@ -18,7 +18,7 @@ export class FavoriteController {
 
   @Post()
   async addFavorite(
-    @CurrentUser('id') userId: string,
+    @CurrentUser('userId') userId: string,
     @Body('courseId') courseId: string,
   ) {
     return this.favoriteService.addFavorite(userId, courseId);
@@ -26,14 +26,14 @@ export class FavoriteController {
 
   @Delete(':courseId')
   async removeFavorite(
-    @CurrentUser('id') userId: string,
+    @CurrentUser('userId') userId: string,
     @Param('courseId') courseId: string,
   ) {
     return this.favoriteService.removeFavorite(userId, courseId);
   }
 
   @Get()
-  async getFavorites(@CurrentUser('id') userId: string) {
+  async getFavorites(@CurrentUser('userId') userId: string) {
     return this.favoriteService.getFavorites(userId);
   }
 }

@@ -23,7 +23,9 @@ import com.example.skillforge.feature.auth.viewmodel.LoginViewModel
 import com.example.skillforge.feature.auth.viewmodel.LoginViewModelFactory
 import com.example.skillforge.feature.auth.viewmodel.RegisterViewModel
 import com.example.skillforge.feature.auth.viewmodel.RegisterViewModelFactory
-import com.example.skillforge.feature.favorite.ui.FavoriteScreen
+import com.example.skillforge.feature.favorite.ui.FavoriteRoute
+import com.example.skillforge.feature.favorite.viewmodel.FavoriteViewModel
+import com.example.skillforge.feature.favorite.viewmodel.FavoriteViewModelFactory
 import com.example.skillforge.feature.instructor_portal.ui.SkillforgeCourseFormScreen
 import com.example.skillforge.feature.instructor_portal.ui.SkillforgeCourseManagerScreen
 import com.example.skillforge.feature.instructor_portal.ui.SkillforgeInstructorDashboardScreen
@@ -66,6 +68,9 @@ class MainActivity : ComponentActivity() {
                         appContainer.courseRepository,
                         appContainer.categoryRepository
                     )
+                )
+                val favoriteViewModel: FavoriteViewModel = viewModel(
+                    factory = FavoriteViewModelFactory(appContainer.favoriteRepository)
                 )
                 val courseFormViewModel: CourseFormViewModel = viewModel(
                     factory = CourseFormViewModelFactory(
@@ -138,6 +143,9 @@ class MainActivity : ComponentActivity() {
                                         session = route.session,
                                         courseId = courseId,
                                     )
+                                },
+                                onNavigateToFavorites = {
+                                    currentRoute = AppRoute.Favorite(route.session)
                                 },
                                 onLogout = { currentRoute = AppRoute.Login }
                             )
@@ -225,7 +233,9 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
 
-                            is AppRoute.Favorite -> FavoriteScreen(
+                            is AppRoute.Favorite -> FavoriteRoute(
+                                session = route.session,
+                                viewModel = favoriteViewModel,
                                 onBackClick = {
                                     currentRoute = AppRoute.StudentCourseListing(route.session)
                                 },
