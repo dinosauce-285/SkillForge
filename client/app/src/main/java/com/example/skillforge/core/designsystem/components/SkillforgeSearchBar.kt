@@ -39,7 +39,7 @@ fun SkillforgeSearchBar(
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         },
-        shape = SkillforgeShapes.input, // Dùng shape chuẩn từ hệ thống (medium radius)
+        shape = SkillforgeShapes.input, // translated comment
         colors = OutlinedTextFieldDefaults.colors(
             unfocusedContainerColor = SearchBarBackgroundColor,
             focusedContainerColor = SearchBarBackgroundColor,

@@ -78,7 +78,7 @@ private fun ActiveCourseItem(course: ActiveCourse) {
 
         Spacer(modifier = Modifier.width(SkillforgeSpacing.medium))
 
-        // Thông tin khóa học & Thanh tiến độ
+        // translated comment
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = course.title,

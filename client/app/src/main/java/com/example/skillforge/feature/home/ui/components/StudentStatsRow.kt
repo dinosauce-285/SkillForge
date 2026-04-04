@@ -24,14 +24,14 @@ fun StudentStatsRow(
             .padding(vertical = SkillforgeSpacing.medium),
         horizontalArrangement = Arrangement.spacedBy(SkillforgeSpacing.medium)
     ) {
-        // Thẻ Thời gian học (chiếm 50% chiều rộng)
+        // translated comment
         StatCard(
             title = "Time Spent",
             value = "$hoursSpent hrs",
             modifier = Modifier.weight(1f)
         )
 
-        // Thẻ Huy hiệu (chiếm 50% chiều rộng)
+        // translated comment
         StatCard(
             title = "Badges Earned",
             value = "$badgesEarned",

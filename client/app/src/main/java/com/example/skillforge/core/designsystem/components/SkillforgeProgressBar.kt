@@ -13,15 +13,15 @@ import com.example.skillforge.core.designsystem.SkillforgeShapes
 
 @Composable
 fun SkillforgeProgressBar(
-    progress: Float, // Giá trị từ 0.0f đến 1.0f
+    progress: Float, // translated comment
     modifier: Modifier = Modifier
 ) {
     LinearProgressIndicator(
         progress = { progress },
         modifier = modifier
             .fillMaxWidth()
-            .height(8.dp) // Độ dày chuẩn của thanh progress
-            .clip(SkillforgeShapes.pill), // Bo tròn tuyệt đối 2 đầu thanh
+            .height(8.dp) // translated comment
+            .clip(SkillforgeShapes.pill), // translated comment
         color = MaterialTheme.colorScheme.primary,
         trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
         strokeCap = StrokeCap.Round

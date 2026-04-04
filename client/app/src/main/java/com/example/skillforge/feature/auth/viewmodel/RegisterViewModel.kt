@@ -22,7 +22,7 @@ class RegisterViewModel(private val registerUseCase: RegisterUseCase) : ViewMode
     val registerState: StateFlow<RegisterState> = _registerState
 
     fun register(fullName: String, email: String, password: String) {
-        Log.d("API_DEBUG", "1. Nút bấm đã gọi tới ViewModel!")
+        Log.d("API_DEBUG", "1. Register button triggered ViewModel")
         viewModelScope.launch {
             _registerState.value = RegisterState.Loading
 
@@ -32,7 +32,7 @@ class RegisterViewModel(private val registerUseCase: RegisterUseCase) : ViewMode
                 _registerState.value = RegisterState.Success(token)
             }
             result.onFailure { exception ->
-                _registerState.value = RegisterState.Error(exception.message ?: "Lỗi không xác định")
+                _registerState.value = RegisterState.Error(exception.message ?: "Unknown error")
             }
         }
     }
@@ -42,7 +42,7 @@ class RegisterViewModel(private val registerUseCase: RegisterUseCase) : ViewMode
             try {
                 registerUseCase.loginWithGoogle()
             } catch (e: Exception) {
-                _registerState.value = RegisterState.Error(e.message ?: "Lỗi đăng nhập Google")
+                _registerState.value = RegisterState.Error(e.message ?: "Google sign-in failed")
             }
         }
     }

@@ -10,7 +10,7 @@ export class FavoriteService {
   constructor(private prisma: PrismaService) {}
 
   async addFavorite(userId: string, courseId: string) {
-    // Kiểm tra khóa học tồn tại
+    // translated comment
     const course = await this.prisma.course.findUnique({
       where: { id: courseId },
     });
@@ -18,7 +18,7 @@ export class FavoriteService {
       throw new NotFoundException('Course not found');
     }
 
-    // Kiểm tra đã favorite chưa
+    // translated comment
     const existing = await this.prisma.favorite.findUnique({
       where: {
         userId_courseId: {

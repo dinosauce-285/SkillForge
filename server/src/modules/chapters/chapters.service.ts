@@ -16,7 +16,7 @@ export class ChaptersService {
     await this.assertCourseOwnership(dto.courseId, user);
 
     let orderIndex = dto.orderIndex;
-    // Tự động xếp xuống cuối nếu không truyền thứ tự
+    // translated comment
     if (orderIndex === undefined) {
       const lastChapter = await this.prisma.chapter.findFirst({
         where: { courseId: dto.courseId, deletedAt: null },
@@ -71,7 +71,7 @@ export class ChaptersService {
 
     this.assertCanManage(chapter.course.instructorId, user);
 
-    // Xóa mềm (Soft delete)
+    // translated comment
     return this.prisma.chapter.update({
       where: { id },
       data: { deletedAt: new Date() },

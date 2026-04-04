@@ -4,7 +4,7 @@ import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
 
-// Hàm tiện ích để móc ra cái tên file (VD: bai-giang-1.mp4) từ cái Uri rắc rối của Android
+// translated comment
 fun getFileName(context: Context, uri: Uri): String? {
     var result: String? = null
     if (uri.scheme == "content") {

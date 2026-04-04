@@ -11,7 +11,7 @@ export class UsersController {
 
     @Get('profile')
     getProfile(@CurrentUser('userId') userId: string) {
-        // CurrentUser('userId') sẽ tự động chọc vào req.user.userId để lấy ra cho bạn
+        // translated comment
         return this.usersService.getProfile(userId);
     }
 

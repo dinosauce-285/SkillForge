@@ -20,7 +20,7 @@ fun SkillforgeCard(
         contentColor = MaterialTheme.colorScheme.onSurface
     )
     val cardElevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    val shape = SkillforgeShapes.card // Khóa chặt bo góc Card = 16.dp
+    val shape = SkillforgeShapes.card // translated comment
 
     if (onClick != null) {
         Card(

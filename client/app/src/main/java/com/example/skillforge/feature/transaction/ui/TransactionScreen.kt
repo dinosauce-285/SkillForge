@@ -128,7 +128,7 @@ fun TransactionScreen(
                                 color = Color.White,
                             )
                         } else {
-                            Text("Xác nhận & Thanh toán", fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
+                            Text("Confirm & Pay", fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
                         }
                     }
                 }
@@ -153,7 +153,7 @@ fun TransactionScreen(
                     .padding(24.dp),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(uiState.errorMessage ?: "Không thể tải dữ liệu checkout", color = MaterialTheme.colorScheme.error)
+                Text(uiState.errorMessage ?: "Unable to load checkout data", color = MaterialTheme.colorScheme.error)
             }
 
             else -> Column(
@@ -165,8 +165,8 @@ fun TransactionScreen(
                 verticalArrangement = Arrangement.spacedBy(24.dp),
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text("Thanh toán", fontSize = 30.sp, fontWeight = FontWeight.ExtraBold, color = Color.Black)
-                    Text("Hoàn thành đăng ký để bắt đầu học ngay.", fontSize = 14.sp, color = Color.Gray)
+                    Text("Checkout", fontSize = 30.sp, fontWeight = FontWeight.ExtraBold, color = Color.Black)
+                    Text("Complete enrollment to start learning right away.", fontSize = 14.sp, color = Color.Gray)
                 }
 
                 uiState.successMessage?.let {
@@ -197,7 +197,7 @@ fun TransactionScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Text("Sản phẩm", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                        Text("Product", fontWeight = FontWeight.Bold, fontSize = 18.sp)
                         Surface(color = Color(0xFFE0F2F1), shape = CircleShape) {
                             Row(
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
@@ -229,7 +229,7 @@ fun TransactionScreen(
                             )
                             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                 Text(uiState.course.title, fontWeight = FontWeight.Bold, lineHeight = 20.sp)
-                                Text("Giảng viên: ${uiState.course.instructorName}", fontSize = 14.sp, color = Color.Gray)
+                                Text("Instructor: ${uiState.course.instructorName}", fontSize = 14.sp, color = Color.Gray)
                                 Text(vnd(uiState.basePrice), fontWeight = FontWeight.Bold, color = PrimaryOrange)
                             }
                         }
@@ -237,12 +237,12 @@ fun TransactionScreen(
                 }
 
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    Text("Mã giảm giá", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                    Text("Promo Code", fontWeight = FontWeight.Bold, fontSize = 18.sp)
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         TextField(
                             value = uiState.promoCode,
                             onValueChange = onPromoCodeChange,
-                            placeholder = { Text("Nhập mã...", fontSize = 14.sp) },
+                            placeholder = { Text("Enter code...", fontSize = 14.sp) },
                             modifier = Modifier.weight(1.6f),
                             shape = RoundedCornerShape(12.dp),
                             colors = TextFieldDefaults.colors(
@@ -258,13 +258,13 @@ fun TransactionScreen(
                             colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange.copy(alpha = 0.2f)),
                             shape = RoundedCornerShape(12.dp),
                         ) {
-                            Text("Áp dụng", color = PrimaryOrange, fontWeight = FontWeight.Bold)
+                            Text("Apply", color = PrimaryOrange, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
 
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    Text("Phương thức thanh toán", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                    Text("Payment Method", fontWeight = FontWeight.Bold, fontSize = 18.sp)
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
                         color = Color.White,
@@ -281,7 +281,7 @@ fun TransactionScreen(
                                     .height(40.dp)
                                     .background(Color(0xFFF3F3F4), RoundedCornerShape(8.dp)),
                             )
-                            Text("Chuyển khoản", modifier = Modifier.weight(1f), fontWeight = FontWeight.Medium)
+                            Text("Bank Transfer", modifier = Modifier.weight(1f), fontWeight = FontWeight.Medium)
                             RadioButton(selected = true, onClick = {}, colors = RadioButtonDefaults.colors(selectedColor = PrimaryOrange))
                         }
                     }
@@ -296,12 +296,12 @@ fun TransactionScreen(
                         modifier = Modifier.padding(24.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        Text("Chi tiết thanh toán", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                        Text("Payment Summary", fontWeight = FontWeight.Bold, fontSize = 18.sp)
 
-                        PriceRow("Tạm tính", vnd(uiState.basePrice))
-                        PriceRow("Mã giảm giá", "-${vnd(uiState.discountAmount)}", highlight = uiState.discountAmount > 0)
+                        PriceRow("Subtotal", vnd(uiState.basePrice))
+                        PriceRow("Discount", "-${vnd(uiState.discountAmount)}", highlight = uiState.discountAmount > 0)
                         HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), color = Color.LightGray.copy(alpha = 0.3f))
-                        PriceRow("Tổng cộng", vnd(uiState.totalPrice), emphasize = true)
+                        PriceRow("Total", vnd(uiState.totalPrice), emphasize = true)
                     }
                 }
 
@@ -343,7 +343,7 @@ private fun PriceRow(label: String, value: String, highlight: Boolean = false, e
     }
 }
 
-private fun vnd(amount: Double): String = "%,.0f VNĐ".format(amount)
+private fun vnd(amount: Double): String = "%,.0f VND".format(amount)
 
 @Preview(showBackground = true, showSystemUi = true, device = Devices.PIXEL_7)
 @Composable

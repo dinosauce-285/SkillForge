@@ -2,26 +2,26 @@ import { Transform } from 'class-transformer';
 import { IsString, IsOptional, IsArray, IsUrl, MaxLength, MinLength } from 'class-validator';
 
 export class UpdateProfileDto {
-    // Field này thuộc bảng User
+    // translated comment
     @IsOptional()
     @IsString()
-    @MinLength(2, { message: 'Họ tên phải có ít nhất 2 ký tự' })
+    @MinLength(2, { message: 'Full name must contain at least 2 characters' })
     @MaxLength(50)
     fullName?: string;  
 
     @IsOptional()
-    @IsUrl({}, { message: 'Link avatar không hợp lệ' })
+    @IsUrl({}, { message: 'Invalid avatar URL' })
     avatarUrl?: string;
 
     @IsOptional()
     @IsArray()
-    @IsString({ each: true, message: 'Mỗi skill phải là một chuỗi' })
+    @IsString({ each: true, message: 'Each skill must be a string' })
     skills?: string[];
 
     @IsOptional()
     @IsString()
-    @MaxLength(1000, { message: 'Mục tiêu học tập không được vượt quá 1000 ký tự' })
-    // @Transform(({ value }) => DOMPurify.sanitize(value)) // Bật lên nếu dùng Rich Text Editor ở Frontend
-    @Transform(({ value }) => value?.trim()) // Xóa khoảng trắng thừa
+    @MaxLength(1000, { message: 'Learning goals cannot exceed 1000 characters' })
+    // translated comment
+    @Transform(({ value }) => value?.trim()) // translated comment
     learningGoals?: string;   
 }

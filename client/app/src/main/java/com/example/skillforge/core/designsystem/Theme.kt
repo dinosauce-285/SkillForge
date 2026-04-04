@@ -7,19 +7,19 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
-// Light Color Scheme - Map các màu custom vào đây
+// translated comment
 private val LightColorScheme = lightColorScheme(
     primary = PrimaryOrange,
     background = BackgroundColor,
     surface = SurfaceColor,
-    onPrimary = Color.White, // Văn bản trên nền màu chính
-    onBackground = TextPrimaryColor, // Văn bản trên nền chính
-    onSurface = TextPrimaryColor,     // Văn bản trên bề mặt chính (trong thẻ trắng)
-    onSurfaceVariant = TextSecondaryColor // Văn bản phụ trên bề mặt chính
-    // Có thể map thêm secondary, error, errorContainer... tùy ý cho đồ án
+    onPrimary = Color.White, // translated comment
+    onBackground = TextPrimaryColor, // translated comment
+    onSurface = TextPrimaryColor,     // translated comment
+    onSurfaceVariant = TextSecondaryColor // translated comment
+    // translated comment
 )
 
-// Có thể định nghĩa thêm DarkColorScheme nếu cần
+// translated comment
 
 @Composable
 fun SkillforgeTheme(
@@ -35,7 +35,7 @@ fun SkillforgeTheme(
 
     MaterialTheme(
         colorScheme = colorScheme,
-        // typography = SkillforgeTypography, // (Nếu bạn có file Type.kt riêng)
+        // translated comment
         content = content
     )
 }
