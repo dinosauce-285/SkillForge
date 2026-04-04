@@ -7,7 +7,6 @@ import com.example.skillforge.domain.model.CourseDetails
 import com.example.skillforge.domain.model.CourseSummary
 import com.example.skillforge.domain.repository.CategoryRepository
 import com.example.skillforge.domain.repository.CourseRepository
-import com.example.skillforge.feature.student_courses.ui.StudentCourseMockData
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -149,19 +148,23 @@ class StudentCoursesViewModel(
         }
 
         viewModelScope.launch {
-            val mockCourse = StudentCourseMockData.detailsFor(courseId)
-            if (mockCourse != null) {
-                loadedCourseDetailsId = courseId
-                _courseDetailsState.value = StudentCourseDetailsUiState(
-                    isLoading = false,
-                    course = mockCourse,
-                )
-            } else {
-                _courseDetailsState.value = StudentCourseDetailsUiState(
-                    isLoading = false,
-                    errorMessage = "Unable to load course details",
-                )
-            }
+            _courseDetailsState.value = StudentCourseDetailsUiState(isLoading = true)
+
+            courseRepository.getCourseDetails(courseId).fold(
+                onSuccess = { course ->
+                    loadedCourseDetailsId = courseId
+                    _courseDetailsState.value = StudentCourseDetailsUiState(
+                        isLoading = false,
+                        course = course,
+                    )
+                },
+                onFailure = { error ->
+                    _courseDetailsState.value = StudentCourseDetailsUiState(
+                        isLoading = false,
+                        errorMessage = error.message ?: "Unable to load course details",
+                    )
+                },
+            )
         }
     }
 }
