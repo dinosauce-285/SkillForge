@@ -50,6 +50,7 @@ import com.example.skillforge.domain.model.Category
 import com.example.skillforge.feature.home.ui.HomeScreen
 import com.example.skillforge.feature.student_courses.ui.MyCoursesScreen
 import com.example.skillforge.feature.student_courses.ui.LessonLearningScreen
+import com.example.skillforge.feature.student_courses.ui.StudentProfileScreen
 
 // IMPORT CỦA DEV
 import io.github.jan.supabase.auth.handleDeeplinks
@@ -114,7 +115,10 @@ class MainActivity : ComponentActivity() {
                                 onNavigateBack = { showMyCourses = false },
                                 onCourseClick = { courseId ->
                                     showLesson = true
-                                }
+                                },
+                                onNavigateToDiscover = { showMyCourses = false },
+                                onNavigateToWishlist = {},
+                                onNavigateToProfile = {},
                             )
                         } else {
                             HomeScreen(
@@ -159,6 +163,12 @@ class MainActivity : ComponentActivity() {
                                 },
                                 onNavigateToFavorites = {
                                     currentRoute = AppRoute.Favorite(route.session)
+                                },
+                                onNavigateToLearning = {
+                                    currentRoute = AppRoute.MyCourses(route.session)
+                                },
+                                onNavigateToProfile = {
+                                    currentRoute = AppRoute.Profile(route.session)
                                 },
                                 onLogout = { currentRoute = AppRoute.Login }
                             )
@@ -281,6 +291,46 @@ class MainActivity : ComponentActivity() {
                                 },
                                 onNavigateToDiscovery = {
                                     currentRoute = AppRoute.StudentCourseListing(route.session)
+                                },
+                                onNavigateToLearning = {
+                                    currentRoute = AppRoute.MyCourses(route.session)
+                                },
+                                onNavigateToProfile = {
+                                    currentRoute = AppRoute.Profile(route.session)
+                                }
+                            )
+
+                            is AppRoute.MyCourses -> MyCoursesScreen(
+                                onNavigateBack = {
+                                    currentRoute = AppRoute.StudentCourseListing(route.session)
+                                },
+                                onCourseClick = {
+                                    currentRoute = AppRoute.StudentCourseListing(route.session)
+                                },
+                                onNavigateToDiscover = {
+                                    currentRoute = AppRoute.StudentCourseListing(route.session)
+                                },
+                                onNavigateToWishlist = {
+                                    currentRoute = AppRoute.Favorite(route.session)
+                                },
+                                onNavigateToProfile = {
+                                    currentRoute = AppRoute.Profile(route.session)
+                                }
+                            )
+
+                            is AppRoute.Profile -> StudentProfileScreen(
+                                session = route.session,
+                                onNavigateToDiscover = {
+                                    currentRoute = AppRoute.StudentCourseListing(route.session)
+                                },
+                                onNavigateToLearning = {
+                                    currentRoute = AppRoute.MyCourses(route.session)
+                                },
+                                onNavigateToWishlist = {
+                                    currentRoute = AppRoute.Favorite(route.session)
+                                },
+                                onLogout = {
+                                    currentRoute = AppRoute.Login
                                 }
                             )
 

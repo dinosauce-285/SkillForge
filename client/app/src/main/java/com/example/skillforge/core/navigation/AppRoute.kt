@@ -32,6 +32,14 @@ sealed interface AppRoute {
     data class Favorite(
         val session: AuthSession,
     ) : AppRoute
+
+    data class MyCourses(
+        val session: AuthSession,
+    ) : AppRoute
+
+    data class Profile(
+        val session: AuthSession,
+    ) : AppRoute
   
     data class CourseForm(
         val session: AuthSession ,

@@ -33,7 +33,10 @@ import androidx.compose.ui.tooling.preview.Preview
 @Composable
 fun MyCoursesScreen(
     onNavigateBack: () -> Unit,
-    onCourseClick: (String) -> Unit
+    onCourseClick: (String) -> Unit,
+    onNavigateToDiscover: () -> Unit,
+    onNavigateToWishlist: () -> Unit,
+    onNavigateToProfile: () -> Unit,
 ) {
     Scaffold(
         topBar = {
@@ -58,7 +61,12 @@ fun MyCoursesScreen(
             )
         },
         bottomBar = {
-            StudentBottomNavigationBar(currentRoute = "Learning")
+            StudentBottomNavigationBar(
+                currentRoute = "Learning",
+                onNavigateToDiscover = onNavigateToDiscover,
+                onNavigateToWishlist = onNavigateToWishlist,
+                onNavigateToProfile = onNavigateToProfile,
+            )
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
@@ -223,7 +231,10 @@ fun MyCoursesScreenPreview() {
     SkillforgeTheme {
         MyCoursesScreen(
             onNavigateBack = {},
-            onCourseClick = {}
+            onCourseClick = {},
+            onNavigateToDiscover = {},
+            onNavigateToWishlist = {},
+            onNavigateToProfile = {},
         )
     }
 }

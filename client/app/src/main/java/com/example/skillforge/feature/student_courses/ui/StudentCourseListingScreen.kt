@@ -97,6 +97,8 @@ fun StudentCourseListingRoute(
     viewModel: StudentCoursesViewModel,
     onCourseSelected: (String) -> Unit,
     onNavigateToFavorites: () -> Unit,
+    onNavigateToLearning: () -> Unit,
+    onNavigateToProfile: () -> Unit,
     onLogout: () -> Unit,
 ) {
     val uiState by viewModel.courseListState.collectAsState()
@@ -111,6 +113,8 @@ fun StudentCourseListingRoute(
         onRetry = viewModel::refreshCatalog,
         onCourseSelected = onCourseSelected,
         onNavigateToFavorites = onNavigateToFavorites,
+        onNavigateToLearning = onNavigateToLearning,
+        onNavigateToProfile = onNavigateToProfile,
         onLogout = onLogout,
     )
 }
@@ -126,6 +130,8 @@ fun StudentCourseListingScreen(
     onRetry: () -> Unit,
     onCourseSelected: (String) -> Unit,
     onNavigateToFavorites: () -> Unit,
+    onNavigateToLearning: () -> Unit,
+    onNavigateToProfile: () -> Unit,
     onLogout: () -> Unit,
 ) {
     var isFilterPanelOpen by remember { mutableStateOf(false) }
@@ -142,7 +148,9 @@ fun StudentCourseListingScreen(
         bottomBar = {
             StudentBottomNavigationBar(
                 currentRoute = "Discover",
+                onNavigateToLearning = onNavigateToLearning,
                 onNavigateToWishlist = onNavigateToFavorites,
+                onNavigateToProfile = onNavigateToProfile,
             )
         },
     ) { innerPadding ->
@@ -870,6 +878,8 @@ private fun StudentCourseListingPreview() {
             onRetry = {},
             onCourseSelected = {},
             onNavigateToFavorites = {},
+            onNavigateToLearning = {},
+            onNavigateToProfile = {},
             onLogout = {},
         )
     }

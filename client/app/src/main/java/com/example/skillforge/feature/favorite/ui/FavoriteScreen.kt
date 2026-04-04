@@ -70,6 +70,8 @@ fun FavoriteRoute(
     onBackClick: () -> Unit,
     onCourseClick: (String) -> Unit,
     onNavigateToDiscovery: () -> Unit,
+    onNavigateToLearning: () -> Unit,
+    onNavigateToProfile: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -82,6 +84,8 @@ fun FavoriteRoute(
         onBackClick = onBackClick,
         onCourseClick = onCourseClick,
         onNavigateToDiscovery = onNavigateToDiscovery,
+        onNavigateToLearning = onNavigateToLearning,
+        onNavigateToProfile = onNavigateToProfile,
     )
 }
 
@@ -92,6 +96,8 @@ fun FavoriteScreen(
     onBackClick: () -> Unit,
     onCourseClick: (String) -> Unit,
     onNavigateToDiscovery: () -> Unit,
+    onNavigateToLearning: () -> Unit,
+    onNavigateToProfile: () -> Unit,
 ) {
     Scaffold(
         topBar = {
@@ -123,7 +129,9 @@ fun FavoriteScreen(
             StudentBottomNavigationBar(
                 currentRoute = "Wishlist",
                 onNavigateToDiscover = onNavigateToDiscovery,
+                onNavigateToLearning = onNavigateToLearning,
                 onNavigateToWishlist = {},
+                onNavigateToProfile = onNavigateToProfile,
             )
         },
         containerColor = BackgroundColor,
@@ -431,5 +439,7 @@ fun FavoriteScreenPreview() {
         onBackClick = {},
         onCourseClick = {},
         onNavigateToDiscovery = {},
+        onNavigateToLearning = {},
+        onNavigateToProfile = {},
     )
 }
