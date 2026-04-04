@@ -34,8 +34,8 @@ export class OrderService {
     return this.prisma.order.update({ where: { id }, data: { status } });
   }
 
-  async createOrder(createOrderDto: CreateOrderDto) {
-    const { userId, courseId, amount } = createOrderDto;
+  async createOrder(userId: string, createOrderDto: CreateOrderDto) {
+    const { courseId, amount } = createOrderDto;
 
     const order = await this.prisma.order.create({
       data: {
