@@ -4,6 +4,7 @@ import com.example.skillforge.data.remote.CourseApi
 import com.example.skillforge.data.remote.CreateCourseRequest
 import com.example.skillforge.domain.model.CourseChapter
 import com.example.skillforge.domain.model.CourseDetails
+import com.example.skillforge.domain.model.CourseLesson
 import com.example.skillforge.domain.model.CourseSummary
 import com.example.skillforge.domain.repository.CourseRepository
 import com.example.skillforge.data.remote.CourseManagerDto
@@ -77,7 +78,12 @@ class CourseRepositoryImpl(
                             CourseChapter(
                                 id = chapter.id,
                                 title = chapter.title,
-                                lessonTitles = chapter.lessons.map { it.title },
+                                lessons = chapter.lessons.map { lesson ->
+                                    CourseLesson(
+                                        id = lesson.id,
+                                        title = lesson.title,
+                                    )
+                                },
                             )
                         },
                     )

@@ -66,7 +66,8 @@ class MainActivity : ComponentActivity() {
                 val studentCoursesViewModel: StudentCoursesViewModel = viewModel(
                     factory = StudentCoursesViewModelFactory(
                         appContainer.courseRepository,
-                        appContainer.categoryRepository
+                        appContainer.categoryRepository,
+                        appContainer.lessonRepository
                     )
                 )
                 val favoriteViewModel: FavoriteViewModel = viewModel(
@@ -94,6 +95,9 @@ class MainActivity : ComponentActivity() {
 
                         if (showLesson) {
                             LessonLearningScreen(
+                                sessionToken = "preview-token",
+                                lessonId = "preview-lesson",
+                                viewModel = studentCoursesViewModel,
                                 onNavigateBack = { showLesson = false }
                             )
                         } else if (showMyCourses) {
@@ -153,7 +157,19 @@ class MainActivity : ComponentActivity() {
                             is AppRoute.StudentCourseDetails -> StudentCourseDetailsRoute(
                                 courseId = route.courseId,
                                 viewModel = studentCoursesViewModel,
+                                onLessonSelected = { lessonId ->
+                                    currentRoute = AppRoute.LessonLearning(route.session, lessonId)
+                                },
                                 onBack = {
+                                    currentRoute = AppRoute.StudentCourseListing(route.session)
+                                }
+                            )
+
+                            is AppRoute.LessonLearning -> LessonLearningScreen(
+                                sessionToken = route.session.accessToken,
+                                lessonId = route.lessonId,
+                                viewModel = studentCoursesViewModel,
+                                onNavigateBack = {
                                     currentRoute = AppRoute.StudentCourseListing(route.session)
                                 }
                             )

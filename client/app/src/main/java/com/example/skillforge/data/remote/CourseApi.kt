@@ -80,6 +80,7 @@ data class CourseChapterDto(
 )
 
 data class CourseLessonDto(
+    val id: String,
     val title: String,
 )
 
