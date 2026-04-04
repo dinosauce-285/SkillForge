@@ -28,19 +28,19 @@ fun HomeScreen(
             // 1. Header
             HomeWelcomeHeader(
                 studentName = "Alex",
-                onNotificationClick = { /* TODO: Mở thông báo */ }
+                onNotificationClick = { /* TODO: Open notifications */ }
             )
 
             Spacer(modifier = Modifier.height(SkillforgeSpacing.large))
 
-            // 2. Thẻ Continue Learning
+            // translated comment
             ContinueLearningCard(
                 course = HomeMockData.mockMostRecentCourse
             )
 
             Spacer(modifier = Modifier.height(SkillforgeSpacing.large))
 
-            // 3. Hàng Thống Kê
+            // translated comment
             StudentStatsRow(
                 hoursSpent = HomeMockData.mockStats.hoursSpent,
                 badgesEarned = HomeMockData.mockStats.badgesEarned
@@ -48,7 +48,7 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(SkillforgeSpacing.large))
 
-            // 4. Danh sách Active Courses
+            // translated comment
             ActiveCourseList(
                 courses = HomeMockData.mockActiveCourses,
                 onViewAllClick = { onNavigateToMyCourses() }

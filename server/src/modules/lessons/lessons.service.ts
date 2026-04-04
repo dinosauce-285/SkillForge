@@ -126,7 +126,7 @@ export class LessonsService {
 
     this.assertCanManage(lesson.chapter.course.instructorId, user);
 
-    // Xóa mềm
+    // translated comment
     return this.prisma.lesson.update({
       where: { id },
       data: { deletedAt: new Date() },

@@ -104,7 +104,7 @@ fun FavoriteScreen(
             TopAppBar(
                 title = {
                     Text(
-                        "Khóa học yêu thích",
+                        "Favorite Courses",
                         style = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.Bold,
                             color = PrimaryOrange,
@@ -177,7 +177,7 @@ fun FavoriteScreen(
 private fun FavoriteHeaderSection() {
     Column(modifier = Modifier.padding(vertical = 16.dp)) {
         Text(
-            text = "BỘ SƯU TẬP CỦA BẠN",
+            text = "YOUR COLLECTION",
             style = MaterialTheme.typography.labelMedium.copy(
                 fontWeight = FontWeight.Medium,
                 letterSpacing = 1.sp,
@@ -187,14 +187,14 @@ private fun FavoriteHeaderSection() {
         Spacer(modifier = Modifier.height(8.dp))
         Row {
             Text(
-                text = "Tiếp tục hành trình ",
+                text = "Continue your journey of ",
                 style = MaterialTheme.typography.headlineMedium.copy(
                     fontWeight = FontWeight.ExtraBold,
                     color = TextPrimaryColor,
                 ),
             )
             Text(
-                text = "tri thức",
+                text = "knowledge",
                 style = MaterialTheme.typography.headlineMedium.copy(
                     fontWeight = FontWeight.ExtraBold,
                     color = PrimaryOrange,
@@ -265,7 +265,7 @@ private fun FavoriteCourseCard(
                             modifier = Modifier.padding(bottom = 4.dp),
                         ) {
                             Text(
-                                text = "ĐÃ SỞ HỮU",
+                                text = "OWNED",
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     fontWeight = FontWeight.Bold,
@@ -321,7 +321,7 @@ private fun FavoriteCourseCard(
                             modifier = Modifier.size(16.dp),
                         )
                         Spacer(modifier = Modifier.size(6.dp))
-                        Text("Vào học ngay", style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold))
+                        Text("Start Learning", style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold))
                     }
                 } else {
                     Row(
@@ -330,7 +330,7 @@ private fun FavoriteCourseCard(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            text = if (course.price > 0) "${"%,.0f".format(course.price)}đ" else "Miễn phí",
+                            text = if (course.price > 0) "${"%,.0f".format(course.price)} VND" else "Free",
                             style = MaterialTheme.typography.titleMedium.copy(
                                 fontWeight = FontWeight.Bold,
                                 color = PrimaryOrange,
@@ -351,7 +351,7 @@ private fun FavoriteCourseCard(
                             contentPadding = PaddingValues(horizontal = 12.dp),
                         ) {
                             Text(
-                                "Đăng ký",
+                                "Enroll",
                                 style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
                             )
                         }
@@ -404,19 +404,19 @@ private fun FavoriteEmptyState(
         verticalArrangement = Arrangement.Center,
     ) {
         Text(
-            text = "Chưa có khóa học yêu thích",
+            text = "No favorite courses yet",
             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
             color = TextPrimaryColor,
         )
         Spacer(modifier = Modifier.height(12.dp))
         Text(
-            text = "Hãy khám phá thêm khóa học và lưu lại những khóa bạn muốn học sau.",
+            text = "Explore more courses and save the ones you want to learn later.",
             textAlign = TextAlign.Center,
             color = TextSecondaryColor,
         )
         Spacer(modifier = Modifier.height(16.dp))
         Button(onClick = onNavigateToDiscovery) {
-            Text("Khám phá khóa học")
+            Text("Explore Courses")
         }
     }
 }

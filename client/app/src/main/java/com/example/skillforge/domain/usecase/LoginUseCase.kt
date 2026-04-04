@@ -6,7 +6,7 @@ import com.example.skillforge.domain.repository.AuthRepository
 class LoginUseCase(private val repository: AuthRepository) {
     suspend operator fun invoke(email: String, password: String): Result<AuthSession> {
         if (email.isBlank() || password.isBlank()) {
-            return Result.failure(Exception("Vui lòng nhập đủ email và mật khẩu"))
+            return Result.failure(Exception("Please enter both email and password"))
         }
 
         return repository.login(email, password)

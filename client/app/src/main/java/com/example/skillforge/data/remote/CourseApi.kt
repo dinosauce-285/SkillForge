@@ -7,7 +7,7 @@ import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
 import retrofit2.http.Path
-import retrofit2.http.Query // Import thêm cái này để dùng @Query
+import retrofit2.http.Query // translated comment
 
 data class CourseListResponse(
     val data: List<CourseSummaryDto>,
@@ -123,5 +123,5 @@ interface CourseApi {
     @GET("courses/instructor/my-courses")
     suspend fun getMyCourses(
         @Header("Authorization") token: String
-    ): Response<List<CourseSummaryDto>> // Trả về List các khóa học của tôi
+    ): Response<List<CourseSummaryDto>> // translated comment
 }

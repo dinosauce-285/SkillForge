@@ -6,7 +6,7 @@ data class ActiveCourse(
     val id: String,
     val title: String,
     val instructorName: String,
-    // 1. ĐỔI KIỂU DỮ LIỆU TỪ String THÀNH Any ĐỂ HỖ TRỢ CẢ URL VÀ RESOURCE ID
+    // translated comment
     val thumbnailUrl: Any,
     val progressPercentage: Float,
     val remainingLessons: Int

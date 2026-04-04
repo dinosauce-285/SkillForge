@@ -108,10 +108,10 @@ class CourseRepositoryImpl(
                 Result.success(Unit)
             } else {
                 val errorBody = response.errorBody()?.string()
-                Result.failure(Exception("Lỗi từ server: ${response.code()} - $errorBody"))
+                Result.failure(Exception("Server error: ${response.code()} - $errorBody"))
             }
         } catch (e: Exception) {
-            Result.failure(Exception("Lỗi mạng: ${e.message}"))
+            Result.failure(Exception("Network error: ${e.message}"))
         }
     }
 
@@ -122,13 +122,13 @@ class CourseRepositoryImpl(
             if (response.isSuccessful) {
                 val body = response.body()
                 if (body != null) {
-                    // 3. Bóc thành công cục data (CourseManagerDto) ra và gửi đi
+                    // translated comment
                     Result.success(body)
                 } else {
-                    Result.failure(Exception("Dữ liệu trả về bị rỗng!"))
+                    Result.failure(Exception("Returned data is empty!"))
                 }
             } else {
-                Result.failure(Exception("Lỗi server: ${response.code()} - ${response.message()}"))
+                Result.failure(Exception("Server error: ${response.code()} - ${response.message()}"))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -141,7 +141,7 @@ class CourseRepositoryImpl(
             if (response.isSuccessful) {
                 Result.success(response.body() ?: emptyList())
             } else {
-                Result.failure(Exception("Lỗi: ${response.code()}"))
+                Result.failure(Exception("Error: ${response.code()}"))
             }
         } catch (e: Exception) {
             Result.failure(e)

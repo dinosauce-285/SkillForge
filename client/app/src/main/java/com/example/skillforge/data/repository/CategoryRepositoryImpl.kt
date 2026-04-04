@@ -12,9 +12,9 @@ class CategoryRepositoryImpl(
         return try {
             val response = api.getCategories()
 
-            // Xử lý mở hộp Response chuẩn mực
+            // translated comment
             if (response.isSuccessful && response.body() != null) {
-                // Map từ CategoryDto sang Category
+                // translated comment
                 val categories = response.body()!!.map { dto ->
                     Category(
                         id = dto.id,
@@ -23,10 +23,10 @@ class CategoryRepositoryImpl(
                 }
                 Result.success(categories)
             } else {
-                Result.failure(Exception("Lỗi tải danh mục: ${response.code()}"))
+                Result.failure(Exception("Failed to load categories: ${response.code()}"))
             }
         } catch (e: Exception) {
-            Result.failure(Exception("Lỗi mạng: ${e.message}"))
+            Result.failure(Exception("Network error: ${e.message}"))
         }
     }
 }

@@ -2,14 +2,14 @@ package com.example.skillforge.feature.instructor_portal.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.skillforge.domain.model.Category // Đổi Import thành Category của Domain
+import com.example.skillforge.domain.model.Category // translated comment
 import com.example.skillforge.domain.repository.CategoryRepository
 import com.example.skillforge.domain.repository.CourseRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-// Trạng thái của màn hình Form
+// translated comment
 sealed class CourseFormState {
     object Idle : CourseFormState()
     object Loading : CourseFormState()
@@ -24,7 +24,7 @@ class CourseFormViewModel(
     private val _uiState = MutableStateFlow<CourseFormState>(CourseFormState.Idle)
     val uiState: StateFlow<CourseFormState> = _uiState
 
-    // Đã đổi CategoryDto thành Category ở 2 dòng dưới đây
+    // translated comment
     private val _categories = MutableStateFlow<List<Category>>(emptyList())
     val categories: StateFlow<List<Category>> = _categories
 
@@ -33,11 +33,11 @@ class CourseFormViewModel(
             categoryRepository.getCategories()
                 .onSuccess {
                     _categories.value = it 
-                    println("✅ ĐÃ LẤY ĐƯỢC CATEGORY: $it")
+                    println("CATEGORIES LOADED: $it")
                 }
                 .onFailure {
-                    // 🌟 In lỗi ra để xem nó bị gì!
-                    println("❌ LỖI TẢI CATEGORY: ${it.message}")
+                    // translated comment
+                    println("CATEGORY LOAD ERROR: ${it.message}")
                     it.printStackTrace()
                 }
         }
@@ -52,10 +52,10 @@ class CourseFormViewModel(
 
                 result.fold(
                     onSuccess = { _uiState.value = CourseFormState.Success },
-                    onFailure = { _uiState.value = CourseFormState.Error(it.message ?: "Lỗi!") }
+                    onFailure = { _uiState.value = CourseFormState.Error(it.message ?: "Error!") }
                 )
             } catch (e: Exception) {
-                _uiState.value = CourseFormState.Error(e.message ?: "Lỗi không xác định")
+                _uiState.value = CourseFormState.Error(e.message ?: "Unknown error")
             }
         }
     }

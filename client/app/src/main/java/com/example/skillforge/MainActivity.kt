@@ -45,14 +45,14 @@ import com.example.skillforge.feature.transaction.ui.TransactionRoute
 import com.example.skillforge.feature.transaction.viewmodel.TransactionViewModel
 import com.example.skillforge.feature.transaction.viewmodel.TransactionViewModelFactory
 
-// IMPORT CỦA FEATURE/HOME-UI
+// translated comment
 import com.example.skillforge.domain.model.Category
 import com.example.skillforge.feature.home.ui.HomeScreen
 import com.example.skillforge.feature.student_courses.ui.MyCoursesScreen
 import com.example.skillforge.feature.student_courses.ui.LessonLearningScreen
 import com.example.skillforge.feature.student_courses.ui.StudentProfileScreen
 
-// IMPORT CỦA DEV
+// translated comment
 import io.github.jan.supabase.auth.handleDeeplinks
 
 class MainActivity : ComponentActivity() {
@@ -94,12 +94,12 @@ class MainActivity : ComponentActivity() {
                 Surface(modifier = Modifier.fillMaxSize()) {
 
                     // ===================================================================
-                    // CỜ CHUYỂN ĐỔI: ĐỂ TRUE ĐỂ TEST HOMESCREEN, ĐỂ FALSE ĐỂ CHẠY APP THẬT
+                    // translated comment
                     val isTestingHome = false
                     // ===================================================================
 
                     if (isTestingHome) {
-                        // Gọi thẳng HomeScreen, hoàn toàn bỏ qua bước đăng nhập
+                        // translated comment
                         var showMyCourses by remember { mutableStateOf(false) }
                         var showLesson by remember { mutableStateOf(false) }
 
@@ -126,7 +126,7 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                     } else {
-                        // LUỒNG CHẠY APP BÌNH THƯỜNG CỦA NHÁNH DEV
+                        // translated comment
                         when (val route = currentRoute) {
                             AppRoute.Login -> LoginScreen(
                                 viewModel = loginViewModel,
@@ -227,7 +227,7 @@ class MainActivity : ComponentActivity() {
                                         currentRoute = AppRoute.CourseManager(route.session, clickedCourseId)
                                     },
                                     onNavigateToUploadMaterial = {
-                                        // Tính năng upload chung (nếu cần)
+                                        // translated comment
                                     },
                                     onLogout = {
                                         currentRoute = AppRoute.Login

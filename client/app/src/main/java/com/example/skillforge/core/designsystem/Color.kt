@@ -2,30 +2,30 @@ package com.example.skillforge.core.designsystem
 
 import androidx.compose.ui.graphics.Color
 
-// Màu chủ đạo (Cam) cho nút, logo, liên kết
+// translated comment
 val PrimaryOrange = Color(0xFFF26724)
-val PrimaryOrangeLight = Color(0xFFF26724) // Dùng cho chữ cam
+val PrimaryOrangeLight = Color(0xFFF26724) // translated comment
 
-// Màu nền
-val BackgroundColor = Color(0xFFF7F7F7) // Nền ngoài thẻ trắng
-val SurfaceColor = Color(0xFFFFFFFF)    // Nền thẻ trắng chính
+// translated comment
+val BackgroundColor = Color(0xFFF7F7F7) // translated comment
+val SurfaceColor = Color(0xFFFFFFFF)    // translated comment
 
-// Màu văn bản
-val TextPrimaryColor = Color(0xFF000000)   // Văn bản chính (Tiêu đề app, Tiêu đề chính)
-val TextSecondaryColor = Color(0xFF757575) // Văn bản phụ, placeholder
+// translated comment
+val TextPrimaryColor = Color(0xFF000000)   // translated comment
+val TextSecondaryColor = Color(0xFF757575) // translated comment
 
-// Màu cho các thành phần UI khác
-val TextFieldBackgroundColor = Color(0xFFFFFFFF) // Nền ô nhập liệu (mặc định trắng)
-val SocialButtonBorderColor = Color(0xFFE0E0E0) // Viền nút social
-val SocialButtonTextColor = Color(0xFF333333)   // Văn bản nút social
+// translated comment
+val TextFieldBackgroundColor = Color(0xFFFFFFFF) // translated comment
+val SocialButtonBorderColor = Color(0xFFE0E0E0) // translated comment
+val SocialButtonTextColor = Color(0xFF333333)   // translated comment
 
-// Màu cho thanh tìm kiếm
+// translated comment
 val SearchBarBackgroundColor = Color(0xFFF5F5F5)
 
-// Màu cho Category Chips (khi chưa được chọn)
-val ChipUnselectedTextColor = Color(0xFF64B5F6) // Màu xanh dương nhạt cho chữ
-val ChipUnselectedBorderColor = Color(0xFFE3F2FD) // Màu xanh dương rất nhạt cho viền
-val ChipUnselectedBackgroundColor = Color(0xFFFFFFFF) // Nền trắng
+// translated comment
+val ChipUnselectedTextColor = Color(0xFF64B5F6) // translated comment
+val ChipUnselectedBorderColor = Color(0xFFE3F2FD) // translated comment
+val ChipUnselectedBackgroundColor = Color(0xFFFFFFFF) // translated comment
 
-// Thêm vào Color.kt
-val RatingStarColor = Color(0xFFFFC107) // Màu vàng hổ phách
+// translated comment
+val RatingStarColor = Color(0xFFFFC107) // translated comment

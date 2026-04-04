@@ -37,7 +37,7 @@ import com.example.skillforge.core.utils.getFileName
 @Composable
 fun SkillforgeMaterialUploadScreen(
     courseId: String = "123",
-    isLoading: Boolean = false, // Thêm trạng thái Loading
+    isLoading: Boolean = false, // translated comment
     onNavigateBack: () -> Unit = {},
     onUploadClick: (title: String, type: String, fileUri: Uri?) -> Unit = { _, _, _ -> }
 ) {
@@ -87,7 +87,7 @@ fun SkillforgeMaterialUploadScreen(
         }
     ) { innerPadding ->
         Column(modifier = Modifier.padding(innerPadding).padding(16.dp)) {
-            // Tiêu đề bài học
+            // translated comment
             OutlinedTextField(
                 value = lessonTitle,
                 onValueChange = { lessonTitle = it },
@@ -99,7 +99,7 @@ fun SkillforgeMaterialUploadScreen(
                 shape = RoundedCornerShape(12.dp)
             )
 
-            // Chọn loại tài liệu
+            // translated comment
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
                     "Material Type",
@@ -139,7 +139,7 @@ fun SkillforgeMaterialUploadScreen(
                 }
             }
 
-            // Vùng chọn file
+            // translated comment
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
                     "Upload File",

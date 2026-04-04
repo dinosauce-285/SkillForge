@@ -40,10 +40,10 @@ enum class SkillforgeInstructorRoute(val title: String, val icon: ImageVector) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SkillforgeInstructorDashboardScreen(
-    courses: List<CourseSummaryDto> = emptyList(), // 🌟 Nhận danh sách khóa học từ API
-    isLoading: Boolean = false, // 🌟 Trạng thái đang tải
+    courses: List<CourseSummaryDto> = emptyList(), // translated comment
+    isLoading: Boolean = false, // translated comment
     onNavigateToCreateCourse: () -> Unit = {},
-    onCourseClick: (String) -> Unit = {}, // 🌟 Sự kiện khi bấm vào 1 khóa học
+    onCourseClick: (String) -> Unit = {}, // translated comment
     onNavigateToUploadMaterial: () -> Unit = {},
     onLogout: () -> Unit = {}
 ) {
@@ -58,7 +58,7 @@ fun SkillforgeInstructorDashboardScreen(
             )
         },
         floatingActionButton = {
-            // Chỉ hiện nút Add nếu đang ở tab Dashboard hoặc Courses
+            // translated comment
             if (selectedRoute == SkillforgeInstructorRoute.Dashboard || selectedRoute == SkillforgeInstructorRoute.Courses) {
                 FloatingActionButton(
                     onClick = onNavigateToCreateCourse,
@@ -72,23 +72,23 @@ fun SkillforgeInstructorDashboardScreen(
         }
     ) { innerPadding ->
 
-        // 🌟 "NGƯỜI GÁC CỔNG" ĐIỀU HƯỚNG NỘI DUNG Ở GIỮA
+        // translated comment
         Box(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
             when (selectedRoute) {
                 SkillforgeInstructorRoute.Dashboard -> {
-                    // Gọi hàm chứa giao diện Dashboard cũ của bạn
+                    // translated comment
                     DashboardTabContent(onNavigateToUploadMaterial, onNavigateToCreateCourse)
                 }
                 SkillforgeInstructorRoute.Courses -> {
-                    // Gọi hàm chứa giao diện Danh sách khóa học mới
+                    // translated comment
                     CourseListTabContent(courses, isLoading, onCourseClick)
                 }
                 SkillforgeInstructorRoute.Analytics -> {
-                    // Tạm thời để trống
+                    // translated comment
                     Text("Analytics Tab (Coming Soon)", modifier = Modifier.align(Alignment.Center))
                 }
                 SkillforgeInstructorRoute.Account -> {
-                    // Tạm thời để trống
+                    // translated comment
                     Text("Account Tab (Coming Soon)", modifier = Modifier.align(Alignment.Center))
                 }
             }
@@ -108,7 +108,7 @@ fun CourseListTabContent(
         }
     } else if (courses.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("Bạn chưa tạo khóa học nào.\nHãy bấm nút '+' để bắt đầu nhé!", color = Color.Gray, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+            Text("You have not created any courses yet.\nTap '+' to get started.", color = Color.Gray, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
         }
     } else {
         LazyColumn(
@@ -117,7 +117,7 @@ fun CourseListTabContent(
                 .background(MaterialTheme.colorScheme.surface)
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
-            contentPadding = PaddingValues(top = 16.dp, bottom = 80.dp) // Chừa chỗ cho nút FAB
+            contentPadding = PaddingValues(top = 16.dp, bottom = 80.dp) // translated comment
         ) {
             item {
                 Text(
@@ -144,7 +144,7 @@ fun InstructorCourseItemCard(
 ) {
     ElevatedCard(
         modifier = Modifier.fillMaxWidth(),
-        onClick = onClick, // Bấm vào đây bay sang màn Manager
+        onClick = onClick, // translated comment
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
@@ -152,7 +152,7 @@ fun InstructorCourseItemCard(
             modifier = Modifier.padding(16.dp).fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Icon đại diện (có thể thay bằng AsyncImage tải thumbnailUrl sau)
+            // translated comment
             Box(
                 modifier = Modifier
                     .size(60.dp)
@@ -173,7 +173,7 @@ fun InstructorCourseItemCard(
                     maxLines = 1
                 )
                 Spacer(modifier = Modifier.height(4.dp))
-                // Hiển thị Category và Giá
+                // translated comment
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(text = course.category.name, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
                     Text(" • ", color = Color.Gray)
@@ -185,17 +185,17 @@ fun InstructorCourseItemCard(
                     )
                 }
                 Spacer(modifier = Modifier.height(8.dp))
-                // Hiển thị thống kê
+                // translated comment
                 Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Default.List, contentDescription = "Chapters", modifier = Modifier.size(14.dp), tint = Color.Gray)
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("${course.counts.chapters} Chương", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                        Text("${course.counts.chapters} Chapters", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
                     }
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Default.Person, contentDescription = "Students", modifier = Modifier.size(14.dp), tint = Color.Gray)
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("${course.counts.enrollments} Học viên", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                        Text("${course.counts.enrollments} Students", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
                     }
                 }
             }

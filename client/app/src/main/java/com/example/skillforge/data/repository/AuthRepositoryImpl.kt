@@ -30,7 +30,7 @@ class AuthRepositoryImpl(
                         id = session.user?.id ?: "",
                         email = session.user?.email ?: "",
                         fullName = session.user?.userMetadata?.get("full_name")?.toString() ?: "User",
-                        role = "STUDENT" // Mặc định hoặc lấy từ metadata nếu có
+                        role = "STUDENT" // translated comment
                     )
                 )
             }
@@ -58,7 +58,7 @@ class AuthRepositoryImpl(
                 Result.failure(Exception(parseErrorMessage(response.errorBody()?.string())))
             }
         } catch (e: Exception) {
-            Result.failure(Exception(e.message ?: "Không thể kết nối tới máy chủ"))
+            Result.failure(Exception(e.message ?: "Unable to connect to server"))
         }
     }
 
@@ -69,11 +69,11 @@ class AuthRepositoryImpl(
                 val data = response.body()!!
                 return Result.success(data.message)
             } else {
-                val errorBody = response.errorBody()?.string() ?: "Không có chi tiết"
-                return Result.failure(Exception("Server chê: Mã ${response.code()} - $errorBody"))
+                val errorBody = response.errorBody()?.string() ?: "No details"
+                return Result.failure(Exception("Server rejected request: Code ${response.code()} - $errorBody"))
             }
         } catch (e: Exception) {
-            return Result.failure(Exception("Lỗi Mạng/Crash: ${e.message}"))
+            return Result.failure(Exception("Network/Crash error: ${e.message}"))
         }
     }
 
@@ -82,10 +82,10 @@ class AuthRepositoryImpl(
     }
 
     private fun parseErrorMessage(rawError: String?): String {
-        if (rawError.isNullOrBlank()) return "Đăng nhập thất bại"
+        if (rawError.isNullOrBlank()) return "Login failed"
         return runCatching {
             val json = Gson().fromJson(rawError, JsonObject::class.java)
-            json.get("message")?.asString ?: "Đăng nhập thất bại"
-        }.getOrElse { "Đăng nhập thất bại" }
+            json.get("message")?.asString ?: "Login failed"
+        }.getOrElse { "Login failed" }
     }
 }
