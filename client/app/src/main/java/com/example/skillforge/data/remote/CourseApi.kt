@@ -49,6 +49,7 @@ data class CourseDetailsDto(
 )
 
 data class CourseCategoryDto(
+    val id: String,
     val name: String,
 )
 
@@ -96,11 +97,11 @@ data class CreateCourseResponse(
 )
 
 interface CourseApi {
-    // Đã thêm searchQuery và categoryId để khớp với Interface và Repository
     @GET("courses")
     suspend fun getCourses(
         @Query("search") searchQuery: String? = null,
-        @Query("categoryId") categoryId: String? = null
+        @Query("categoryId") categoryId: String? = null,
+        @Query("level") level: String? = null,
     ): Response<CourseListResponse>
 
     @GET("courses/{id}")

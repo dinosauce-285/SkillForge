@@ -6,6 +6,7 @@ data class CourseSummary(
     val subtitle: String?,
     val summary: String?,
     val thumbnailUrl: String? = null,
+    val categoryId: String,
     val categoryName: String,
     val instructorName: String,
     val level: String,

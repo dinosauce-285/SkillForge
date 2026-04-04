@@ -62,7 +62,10 @@ class MainActivity : ComponentActivity() {
                     factory = RegisterViewModelFactory(appContainer.registerUseCase)
                 )
                 val studentCoursesViewModel: StudentCoursesViewModel = viewModel(
-                    factory = StudentCoursesViewModelFactory(appContainer.courseRepository)
+                    factory = StudentCoursesViewModelFactory(
+                        appContainer.courseRepository,
+                        appContainer.categoryRepository
+                    )
                 )
                 val courseFormViewModel: CourseFormViewModel = viewModel(
                     factory = CourseFormViewModelFactory(
@@ -76,7 +79,7 @@ class MainActivity : ComponentActivity() {
 
                     // ===================================================================
                     // CỜ CHUYỂN ĐỔI: ĐỂ TRUE ĐỂ TEST HOMESCREEN, ĐỂ FALSE ĐỂ CHẠY APP THẬT
-                    val isTestingHome = true
+                    val isTestingHome = false
                     // ===================================================================
 
                     if (isTestingHome) {
