@@ -4,9 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.skillforge.domain.model.Category
 import com.example.skillforge.domain.model.CourseDetails
+import com.example.skillforge.domain.model.LessonContent
 import com.example.skillforge.domain.model.CourseSummary
 import com.example.skillforge.domain.repository.CategoryRepository
 import com.example.skillforge.domain.repository.CourseRepository
+import com.example.skillforge.domain.repository.LessonRepository
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -29,9 +31,16 @@ data class StudentCourseDetailsUiState(
     val errorMessage: String? = null,
 )
 
+data class LessonContentUiState(
+    val isLoading: Boolean = false,
+    val lesson: LessonContent? = null,
+    val errorMessage: String? = null,
+)
+
 class StudentCoursesViewModel(
     private val courseRepository: CourseRepository,
     private val categoryRepository: CategoryRepository,
+    private val lessonRepository: LessonRepository,
 ) : ViewModel() {
     private val _courseListState = MutableStateFlow(StudentCourseListUiState(isLoading = true))
     val courseListState: StateFlow<StudentCourseListUiState> = _courseListState
@@ -39,7 +48,11 @@ class StudentCoursesViewModel(
     private val _courseDetailsState = MutableStateFlow(StudentCourseDetailsUiState())
     val courseDetailsState: StateFlow<StudentCourseDetailsUiState> = _courseDetailsState
 
+    private val _lessonContentState = MutableStateFlow(LessonContentUiState())
+    val lessonContentState: StateFlow<LessonContentUiState> = _lessonContentState
+
     private var loadedCourseDetailsId: String? = null
+    private var loadedLessonId: String? = null
 
     init {
         refreshCatalog()
@@ -162,6 +175,32 @@ class StudentCoursesViewModel(
                     _courseDetailsState.value = StudentCourseDetailsUiState(
                         isLoading = false,
                         errorMessage = error.message ?: "Unable to load course details",
+                    )
+                },
+            )
+        }
+    }
+
+    fun loadLessonContent(token: String, lessonId: String, forceReload: Boolean = false) {
+        if (!forceReload && loadedLessonId == lessonId && _lessonContentState.value.lesson != null) {
+            return
+        }
+
+        viewModelScope.launch {
+            _lessonContentState.value = LessonContentUiState(isLoading = true)
+
+            lessonRepository.getLessonDetails(token, lessonId).fold(
+                onSuccess = { lesson ->
+                    loadedLessonId = lessonId
+                    _lessonContentState.value = LessonContentUiState(
+                        isLoading = false,
+                        lesson = lesson,
+                    )
+                },
+                onFailure = { error ->
+                    _lessonContentState.value = LessonContentUiState(
+                        isLoading = false,
+                        errorMessage = error.message ?: "Unable to load lesson",
                     )
                 },
             )

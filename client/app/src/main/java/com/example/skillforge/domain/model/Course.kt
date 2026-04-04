@@ -22,7 +22,12 @@ data class CourseSummary(
 data class CourseChapter(
     val id: String,
     val title: String,
-    val lessonTitles: List<String>,
+    val lessons: List<CourseLesson>,
+)
+
+data class CourseLesson(
+    val id: String,
+    val title: String,
 )
 
 data class CourseDetails(
