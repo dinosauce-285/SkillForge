@@ -10,6 +10,7 @@ import {
 import { OrderService } from './order.service';
 import { CreateOrderDto } from './dto/create.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @Controller('orders')
 @UseGuards(JwtAuthGuard)
@@ -17,18 +18,23 @@ export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
   @Get()
-  async getAllByUser(@Request() req) {
-    const userId = req.user.id;
+  async getAllByUser(@CurrentUser('userId') userId: string) {
     return this.orderService.getAllByUser(userId);
   }
 
   @Get(':id')
-  async getDetail(@Param('id') orderId: string, @Request() req) {
-    return this.orderService.getByOrderId(req.user.id, orderId);
+  async getDetail(
+    @Param('id') orderId: string,
+    @CurrentUser('userId') userId: string,
+  ) {
+    return this.orderService.getByOrderId(userId, orderId);
   }
 
   @Post()
-  async create(@Body() createOrderDto: CreateOrderDto) {
-    return this.orderService.createOrder(createOrderDto);
+  async create(
+    @Body() createOrderDto: CreateOrderDto,
+    @CurrentUser('userId') userId: string,
+  ) {
+    return this.orderService.createOrder(userId, createOrderDto);
   }
 }

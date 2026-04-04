@@ -65,6 +65,7 @@ fun StudentCourseDetailsRoute(
     courseId: String,
     viewModel: StudentCoursesViewModel,
     onLessonSelected: (String) -> Unit,
+    onCheckoutSelected: (String) -> Unit,
     onBack: () -> Unit,
 ) {
     val uiState by viewModel.courseDetailsState.collectAsState()
@@ -76,6 +77,7 @@ fun StudentCourseDetailsRoute(
     StudentCourseDetailsScreen(
         uiState = uiState,
         onLessonSelected = onLessonSelected,
+        onCheckoutSelected = onCheckoutSelected,
         onBack = onBack,
         onRetry = { viewModel.loadCourseDetails(courseId, forceReload = true) },
     )
@@ -85,6 +87,7 @@ fun StudentCourseDetailsRoute(
 fun StudentCourseDetailsScreen(
     uiState: StudentCourseDetailsUiState,
     onLessonSelected: (String) -> Unit,
+    onCheckoutSelected: (String) -> Unit,
     onBack: () -> Unit,
     onRetry: () -> Unit,
 ) {
@@ -109,7 +112,7 @@ fun StudentCourseDetailsScreen(
                     verticalArrangement = Arrangement.spacedBy(SkillforgeLayout.sectionGap),
                 ) {
                     item { CourseDetailsHero(course = course, onBack = onBack) }
-                    item { CourseOverviewCard(course = course) }
+                    item { CourseOverviewCard(course = course, onCheckoutSelected = onCheckoutSelected) }
                     if (course.tags.isNotEmpty()) {
                         item { CourseTagsCard(tags = course.tags) }
                     }
@@ -228,7 +231,10 @@ private fun CourseDetailsHero(
 }
 
 @Composable
-private fun CourseOverviewCard(course: CourseDetails) {
+private fun CourseOverviewCard(
+    course: CourseDetails,
+    onCheckoutSelected: (String) -> Unit,
+) {
     ElevatedCard(shape = SkillforgeShapes.card, colors = skillforgeElevatedCardColors()) {
         Column(
             modifier = Modifier.padding(SkillforgeLayout.cardContentPadding),
@@ -245,7 +251,7 @@ private fun CourseOverviewCard(course: CourseDetails) {
                 DetailsStat(title = "Chapters", value = course.chapterCount.toString())
             }
             Button(
-                onClick = {},
+                onClick = { onCheckoutSelected(course.id) },
                 colors = skillforgePrimaryButtonColors(),
                 modifier = Modifier.fillMaxWidth(),
             ) {
@@ -448,6 +454,7 @@ private fun StudentCourseDetailsPreview() {
         StudentCourseDetailsScreen(
             uiState = StudentCourseDetailsUiState(course = StudentCourseMockData.courseDetails),
             onLessonSelected = {},
+            onCheckoutSelected = {},
             onBack = {},
             onRetry = {},
         )
