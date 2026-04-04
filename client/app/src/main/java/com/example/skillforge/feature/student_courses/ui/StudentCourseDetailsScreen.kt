@@ -1,7 +1,5 @@
 package com.example.skillforge.feature.student_courses.ui
-
 import androidx.compose.foundation.background
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -43,10 +41,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import com.example.skillforge.R
+import coil.compose.AsyncImage
 import com.example.skillforge.core.designsystem.PrimaryOrange
 import com.example.skillforge.core.designsystem.PrimaryOrangeLight
 import com.example.skillforge.core.designsystem.SkillforgeComponentSizes
@@ -169,12 +166,16 @@ private fun CourseDetailsHero(
                     .clip(SkillforgeShapes.card)
                     .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.18f)),
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.mock_course_thumbnail),
-                    contentDescription = course.title,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop,
-                )
+                val thumbnailUrl = course.thumbnailUrl?.takeIf { it.isNotBlank() }
+
+                if (thumbnailUrl != null) {
+                    AsyncImage(
+                        model = thumbnailUrl,
+                        contentDescription = course.title,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop,
+                    )
+                }
 
                 Box(
                     modifier = Modifier

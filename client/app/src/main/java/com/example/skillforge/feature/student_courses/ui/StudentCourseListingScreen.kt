@@ -1,11 +1,9 @@
 package com.example.skillforge.feature.student_courses.ui
-
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -64,12 +62,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.skillforge.R
+import coil.compose.AsyncImage
 import com.example.skillforge.core.designsystem.PrimaryOrange
 import com.example.skillforge.core.designsystem.SkillforgeComponentSizes
 import com.example.skillforge.core.designsystem.SkillforgeLayout
@@ -586,12 +583,16 @@ private fun CourseDiscoveryCard(
                     .height(SkillforgeComponentSizes.thumbnailHeight)
                     .background(MaterialTheme.colorScheme.surfaceVariant),
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.mock_course_thumbnail),
-                    contentDescription = course.title,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop,
-                )
+                val thumbnailUrl = course.thumbnailUrl?.takeIf { it.isNotBlank() }
+
+                if (thumbnailUrl != null) {
+                    AsyncImage(
+                        model = thumbnailUrl,
+                        contentDescription = course.title,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop,
+                    )
+                }
 
                 Box(
                     modifier = Modifier

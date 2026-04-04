@@ -1,6 +1,4 @@
 package com.example.skillforge.feature.favorite.ui
-
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -45,14 +43,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.skillforge.R
+import coil.compose.AsyncImage
 import com.example.skillforge.core.designsystem.BackgroundColor
 import com.example.skillforge.core.designsystem.PrimaryOrange
 import com.example.skillforge.core.designsystem.SurfaceColor
@@ -223,12 +220,16 @@ private fun FavoriteCourseCard(
                     .size(width = 120.dp, height = 90.dp)
                     .clip(RoundedCornerShape(12.dp)),
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.mock_course_thumbnail),
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop,
-                )
+                val thumbnailUrl = course.thumbnailUrl?.takeIf { it.isNotBlank() }
+
+                if (thumbnailUrl != null) {
+                    AsyncImage(
+                        model = thumbnailUrl,
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop,
+                    )
+                }
 
                 Box(
                     modifier = Modifier
