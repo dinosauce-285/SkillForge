@@ -1,11 +1,16 @@
 package com.example.skillforge.feature.student_courses.ui
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -13,45 +18,46 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.Logout
-import androidx.compose.material.icons.filled.Explore
-import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.PlayCircleOutline
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.MenuAnchorType
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -74,10 +80,19 @@ import com.example.skillforge.core.designsystem.skillforgeElevatedCardColors
 import com.example.skillforge.core.designsystem.skillforgePrimaryButtonColors
 import com.example.skillforge.domain.model.AuthSession
 import com.example.skillforge.domain.model.AuthUser
+import com.example.skillforge.domain.model.Category
 import com.example.skillforge.domain.model.CourseSummary
 import com.example.skillforge.feature.student_courses.ui.components.StudentBottomNavigationBar
 import com.example.skillforge.feature.student_courses.viewmodel.StudentCourseListUiState
 import com.example.skillforge.feature.student_courses.viewmodel.StudentCoursesViewModel
+
+private val levelOptions = listOf(
+    null to "All levels",
+    "BEGINNER" to "Beginner",
+    "INTERMEDIATE" to "Intermediate",
+    "ADVANCED" to "Advanced",
+    "ALL_LEVELS" to "All levels course",
+)
 
 @Composable
 fun StudentCourseListingRoute(
@@ -91,7 +106,11 @@ fun StudentCourseListingRoute(
     StudentCourseListingScreen(
         session = session,
         uiState = uiState,
-        onRetry = viewModel::loadCourses,
+        onSearchQueryChange = viewModel::updateSearchQuery,
+        onCategorySelected = viewModel::updateSelectedCategory,
+        onLevelSelected = viewModel::updateSelectedLevel,
+        onResetFilters = viewModel::resetFilters,
+        onRetry = viewModel::refreshCatalog,
         onCourseSelected = onCourseSelected,
         onLogout = onLogout,
     )
@@ -101,33 +120,20 @@ fun StudentCourseListingRoute(
 fun StudentCourseListingScreen(
     session: AuthSession,
     uiState: StudentCourseListUiState,
+    onSearchQueryChange: (String) -> Unit,
+    onCategorySelected: (String?) -> Unit,
+    onLevelSelected: (String?) -> Unit,
+    onResetFilters: () -> Unit,
     onRetry: () -> Unit,
     onCourseSelected: (String) -> Unit,
     onLogout: () -> Unit,
 ) {
-    var searchQuery by rememberSaveable { mutableStateOf("") }
-    val categories = remember(uiState.courses) {
-        buildList {
-            add("All")
-            addAll(uiState.courses.map { it.categoryName }.distinct())
-        }
-    }
-    var selectedCategory by remember(categories) {
-        mutableStateOf(categories.firstOrNull().orEmpty())
-    }
-
-    val visibleCourses = remember(uiState.courses, searchQuery, selectedCategory) {
-        uiState.courses.filter { course ->
-            val matchesCategory = selectedCategory == "All" || selectedCategory.isBlank() || course.categoryName == selectedCategory
-            val query = searchQuery.trim()
-            val matchesQuery = query.isBlank() ||
-                course.title.contains(query, ignoreCase = true) ||
-                course.instructorName.contains(query, ignoreCase = true) ||
-                course.categoryName.contains(query, ignoreCase = true) ||
-                course.tags.any { tag -> tag.contains(query, ignoreCase = true) }
-
-            matchesCategory && matchesQuery
-        }
+    var isFilterPanelOpen by remember { mutableStateOf(false) }
+    val activeFilterCount = remember(
+        uiState.selectedCategoryId,
+        uiState.selectedLevel,
+    ) {
+        listOf(uiState.selectedCategoryId, uiState.selectedLevel).count { it != null }
     }
 
     Scaffold(
@@ -137,70 +143,97 @@ fun StudentCourseListingScreen(
             StudentBottomNavigationBar(currentRoute = "Discover")
         },
     ) { innerPadding ->
-        LazyColumn(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background),
-            contentPadding = PaddingValues(
-                start = SkillforgeLayout.screenHorizontalPadding,
-                end = SkillforgeLayout.screenHorizontalPadding,
-                top = SkillforgeSpacing.medium,
-                bottom = innerPadding.calculateBottomPadding() + SkillforgeSpacing.large,
-            ),
-            verticalArrangement = Arrangement.spacedBy(SkillforgeSpacing.medium),
         ) {
-            item {
-                DiscoverHeader(
-                    fullName = session.user.fullName,
-                    onLogout = onLogout,
-                )
-            }
-
-            item {
-                SearchBar(
-                    value = searchQuery,
-                    onValueChange = { searchQuery = it },
-                )
-            }
-
-            if (categories.isNotEmpty()) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(
+                    start = SkillforgeLayout.screenHorizontalPadding,
+                    end = SkillforgeLayout.screenHorizontalPadding,
+                    top = SkillforgeSpacing.medium,
+                    bottom = innerPadding.calculateBottomPadding() + SkillforgeSpacing.large,
+                ),
+                verticalArrangement = Arrangement.spacedBy(SkillforgeSpacing.medium),
+            ) {
                 item {
-                    CategoryRow(
-                        categories = categories,
-                        selectedCategory = selectedCategory,
-                        onCategorySelected = { selectedCategory = it },
+                    DiscoverHeader(
+                        fullName = session.user.fullName,
+                        onLogout = onLogout,
+                    )
+                }
+
+                item {
+                    SearchActionBar(
+                        value = uiState.searchQuery,
+                        activeFilterCount = activeFilterCount,
+                        onValueChange = onSearchQueryChange,
+                        onFilterClick = { isFilterPanelOpen = true },
+                    )
+                }
+
+                item {
+                    SectionHeader(
+                        title = "Course catalog",
+                        actionLabel = "${uiState.courses.size} results",
+                    )
+                }
+
+                item {
+                    CourseCatalogContent(
+                        uiState = uiState,
+                        onRetry = onRetry,
+                        onCourseSelected = onCourseSelected,
                     )
                 }
             }
 
-            item {
-                SectionHeader(
-                    title = "Popular courses",
-                    actionLabel = "See all",
+            AnimatedVisibility(
+                visible = isFilterPanelOpen,
+                enter = fadeIn(),
+                exit = fadeOut(),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.32f))
+                        .clickable { isFilterPanelOpen = false },
                 )
             }
 
-            when {
-                uiState.isLoading -> item { LoadingStateCard() }
-                uiState.errorMessage != null -> item {
-                    ErrorStateCard(
-                        message = uiState.errorMessage,
-                        onRetry = onRetry,
-                    )
-                }
+            BoxWithConstraints(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.CenterEnd,
+            ) {
+                val compactPanelWidth = maxWidth * 0.84f
+                val panelWidth = if (maxWidth < 760.dp) compactPanelWidth else 360.dp
 
-                visibleCourses.isEmpty() -> item {
-                    EmptyStateCard(
-                        searchQuery = searchQuery,
-                        selectedCategory = selectedCategory,
-                    )
-                }
-
-                else -> {
-                    items(visibleCourses, key = { it.id }) { course ->
-                        CourseDiscoveryCard(
-                            course = course,
-                            onClick = { onCourseSelected(course.id) },
+                AnimatedVisibility(
+                    visible = isFilterPanelOpen,
+                    enter = slideInHorizontally(initialOffsetX = { it }) + fadeIn(),
+                    exit = slideOutHorizontally(targetOffsetX = { it }) + fadeOut(),
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(
+                                top = SkillforgeSpacing.medium,
+                                bottom = innerPadding.calculateBottomPadding() + SkillforgeSpacing.medium,
+                                end = SkillforgeLayout.screenHorizontalPadding,
+                            ),
+                        contentAlignment = Alignment.CenterEnd,
+                    ) {
+                        CourseFilterSidebar(
+                            modifier = Modifier.width(panelWidth),
+                            categories = uiState.categories,
+                            selectedCategoryId = uiState.selectedCategoryId,
+                            selectedLevel = uiState.selectedLevel,
+                            onCategorySelected = onCategorySelected,
+                            onLevelSelected = onLevelSelected,
+                            onResetFilters = onResetFilters,
+                            onClose = { isFilterPanelOpen = false },
                         )
                     }
                 }
@@ -281,64 +314,59 @@ private fun DiscoverHeader(
 }
 
 @Composable
-private fun SearchBar(
+private fun SearchActionBar(
     value: String,
+    activeFilterCount: Int,
     onValueChange: (String) -> Unit,
-) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        modifier = Modifier.fillMaxWidth(),
-        shape = SkillforgeShapes.input,
-        singleLine = true,
-        leadingIcon = {
-            Icon(
-                imageVector = Icons.Default.Search,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        },
-        placeholder = {
-            Text("Search for courses, topics...")
-        },
-    )
-}
-
-@Composable
-private fun CategoryRow(
-    categories: List<String>,
-    selectedCategory: String,
-    onCategorySelected: (String) -> Unit,
+    onFilterClick: () -> Unit,
 ) {
     Row(
-        modifier = Modifier.horizontalScroll(rememberScrollState()),
+        modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(SkillforgeSpacing.small),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        categories.forEach { category ->
-            val isSelected = category == selectedCategory
-            FilterChip(
-                selected = isSelected,
-                onClick = { onCategorySelected(category) },
-                label = {
-                    Text(
-                        text = category,
-                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            modifier = Modifier.weight(1f),
+            shape = SkillforgeShapes.input,
+            singleLine = true,
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Default.Search,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            },
+            placeholder = {
+                Text("Search courses by title...")
+            },
+        )
+
+        Surface(
+            modifier = Modifier.size(56.dp),
+            shape = SkillforgeShapes.input,
+            color = MaterialTheme.colorScheme.surface,
+            tonalElevation = SkillforgeSpacing.xSmall,
+            onClick = onFilterClick,
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                BadgedBox(
+                    badge = {
+                        if (activeFilterCount > 0) {
+                            Badge {
+                                Text(activeFilterCount.toString())
+                            }
+                        }
+                    },
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.FilterList,
+                        contentDescription = "Open filters",
+                        tint = MaterialTheme.colorScheme.primary,
                     )
-                },
-                colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = MaterialTheme.colorScheme.primary,
-                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    labelColor = MaterialTheme.colorScheme.primary,
-                ),
-                border = FilterChipDefaults.filterChipBorder(
-                    enabled = true,
-                    selected = isSelected,
-                    borderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
-                    selectedBorderColor = MaterialTheme.colorScheme.primary,
-                ),
-            )
-            Spacer(modifier = Modifier.width(4.dp))
+                }
+            }
         }
     }
 }
@@ -364,6 +392,171 @@ private fun SectionHeader(
             style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.SemiBold,
         )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CourseFilterSidebar(
+    modifier: Modifier = Modifier,
+    categories: List<Category>,
+    selectedCategoryId: String?,
+    selectedLevel: String?,
+    onCategorySelected: (String?) -> Unit,
+    onLevelSelected: (String?) -> Unit,
+    onResetFilters: () -> Unit,
+    onClose: () -> Unit,
+) {
+    var levelExpanded by remember { mutableStateOf(false) }
+    val selectedLevelLabel = levelOptions.firstOrNull { it.first == selectedLevel }?.second ?: "All levels"
+
+    ElevatedCard(
+        modifier = modifier,
+        shape = SkillforgeShapes.card,
+        colors = skillforgeElevatedCardColors(),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(SkillforgeLayout.cardContentPadding),
+            verticalArrangement = Arrangement.spacedBy(SkillforgeSpacing.medium),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = "Filters",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(SkillforgeSpacing.xSmall)) {
+                    OutlinedButton(onClick = onResetFilters) {
+                        Text("Reset")
+                    }
+                    OutlinedButton(onClick = onClose) {
+                        Text("Close")
+                    }
+                }
+            }
+
+            Column(verticalArrangement = Arrangement.spacedBy(SkillforgeSpacing.xSmall)) {
+                Text(
+                    text = "Category",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                FilterCheckboxRow(
+                    label = "All categories",
+                    checked = selectedCategoryId == null,
+                    onClick = { onCategorySelected(null) },
+                )
+                categories.forEach { category ->
+                    FilterCheckboxRow(
+                        label = category.name,
+                        checked = selectedCategoryId == category.id,
+                        onClick = { onCategorySelected(category.id) },
+                    )
+                }
+            }
+
+            Column(verticalArrangement = Arrangement.spacedBy(SkillforgeSpacing.xSmall)) {
+                Text(
+                    text = "Difficulty",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                ExposedDropdownMenuBox(
+                    expanded = levelExpanded,
+                    onExpandedChange = { levelExpanded = !levelExpanded },
+                ) {
+                    OutlinedTextField(
+                        value = selectedLevelLabel,
+                        onValueChange = {},
+                        readOnly = true,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor(MenuAnchorType.PrimaryNotEditable),
+                        trailingIcon = {
+                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = levelExpanded)
+                        },
+                        colors = TextFieldDefaults.colors(),
+                    )
+                    ExposedDropdownMenu(
+                        expanded = levelExpanded,
+                        onDismissRequest = { levelExpanded = false },
+                    ) {
+                        levelOptions.forEach { option ->
+                            DropdownMenuItem(
+                                text = { Text(option.second) },
+                                onClick = {
+                                    onLevelSelected(option.first)
+                                    levelExpanded = false
+                                },
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun FilterCheckboxRow(
+    label: String,
+    checked: Boolean,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(SkillforgeShapes.card)
+            .clickable(onClick = onClick)
+            .padding(vertical = 2.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(SkillforgeSpacing.xSmall),
+    ) {
+        Checkbox(
+            checked = checked,
+            onCheckedChange = { onClick() },
+        )
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+    }
+}
+
+@Composable
+private fun CourseCatalogContent(
+    uiState: StudentCourseListUiState,
+    onRetry: () -> Unit,
+    onCourseSelected: (String) -> Unit,
+) {
+    when {
+        uiState.isLoading -> LoadingStateCard()
+        uiState.errorMessage != null -> ErrorStateCard(
+            message = uiState.errorMessage,
+            onRetry = onRetry,
+        )
+
+        uiState.courses.isEmpty() -> EmptyStateCard(
+            searchQuery = uiState.searchQuery,
+            selectedCategoryId = uiState.selectedCategoryId,
+            selectedLevel = uiState.selectedLevel,
+        )
+
+        else -> Column(verticalArrangement = Arrangement.spacedBy(SkillforgeSpacing.medium)) {
+            uiState.courses.forEach { course ->
+                CourseDiscoveryCard(
+                    course = course,
+                    onClick = { onCourseSelected(course.id) },
+                )
+            }
+        }
     }
 }
 
@@ -552,7 +745,7 @@ private fun LoadingStateCard() {
             verticalArrangement = Arrangement.spacedBy(SkillforgeSpacing.medium),
         ) {
             CircularProgressIndicator(color = PrimaryOrange)
-            Text(text = "Loading course catalog...")
+            Text(text = "Loading filtered course catalog...")
         }
     }
 }
@@ -592,10 +785,12 @@ private fun ErrorStateCard(
 @Composable
 private fun EmptyStateCard(
     searchQuery: String,
-    selectedCategory: String,
+    selectedCategoryId: String?,
+    selectedLevel: String?,
 ) {
-    val description = if (searchQuery.isNotBlank() || selectedCategory != "All") {
-        "Try another keyword or switch to a different category."
+    val hasFilters = searchQuery.isNotBlank() || selectedCategoryId != null || selectedLevel != null
+    val description = if (hasFilters) {
+        "No course matches this keyword, category, and difficulty combination."
     } else {
         "Publish a few courses from the instructor side and they will appear here automatically."
     }
@@ -653,7 +848,18 @@ private fun StudentCourseListingPreview() {
                     role = "STUDENT",
                 ),
             ),
-            uiState = StudentCourseListUiState(courses = StudentCourseMockData.featuredCourses),
+            uiState = StudentCourseListUiState(
+                courses = StudentCourseMockData.featuredCourses,
+                categories = listOf(
+                    Category(id = "design", name = "Design"),
+                    Category(id = "development", name = "Development"),
+                    Category(id = "business", name = "Business"),
+                ),
+            ),
+            onSearchQueryChange = {},
+            onCategorySelected = {},
+            onLevelSelected = {},
+            onResetFilters = {},
             onRetry = {},
             onCourseSelected = {},
             onLogout = {},

@@ -60,11 +60,7 @@ export class CoursesService {
       ...(levelFilter ? { level: levelFilter } : {}),
       ...(search
         ? {
-            OR: [
-              { title: { contains: search, mode: 'insensitive' } },
-              { subtitle: { contains: search, mode: 'insensitive' } },
-              { summary: { contains: search, mode: 'insensitive' } },
-            ],
+            title: { contains: search, mode: 'insensitive' },
           }
         : {}),
     };
