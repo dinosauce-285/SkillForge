@@ -2,7 +2,6 @@ package com.example.skillforge.data.repository
 
 import com.example.skillforge.data.remote.CourseApi
 import com.example.skillforge.data.remote.CreateCourseRequest
-import com.example.skillforge.domain.model.Category
 import com.example.skillforge.domain.model.CourseChapter
 import com.example.skillforge.domain.model.CourseDetails
 import com.example.skillforge.domain.model.CourseSummary
@@ -16,10 +15,11 @@ class CourseRepositoryImpl(
 
     override suspend fun getCourses(
         searchQuery: String?,
-        categoryId: String?
+        categoryId: String?,
+        level: String?,
     ): Result<List<CourseSummary>> {
         return try {
-            val response = api.getCourses(searchQuery, categoryId)
+            val response = api.getCourses(searchQuery, categoryId, level)
             if (response.isSuccessful && response.body() != null) {
                 Result.success(response.body()!!.data.map { dto ->
                     CourseSummary(
@@ -28,6 +28,7 @@ class CourseRepositoryImpl(
                         subtitle = dto.subtitle,
                         summary = dto.summary,
                         thumbnailUrl = dto.thumbnailUrl,
+                        categoryId = dto.category.id,
                         categoryName = dto.category.name,
                         instructorName = dto.instructor.fullName,
                         level = dto.level,
