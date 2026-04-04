@@ -99,6 +99,7 @@ fun StudentCourseListingRoute(
     session: AuthSession,
     viewModel: StudentCoursesViewModel,
     onCourseSelected: (String) -> Unit,
+    onNavigateToFavorites: () -> Unit,
     onLogout: () -> Unit,
 ) {
     val uiState by viewModel.courseListState.collectAsState()
@@ -112,6 +113,7 @@ fun StudentCourseListingRoute(
         onResetFilters = viewModel::resetFilters,
         onRetry = viewModel::refreshCatalog,
         onCourseSelected = onCourseSelected,
+        onNavigateToFavorites = onNavigateToFavorites,
         onLogout = onLogout,
     )
 }
@@ -126,6 +128,7 @@ fun StudentCourseListingScreen(
     onResetFilters: () -> Unit,
     onRetry: () -> Unit,
     onCourseSelected: (String) -> Unit,
+    onNavigateToFavorites: () -> Unit,
     onLogout: () -> Unit,
 ) {
     var isFilterPanelOpen by remember { mutableStateOf(false) }
@@ -140,7 +143,10 @@ fun StudentCourseListingScreen(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
-            StudentBottomNavigationBar(currentRoute = "Discover")
+            StudentBottomNavigationBar(
+                currentRoute = "Discover",
+                onNavigateToWishlist = onNavigateToFavorites,
+            )
         },
     ) { innerPadding ->
         Box(
@@ -862,6 +868,7 @@ private fun StudentCourseListingPreview() {
             onResetFilters = {},
             onRetry = {},
             onCourseSelected = {},
+            onNavigateToFavorites = {},
             onLogout = {},
         )
     }

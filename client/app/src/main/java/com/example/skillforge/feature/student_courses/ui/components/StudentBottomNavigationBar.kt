@@ -15,7 +15,13 @@ import androidx.compose.runtime.Composable
 import com.example.skillforge.core.designsystem.SkillforgeSpacing
 
 @Composable
-fun StudentBottomNavigationBar(currentRoute: String = "Learning") {
+fun StudentBottomNavigationBar(
+    currentRoute: String = "Learning",
+    onNavigateToDiscover: () -> Unit = {},
+    onNavigateToLearning: () -> Unit = {},
+    onNavigateToWishlist: () -> Unit = {},
+    onNavigateToProfile: () -> Unit = {},
+) {
     NavigationBar(
         containerColor = MaterialTheme.colorScheme.surface,
         tonalElevation = SkillforgeSpacing.xSmall,
@@ -30,28 +36,28 @@ fun StudentBottomNavigationBar(currentRoute: String = "Learning") {
 
         NavigationBarItem(
             selected = currentRoute == "Discover",
-            onClick = { /* TODO: Chuyển sang Discover / Home */ },
+            onClick = onNavigateToDiscover,
             icon = { Icon(Icons.Default.Explore, contentDescription = "Discover") },
             label = { Text("Discover") },
             colors = colors
         )
         NavigationBarItem(
             selected = currentRoute == "Learning",
-            onClick = { /* TODO: Màn hình My Courses / Learning */ },
+            onClick = onNavigateToLearning,
             icon = { Icon(Icons.Default.PlayCircleOutline, contentDescription = "Learning") },
             label = { Text("Learning") },
             colors = colors
         )
         NavigationBarItem(
             selected = currentRoute == "Wishlist",
-            onClick = { /* TODO: Chuyển sang Favorite */ },
+            onClick = onNavigateToWishlist,
             icon = { Icon(Icons.Default.FavoriteBorder, contentDescription = "Wishlist") },
             label = { Text("Wishlist") },
             colors = colors
         )
         NavigationBarItem(
             selected = currentRoute == "Profile",
-            onClick = { /* TODO: Chuyển sang Profile */ },
+            onClick = onNavigateToProfile,
             icon = { Icon(Icons.Default.Person, contentDescription = "Profile") },
             label = { Text("Profile") },
             colors = colors
