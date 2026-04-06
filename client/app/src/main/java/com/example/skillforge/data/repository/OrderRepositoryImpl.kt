@@ -24,6 +24,7 @@ class OrderRepositoryImpl(
                         amount = dto.amount,
                         status = dto.status,
                         courseTitle = dto.course.title,
+                        courseId = dto.course.id,
                     ),
                 )
             } else {
@@ -46,6 +47,7 @@ class OrderRepositoryImpl(
                             amount = dto.amount,
                             status = dto.status,
                             courseTitle = dto.course.title,
+                            courseId = dto.course.id,
                         )
                     },
                 )

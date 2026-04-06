@@ -24,4 +24,5 @@ interface CourseRepository {
 
     suspend fun getCourseForManager(token: String, courseId: String): Result<CourseManagerDto>
     suspend fun getMyCourses(token: String): Result<List<CourseSummaryDto>>
+    suspend fun getEnrollmentStatus(token: String, courseId: String): Result<Boolean>
 }

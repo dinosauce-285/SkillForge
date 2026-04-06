@@ -167,6 +167,21 @@ export class CoursesService {
     return course;
   }
 
+  async checkEnrollmentStatus(courseId: string, userId: string) {
+    const enrollment = await this.prisma.enrollment.findUnique({
+      where: {
+        userId_courseId: {
+          userId,
+          courseId,
+        },
+      },
+    });
+
+    return {
+      isEnrolled: enrollment?.status === 'ACTIVE',
+    };
+  }
+
   async create(user: { userId: string; role: Role }, dto: CreateCourseDto) {
     if (!dto.title?.trim()) {
       throw new BadRequestException('title is required');

@@ -60,6 +60,7 @@ import com.example.skillforge.feature.student_courses.viewmodel.StudentCoursesVi
 @Composable
 fun StudentCourseDetailsRoute(
     courseId: String,
+    token: String,
     viewModel: StudentCoursesViewModel,
     onLessonSelected: (String) -> Unit,
     onCheckoutSelected: (String) -> Unit,
@@ -67,8 +68,8 @@ fun StudentCourseDetailsRoute(
 ) {
     val uiState by viewModel.courseDetailsState.collectAsState()
 
-    LaunchedEffect(courseId) {
-        viewModel.loadCourseDetails(courseId)
+    LaunchedEffect(courseId, token) {
+        viewModel.loadCourseDetails(courseId, token)
     }
 
     StudentCourseDetailsScreen(
@@ -76,7 +77,7 @@ fun StudentCourseDetailsRoute(
         onLessonSelected = onLessonSelected,
         onCheckoutSelected = onCheckoutSelected,
         onBack = onBack,
-        onRetry = { viewModel.loadCourseDetails(courseId, forceReload = true) },
+        onRetry = { viewModel.loadCourseDetails(courseId, token, forceReload = true) },
     )
 }
 
@@ -109,7 +110,14 @@ fun StudentCourseDetailsScreen(
                     verticalArrangement = Arrangement.spacedBy(SkillforgeLayout.sectionGap),
                 ) {
                     item { CourseDetailsHero(course = course, onBack = onBack) }
-                    item { CourseOverviewCard(course = course, onCheckoutSelected = onCheckoutSelected) }
+                    item { 
+                        CourseOverviewCard(
+                            course = course, 
+                            isEnrolled = uiState.isEnrolled,
+                            onLessonSelected = onLessonSelected,
+                            onCheckoutSelected = onCheckoutSelected 
+                        ) 
+                    }
                     if (course.tags.isNotEmpty()) {
                         item { CourseTagsCard(tags = course.tags) }
                     }
@@ -234,6 +242,8 @@ private fun CourseDetailsHero(
 @Composable
 private fun CourseOverviewCard(
     course: CourseDetails,
+    isEnrolled: Boolean,
+    onLessonSelected: (String) -> Unit,
     onCheckoutSelected: (String) -> Unit,
 ) {
     ElevatedCard(shape = SkillforgeShapes.card, colors = skillforgeElevatedCardColors()) {
@@ -252,11 +262,21 @@ private fun CourseOverviewCard(
                 DetailsStat(title = "Chapters", value = course.chapterCount.toString())
             }
             Button(
-                onClick = { onCheckoutSelected(course.id) },
+                onClick = {
+                    if (isEnrolled) {
+                        val firstChapter = course.chapters.firstOrNull()
+                        val firstLesson = firstChapter?.lessons?.firstOrNull()
+                        if (firstLesson != null) {
+                            onLessonSelected(firstLesson.id)
+                        }
+                    } else {
+                        onCheckoutSelected(course.id)
+                    }
+                },
                 colors = skillforgePrimaryButtonColors(),
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                Text(text = if (course.isFree) "Start learning" else "Enroll now")
+                Text(text = if (isEnrolled) "Start learning" else if (course.isFree) "Start learning" else "Enroll now")
             }
         }
     }

@@ -28,6 +28,7 @@ data class StudentCourseListUiState(
 data class StudentCourseDetailsUiState(
     val isLoading: Boolean = false,
     val course: CourseDetails? = null,
+    val isEnrolled: Boolean = false,
     val errorMessage: String? = null,
 )
 
@@ -155,20 +156,28 @@ class StudentCoursesViewModel(
         }
     }
 
-    fun loadCourseDetails(courseId: String, forceReload: Boolean = false) {
-        if (!forceReload && loadedCourseDetailsId == courseId && _courseDetailsState.value.course != null) {
-            return
-        }
-
+    fun loadCourseDetails(courseId: String, token: String, forceReload: Boolean = false) {
         viewModelScope.launch {
+            if (!forceReload && loadedCourseDetailsId == courseId && _courseDetailsState.value.course != null) {
+                val enrollmentResult = courseRepository.getEnrollmentStatus(token, courseId)
+                val userIsEnrolled = enrollmentResult.getOrNull() ?: false
+                _courseDetailsState.value = _courseDetailsState.value.copy(
+                    isEnrolled = userIsEnrolled
+                )
+                return@launch
+            }
             _courseDetailsState.value = StudentCourseDetailsUiState(isLoading = true)
 
             courseRepository.getCourseDetails(courseId).fold(
                 onSuccess = { course ->
                     loadedCourseDetailsId = courseId
+                    val enrollmentResult = courseRepository.getEnrollmentStatus(token, courseId)
+                    val userIsEnrolled = enrollmentResult.getOrNull() ?: false
+
                     _courseDetailsState.value = StudentCourseDetailsUiState(
                         isLoading = false,
                         course = course,
+                        isEnrolled = userIsEnrolled,
                     )
                 },
                 onFailure = { error ->
@@ -191,6 +200,7 @@ class StudentCoursesViewModel(
 
             lessonRepository.getLessonDetails(token, lessonId).fold(
                 onSuccess = { lesson ->
+                    android.util.Log.d("SKILLFORGE_DEBUG", "Lesson loaded successfully in ViewModel: \${lesson.title}")
                     loadedLessonId = lessonId
                     _lessonContentState.value = LessonContentUiState(
                         isLoading = false,
@@ -198,6 +208,7 @@ class StudentCoursesViewModel(
                     )
                 },
                 onFailure = { error ->
+                    android.util.Log.e("SKILLFORGE_DEBUG", "ViewModel failed to load lesson content: \${error.message}", error)
                     _lessonContentState.value = LessonContentUiState(
                         isLoading = false,
                         errorMessage = error.message ?: "Unable to load lesson",

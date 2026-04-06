@@ -71,7 +71,7 @@ class MainActivity : ComponentActivity() {
                     factory = StudentCoursesViewModelFactory(
                         appContainer.courseRepository,
                         appContainer.categoryRepository,
-                        appContainer.lessonRepository
+                        appContainer.lessonRepository,
                     )
                 )
                 val favoriteViewModel: FavoriteViewModel = viewModel(
@@ -175,6 +175,7 @@ class MainActivity : ComponentActivity() {
 
                             is AppRoute.StudentCourseDetails -> StudentCourseDetailsRoute(
                                 courseId = route.courseId,
+                                token = route.session.accessToken,
                                 viewModel = studentCoursesViewModel,
                                 onLessonSelected = { lessonId ->
                                     currentRoute = AppRoute.LessonLearning(route.session, lessonId)
@@ -202,6 +203,9 @@ class MainActivity : ComponentActivity() {
                                 viewModel = transactionViewModel,
                                 onBackClick = {
                                     currentRoute = AppRoute.StudentCourseDetails(route.session, route.courseId)
+                                },
+                                onCheckoutSuccess = {
+                                    currentRoute = AppRoute.StudentCourseListing(route.session)
                                 }
                             )
 

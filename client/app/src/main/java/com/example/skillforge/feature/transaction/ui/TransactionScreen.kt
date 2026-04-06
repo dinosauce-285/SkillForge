@@ -65,8 +65,16 @@ fun TransactionRoute(
     courseId: String,
     viewModel: TransactionViewModel,
     onBackClick: () -> Unit = {},
+    onCheckoutSuccess: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(uiState.successMessage) {
+        if (uiState.successMessage != null) {
+            kotlinx.coroutines.delay(1500)
+            onCheckoutSuccess()
+        }
+    }
 
     LaunchedEffect(courseId) {
         viewModel.loadCourse(courseId)

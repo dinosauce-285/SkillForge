@@ -37,17 +37,35 @@ export class OrderService {
   async createOrder(userId: string, createOrderDto: CreateOrderDto) {
     const { courseId, amount } = createOrderDto;
 
-    const order = await this.prisma.order.create({
-      data: {
-        userId,
-        courseId,
-        amount,
-      },
-      include: {
-        user: true,
-        course: true,
-      },
-    });
+    const [order] = await this.prisma.$transaction([
+      this.prisma.order.create({
+        data: {
+          userId,
+          courseId,
+          amount,
+        },
+        include: {
+          user: true,
+          course: true,
+        },
+      }),
+      this.prisma.enrollment.upsert({
+        where: {
+          userId_courseId: {
+            userId,
+            courseId,
+          },
+        },
+        update: {
+          status: 'ACTIVE',
+        },
+        create: {
+          userId,
+          courseId,
+          status: 'ACTIVE',
+        },
+      }),
+    ]);
 
     return order;
   }

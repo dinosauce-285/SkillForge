@@ -34,6 +34,15 @@ export class CoursesController {
     return this.coursesService.findOne(id);
   }
 
+  @Get(':id/enrollment-status')
+  @UseGuards(JwtAuthGuard)
+  checkEnrollmentStatus(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @CurrentUser('userId') userId: string,
+  ) {
+    return this.coursesService.checkEnrollmentStatus(id, userId);
+  }
+
   @Roles('INSTRUCTOR', 'ADMIN')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Post()

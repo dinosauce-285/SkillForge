@@ -31,9 +31,11 @@ class LessonRepositoryImpl(private val api: LessonApi) : LessonRepository {
                     ),
                 )
             } else {
+                android.util.Log.e("SKILLFORGE_DEBUG", "Failed to load lesson. Code: ${response.code()}, ErrorBody: ${response.errorBody()?.string()}")
                 Result.failure(Exception("Failed to load lesson"))
             }
         } catch (e: Exception) {
+            android.util.Log.e("SKILLFORGE_DEBUG", "Exception when fetching lesson: ", e)
             Result.failure(Exception(e.message ?: "Failed to load lesson"))
         }
     }

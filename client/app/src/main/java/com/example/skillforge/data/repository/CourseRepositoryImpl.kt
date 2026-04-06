@@ -148,4 +148,17 @@ class CourseRepositoryImpl(
         }
     }
 
+    override suspend fun getEnrollmentStatus(token: String, courseId: String): Result<Boolean> {
+        return try {
+            val bearerToken = if (token.startsWith("Bearer ")) token else "Bearer $token"
+            val response = api.getEnrollmentStatus(courseId, bearerToken)
+            if (response.isSuccessful && response.body() != null) {
+                Result.success(response.body()!!.isEnrolled)
+            } else {
+                Result.failure(Exception("Failed to check enrollment status"))
+            }
+        } catch (e: Exception) {
+            Result.failure(Exception(e.message ?: "Failed to check enrollment status"))
+        }
+    }
 }

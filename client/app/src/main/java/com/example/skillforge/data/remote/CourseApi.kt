@@ -84,6 +84,10 @@ data class CourseLessonDto(
     val title: String,
 )
 
+data class EnrollmentStatusDto(
+    val isEnrolled: Boolean
+)
+
 data class CreateCourseRequest(
     val title: String,
     val summary: String,
@@ -107,6 +111,12 @@ interface CourseApi {
 
     @GET("courses/{id}")
     suspend fun getCourseDetails(@Path("id") courseId: String): Response<CourseDetailsDto>
+
+    @GET("courses/{id}/enrollment-status")
+    suspend fun getEnrollmentStatus(
+        @Path("id") courseId: String,
+        @Header("Authorization") token: String
+    ): Response<EnrollmentStatusDto>
 
     @POST("courses")
     suspend fun createCourse(

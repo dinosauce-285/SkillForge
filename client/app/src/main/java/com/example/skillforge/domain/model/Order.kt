@@ -5,4 +5,5 @@ data class OrderSummary(
     val amount: Double,
     val status: String,
     val courseTitle: String,
+    val courseId: String,
 )
