@@ -1,14 +1,30 @@
 package com.example.skillforge.feature.instructor_portal.ui
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material.icons.filled.AssignmentTurnedIn
+import androidx.compose.material.icons.filled.ChatBubbleOutline
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Payments
+import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.School
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,31 +35,30 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import com.example.skillforge.core.designsystem.*
 import com.example.skillforge.data.remote.CourseSummaryDto
-import androidx.compose.foundation.lazy.items
-
-private val SkillForgePrimary = Color(0xFFD84B1E)
-private val SkillForgePrimaryContainer = Color(0xFFFFEAD8)
-private val SkillForgeOnPrimary = Color.White
-private val SkillForgeSurfaceVariant = Color(0xFFF0F0F0)
+import com.example.skillforge.feature.instructor_portal.viewmodel.InstructorAnalyticsDto
+import com.example.skillforge.feature.instructor_portal.viewmodel.InstructorDashboardDto
 
 enum class SkillforgeInstructorRoute(val title: String, val icon: ImageVector) {
     Dashboard("Dashboard", Icons.Default.Home),
     Courses("Courses", Icons.AutoMirrored.Filled.List),
-    Analytics("Analytics", Icons.Default.Info),
+    Analytics("Analytics", Icons.Default.Info), // Sửa lỗi Icons.Default.Insights không tồn tại
     Account("Account", Icons.Default.AccountCircle)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SkillforgeInstructorDashboardScreen(
-    courses: List<CourseSummaryDto> = emptyList(), // translated comment
-    isLoading: Boolean = false, // translated comment
+    courses: List<CourseSummaryDto> = emptyList(),
+    analyticsData: InstructorAnalyticsDto? = null,
+    dashboardData: InstructorDashboardDto? = null,
+    isLoading: Boolean = false,
     onNavigateToCreateCourse: () -> Unit = {},
-    onCourseClick: (String) -> Unit = {}, // translated comment
+    onCourseClick: (String) -> Unit = {},
     onNavigateToUploadMaterial: () -> Unit = {},
     onLogout: () -> Unit = {}
 ) {
@@ -58,12 +73,11 @@ fun SkillforgeInstructorDashboardScreen(
             )
         },
         floatingActionButton = {
-            // translated comment
             if (selectedRoute == SkillforgeInstructorRoute.Dashboard || selectedRoute == SkillforgeInstructorRoute.Courses) {
                 FloatingActionButton(
                     onClick = onNavigateToCreateCourse,
-                    containerColor = SkillForgePrimary,
-                    contentColor = SkillForgeOnPrimary,
+                    containerColor = PrimaryOrange,
+                    contentColor = SurfaceColor,
                     shape = CircleShape
                 ) {
                     Icon(Icons.Default.Add, contentDescription = "Add Course")
@@ -71,414 +85,494 @@ fun SkillforgeInstructorDashboardScreen(
             }
         }
     ) { innerPadding ->
-
-        // translated comment
-        Box(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
+        Box(modifier = Modifier.padding(innerPadding).fillMaxSize().background(BackgroundColor)) {
             when (selectedRoute) {
                 SkillforgeInstructorRoute.Dashboard -> {
-                    // translated comment
-                    DashboardTabContent(onNavigateToUploadMaterial, onNavigateToCreateCourse)
+                    DashboardTabContent(
+                        dashboardData = dashboardData,
+                        onNavigateToReports = { selectedRoute = SkillforgeInstructorRoute.Analytics },
+                        onNavigateToCreateCourse = onNavigateToCreateCourse
+                    )
                 }
                 SkillforgeInstructorRoute.Courses -> {
-                    // translated comment
                     CourseListTabContent(courses, isLoading, onCourseClick)
                 }
                 SkillforgeInstructorRoute.Analytics -> {
-                    // translated comment
-                    Text("Analytics Tab (Coming Soon)", modifier = Modifier.align(Alignment.Center))
+                    AnalyticsTabContent(analyticsData, isLoading)
                 }
                 SkillforgeInstructorRoute.Account -> {
-                    // translated comment
-                    Text("Account Tab (Coming Soon)", modifier = Modifier.align(Alignment.Center))
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text("Account Tab (Coming Soon)", color = TextSecondaryColor)
+                    }
                 }
             }
         }
     }
 }
 
+// ==========================================
+// 🌟 TAB 0: DASHBOARD
+// ==========================================
+@Composable
+fun DashboardTabContent(
+    dashboardData: InstructorDashboardDto?,
+    onNavigateToReports: () -> Unit,
+    onNavigateToCreateCourse: () -> Unit
+) {
+    if (dashboardData == null) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator(color = PrimaryOrange) }
+        return
+    }
+
+    LazyColumn(
+        modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        contentPadding = PaddingValues(bottom = 80.dp)
+    ) {
+        item {
+            Spacer(modifier = Modifier.height(16.dp))
+            Text("INSTRUCTOR PORTAL", fontSize = 12.sp, color = PrimaryOrange, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+            Text("Good Morning,\n${dashboardData.instructorName}.", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.ExtraBold, color = TextPrimaryColor, lineHeight = 36.sp)
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Button(
+                    onClick = onNavigateToReports,
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(containerColor = ChipUnselectedBorderColor, contentColor = TextPrimaryColor),
+                    shape = RoundedCornerShape(24.dp)
+                ) { Text("View Reports", fontWeight = FontWeight.Bold) }
+
+                Button(
+                    onClick = onNavigateToCreateCourse,
+                    modifier = Modifier.weight(1.2f),
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange, contentColor = SurfaceColor),
+                    shape = RoundedCornerShape(24.dp)
+                ) { Text("Create New Course", fontWeight = FontWeight.Bold) }
+            }
+        }
+
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = SurfaceColor)
+            ) {
+                Box(modifier = Modifier.padding(24.dp)) {
+                    Column(modifier = Modifier.fillMaxWidth(0.8f)) {
+                        Text("Ready to expand?", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = TextPrimaryColor)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text("Launch a new learning module or curate your existing materials into a specialized workshop.", color = TextSecondaryColor, style = MaterialTheme.typography.bodyMedium)
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("Quick Start", color = PrimaryOrange, fontWeight = FontWeight.Bold)
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = PrimaryOrange, modifier = Modifier.size(16.dp))
+                        }
+                    }
+                    Icon(
+                        Icons.Default.AddCircle,
+                        contentDescription = null,
+                        tint = ChipUnselectedBorderColor.copy(alpha = 0.5f),
+                        modifier = Modifier.size(80.dp).align(Alignment.TopEnd).offset(x = 16.dp, y = (-16).dp)
+                    )
+                }
+            }
+        }
+
+        item {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                DashboardStatCard(
+                    modifier = Modifier.weight(1f),
+                    title = "Total Students",
+                    value = String.format("%,d", dashboardData.totalStudents),
+                    badgeText = dashboardData.studentGrowth,
+                    icon = Icons.Default.People
+                )
+                DashboardStatCard(
+                    modifier = Modifier.weight(1f),
+                    title = "Earnings",
+                    value = "$${dashboardData.earnings / 1000}k",
+                    badgeText = "Record",
+                    icon = Icons.Default.Payments
+                )
+            }
+        }
+
+        item {
+            Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = SurfaceColor)) {
+                Column(modifier = Modifier.padding(24.dp)) {
+                    Surface(shape = CircleShape, color = BackgroundColor, modifier = Modifier.size(40.dp)) {
+                        Icon(Icons.Default.School, contentDescription = null, tint = PrimaryOrange, modifier = Modifier.padding(8.dp))
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text("Active Courses", color = TextSecondaryColor, fontSize = 12.sp)
+                    Text(dashboardData.activeCourses.toString(), fontSize = 28.sp, fontWeight = FontWeight.Bold, color = TextPrimaryColor)
+                }
+            }
+        }
+
+        item {
+            Row(modifier = Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Text("Recent Activity", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = TextPrimaryColor)
+                Text("View History", color = PrimaryOrange, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+            }
+        }
+
+        items(dashboardData.activities) { activity ->
+            val icon = when(activity.iconType) {
+                "comment" -> Icons.Default.ChatBubbleOutline
+                "submission" -> Icons.Default.AssignmentTurnedIn
+                else -> Icons.Default.StarBorder
+            }
+            val iconBg = when(activity.iconType) {
+                "comment" -> Color(0xFFFBE9E7)
+                "submission" -> Color(0xFFE3F2FD)
+                else -> Color(0xFFFFEBEE)
+            }
+            val iconTint = when(activity.iconType) {
+                "comment" -> PrimaryOrange
+                "submission" -> Color(0xFF1976D2)
+                else -> Color(0xFFD32F2F)
+            }
+
+            Row(modifier = Modifier.fillMaxWidth().background(SurfaceColor, RoundedCornerShape(16.dp)).padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                Surface(shape = CircleShape, color = iconBg, modifier = Modifier.size(48.dp)) {
+                    Icon(icon, contentDescription = null, tint = iconTint, modifier = Modifier.padding(12.dp))
+                }
+                Spacer(modifier = Modifier.width(16.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(activity.title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = TextPrimaryColor)
+                    Text(activity.description, style = MaterialTheme.typography.bodySmall, color = TextSecondaryColor, lineHeight = 16.sp)
+                }
+                Text(activity.timeAgo, fontSize = 10.sp, color = TextSecondaryColor)
+            }
+        }
+
+        item {
+            Text("Performance", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = TextPrimaryColor, modifier = Modifier.padding(top = 8.dp))
+            Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = SurfaceColor)) {
+                Column(modifier = Modifier.padding(24.dp)) {
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text("Course Completion", color = TextPrimaryColor, fontSize = 12.sp)
+                        Text("${(dashboardData.courseCompletionRate * 100).toInt()}%", color = Color(0xFF1976D2), fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    LinearProgressIndicator(progress = { dashboardData.courseCompletionRate }, modifier = Modifier.fillMaxWidth().height(6.dp), color = Color(0xFF1976D2), trackColor = ChipUnselectedBorderColor, strokeCap = StrokeCap.Round)
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text("Student Retention", color = TextPrimaryColor, fontSize = 12.sp)
+                        Text("${(dashboardData.studentRetentionRate * 100).toInt()}%", color = Color(0xFFD32F2F), fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    LinearProgressIndicator(progress = { dashboardData.studentRetentionRate }, modifier = Modifier.fillMaxWidth().height(6.dp), color = Color(0xFFD32F2F), trackColor = ChipUnselectedBorderColor, strokeCap = StrokeCap.Round)
+
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Text("You're in the top 5% of instructors this month. Keep up the high engagement!", color = TextSecondaryColor, fontSize = 12.sp, lineHeight = 16.sp)
+
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Box(modifier = Modifier.fillMaxWidth().height(200.dp).background(Color(0xFF264653), RoundedCornerShape(8.dp)), contentAlignment = Alignment.Center) {
+                        Text("Chart Area", color = Color.White)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun DashboardStatCard(modifier: Modifier = Modifier, title: String, value: String, badgeText: String, icon: ImageVector) {
+    Card(modifier = modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = SurfaceColor)) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
+                Surface(shape = CircleShape, color = BackgroundColor, modifier = Modifier.size(40.dp)) {
+                    Icon(icon, contentDescription = null, tint = PrimaryOrange, modifier = Modifier.padding(8.dp))
+                }
+                Surface(shape = RoundedCornerShape(12.dp), color = Color(0xFFE3F2FD)) {
+                    Text(badgeText, color = Color(0xFF1976D2), fontSize = 10.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
+                }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(title, color = TextSecondaryColor, fontSize = 12.sp)
+            Text(value, fontSize = 28.sp, fontWeight = FontWeight.Bold, color = TextPrimaryColor)
+        }
+    }
+}
+
+// ==========================================
+// 🌟 TAB 1: COURSES
+// ==========================================
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CourseListTabContent(
     courses: List<CourseSummaryDto>,
     isLoading: Boolean,
     onCourseClick: (String) -> Unit
 ) {
-    if (isLoading) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator(color = SkillForgePrimary)
-        }
-    } else if (courses.isEmpty()) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("You have not created any courses yet.\nTap '+' to get started.", color = Color.Gray, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
-        }
-    } else {
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.surface)
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            contentPadding = PaddingValues(top = 16.dp, bottom = 80.dp) // translated comment
-        ) {
-            item {
-                Text(
-                    "My Courses",
-                    style = MaterialTheme.typography.displaySmall,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text("Manage your curriculum and content.", color = Color.Gray, style = MaterialTheme.typography.bodyMedium)
-                Spacer(modifier = Modifier.height(8.dp))
-            }
+    var searchQuery by remember { mutableStateOf("") }
+    var selectedFilter by remember { mutableStateOf("All Courses") }
+    val filters = listOf("All Courses", "Published", "Drafts", "Under Review")
 
-            items(courses) { course ->
-                InstructorCourseItemCard(course = course, onClick = { onCourseClick(course.id) })
+    Column(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
+        Spacer(modifier = Modifier.height(16.dp))
+        Text("Curate Your Knowledge", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, color = TextPrimaryColor)
+        Spacer(modifier = Modifier.height(4.dp))
+        Text("Manage your educational gallery. Review performance metrics and refine your course offerings from a single editorial lens.", color = TextSecondaryColor, style = MaterialTheme.typography.bodyMedium)
+        Spacer(modifier = Modifier.height(16.dp))
+
+        OutlinedTextField(
+            value = searchQuery,
+            onValueChange = { searchQuery = it },
+            placeholder = { Text("Search your catalog...", color = TextSecondaryColor) },
+            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = TextSecondaryColor) },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = SearchBarBackgroundColor,
+                unfocusedContainerColor = SearchBarBackgroundColor,
+                unfocusedBorderColor = Color.Transparent,
+                focusedBorderColor = PrimaryOrange
+            ),
+            singleLine = true
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            filters.forEach { filter ->
+                FilterChip(
+                    selected = selectedFilter == filter,
+                    onClick = { selectedFilter = filter },
+                    label = { Text(filter) },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = PrimaryOrange,
+                        selectedLabelColor = SurfaceColor,
+                        containerColor = ChipUnselectedBackgroundColor,
+                        labelColor = TextSecondaryColor
+                    ),
+                    border = BorderStroke(1.dp, if (selectedFilter == filter) PrimaryOrange else ChipUnselectedBorderColor),
+                    shape = RoundedCornerShape(20.dp)
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+
+        if (isLoading) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator(color = PrimaryOrange) }
+        } else {
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp), contentPadding = PaddingValues(bottom = 80.dp)) {
+                val filteredCourses = courses.filter { it.title.contains(searchQuery, ignoreCase = true) }
+                items(filteredCourses) { course ->
+                    InstructorCourseItemCard(course = course, onClick = { onCourseClick(course.id) })
+                }
             }
         }
     }
 }
 
 @Composable
-fun InstructorCourseItemCard(
-    course: CourseSummaryDto,
-    onClick: () -> Unit
-) {
-    ElevatedCard(
+fun InstructorCourseItemCard(course: CourseSummaryDto, onClick: () -> Unit) {
+    Card(
+        onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
-        onClick = onClick, // translated comment
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        colors = CardDefaults.cardColors(containerColor = SurfaceColor),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Row(
-            modifier = Modifier.padding(16.dp).fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // translated comment
-            Box(
-                modifier = Modifier
-                    .size(60.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(SkillForgePrimaryContainer),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(Icons.AutoMirrored.Filled.List, contentDescription = null, tint = SkillForgePrimary)
-            }
-
-            Spacer(modifier = Modifier.width(16.dp))
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = course.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1
+        Column {
+            Box(modifier = Modifier.fillMaxWidth().height(180.dp)) {
+                AsyncImage(
+                    model = course.thumbnailUrl ?: "https://via.placeholder.com/400x200?text=No+Cover",
+                    contentDescription = "Cover",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
                 )
-                Spacer(modifier = Modifier.height(4.dp))
-                // translated comment
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(text = course.category.name, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-                    Text(" • ", color = Color.Gray)
-                    Text(
-                        text = if (course.isFree) "Free" else "$${course.price}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = SkillForgePrimary,
-                        fontWeight = FontWeight.Bold
-                    )
+                Surface(
+                    modifier = Modifier.align(Alignment.BottomStart).padding(12.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    color = PrimaryOrange
+                ) {
+                    Text(text = "PUBLISHED", color = SurfaceColor, fontSize = 10.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
                 }
-                Spacer(modifier = Modifier.height(8.dp))
-                // translated comment
-                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.List, contentDescription = "Chapters", modifier = Modifier.size(14.dp), tint = Color.Gray)
+                Surface(
+                    modifier = Modifier.align(Alignment.TopEnd).padding(12.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    color = SurfaceColor
+                ) {
+                    Row(modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Star, contentDescription = null, tint = RatingStarColor, modifier = Modifier.size(14.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("${course.counts.chapters} Chapters", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                        Text(course.averageRating.toString(), fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Person, contentDescription = "Students", modifier = Modifier.size(14.dp), tint = Color.Gray)
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("${course.counts.enrollments} Students", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                }
+            }
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(text = course.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = TextPrimaryColor)
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(text = course.summary ?: "No description available.", style = MaterialTheme.typography.bodySmall, color = TextSecondaryColor, maxLines = 2)
+                Spacer(modifier = Modifier.height(16.dp))
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Bottom) {
+                    Column {
+                        Text("STUDENTS", fontSize = 10.sp, color = TextSecondaryColor, fontWeight = FontWeight.SemiBold)
+                        Text(course.counts.enrollments.toString(), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = TextPrimaryColor)
                     }
+                    Text(text = "Manage", color = PrimaryOrange, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                 }
             }
         }
     }
 }
 
+// ==========================================
+// 🌟 TAB 2: ANALYTICS
+// ==========================================
 @Composable
-fun DashboardTabContent(
-    onNavigateToUploadMaterial: () -> Unit,
-    onNavigateToCreateCourse: () -> Unit
-) {
+fun AnalyticsTabContent(analyticsData: InstructorAnalyticsDto?, isLoading: Boolean) {
+    if (isLoading || analyticsData == null) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator(color = PrimaryOrange) }
+        return
+    }
+
     LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.surface)
-            .padding(horizontal = 16.dp),
+        modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
-        contentPadding = PaddingValues(top = 16.dp, bottom = 80.dp)
+        contentPadding = PaddingValues(bottom = 80.dp)
     ) {
         item {
-            Text("INSTRUCTOR PORTAL", style = MaterialTheme.typography.labelMedium, color = Color.Gray)
-            Text(
-                "Good Morning,\nCurator.",
-                style = MaterialTheme.typography.displayMedium,
-                fontWeight = FontWeight.Bold,
-                lineHeight = 40.sp
+            Spacer(modifier = Modifier.height(16.dp))
+            Text("PERFORMANCE OVERSIGHT", fontSize = 12.sp, color = PrimaryOrange, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+            Text("Institutional\nIntelligence Insight", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, color = TextPrimaryColor, lineHeight = 36.sp)
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
+        item {
+            AnalyticsMetricCard(
+                title = "Total Revenue (Monthly)",
+                value = "$${String.format("%,.0f", analyticsData.totalRevenue)}",
+                growth = "+${analyticsData.revenueGrowth}%",
+                progressColor = Color(0xFFD32F2F),
+                progress = 0.7f
             )
         }
 
         item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                Button(
-                    onClick = onNavigateToUploadMaterial,
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.onSurfaceVariant),
-                    shape = RoundedCornerShape(12.dp)
-                ) { Text("Upload Files") }
-                Button(
-                    onClick = onNavigateToCreateCourse,
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(containerColor = SkillForgePrimary, contentColor = SkillForgeOnPrimary),
-                    shape = RoundedCornerShape(12.dp)
-                ) { Text("Create New") }
-            }
+            AnalyticsMetricCard(
+                title = "New Enrollments",
+                value = "${String.format("%,d", analyticsData.newEnrollments)}",
+                growth = "+${analyticsData.enrollmentsGrowth}%",
+                progressColor = Color(0xFF1976D2),
+                progress = 0.5f
+            )
         }
-
-        item { SkillforgeStatCard(title = "Ready to expand?", icon = Icons.Default.Star, description = "Launch a new learning module...", actionText = "Quick Start", hasBadge = false) }
 
         item {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                SkillforgeStatCard(title = "Total Students", icon = Icons.Default.Person, modifier = Modifier.weight(1f), value = "1,284", badgeText = "+12%", badgeColor = SkillForgePrimaryContainer)
-                SkillforgeStatCard(title = "Earnings", icon = Icons.Default.ShoppingCart, modifier = Modifier.weight(1f), value = "$42.1k", badgeText = "Record", badgeColor = SkillForgePrimary, badgeTextColor = SkillForgeOnPrimary)
-            }
+            AnalyticsMetricCard(
+                title = "Student Satisfaction",
+                value = "${analyticsData.studentSatisfaction}",
+                growth = analyticsData.satisfactionRank,
+                progressColor = PrimaryOrange,
+                progress = 0.9f,
+                isGrowthPositive = true
+            )
         }
 
-        item { SkillforgeStatCard(title = "Active Courses", icon = Icons.AutoMirrored.Filled.List, value = "14", hasBadge = false) }
-
-        item { SectionHeader(title = "Recent Activity", actionText = "View History") }
-        items(3) { index -> SkillforgeActivityItem(index = index) }
-
-        item { SectionHeader(title = "Performance") }
-        item { SkillforgePerformanceCard() }
+        item {
+            Card(colors = CardDefaults.cardColors(containerColor = SurfaceColor), shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Column {
+                            Text("Revenue Dynamics", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = TextPrimaryColor)
+                            Text("Monthly fiscal progression", fontSize = 12.sp, color = TextSecondaryColor)
+                        }
+                        Surface(color = SearchBarBackgroundColor, shape = RoundedCornerShape(8.dp)) {
+                            Text("Last 6 Months", fontSize = 10.sp, modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp), color = TextPrimaryColor)
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Box(modifier = Modifier.fillMaxWidth().height(150.dp).background(SearchBarBackgroundColor, RoundedCornerShape(8.dp)), contentAlignment = Alignment.Center) {
+                        Text("📊 Bar Chart Placeholder", color = TextSecondaryColor)
+                    }
+                }
+            }
+        }
     }
 }
 
 @Composable
+fun AnalyticsMetricCard(title: String, value: String, growth: String, progressColor: Color, progress: Float, isGrowthPositive: Boolean = true) {
+    Card(
+        colors = CardDefaults.cardColors(containerColor = SurfaceColor),
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Text(title, color = TextSecondaryColor, fontSize = 14.sp)
+            Spacer(modifier = Modifier.height(4.dp))
+            Row(verticalAlignment = Alignment.Bottom) {
+                Text(value, fontSize = 32.sp, fontWeight = FontWeight.Bold, color = TextPrimaryColor)
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = growth,
+                    color = if (isGrowthPositive) Color(0xFF388E3C) else PrimaryOrange,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 6.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            LinearProgressIndicator(
+                progress = { progress },
+                modifier = Modifier.fillMaxWidth().height(4.dp),
+                color = progressColor,
+                trackColor = SearchBarBackgroundColor,
+                strokeCap = StrokeCap.Round
+            )
+        }
+    }
+}
+
+// ==========================================
+// THÀNH PHẦN CHUNG: TopBar & BottomBar
+// ==========================================
+@Composable
 fun SkillforgeInstructorTopBar() {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
+        modifier = Modifier.fillMaxWidth().background(BackgroundColor).padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Image(
-                imageVector = Icons.Default.AccountCircle,
+                imageVector = Icons.Default.AccountCircle, // Đúng rồi, không dùng Icons.Default.Image nữa!
                 contentDescription = "Instructor Avatar",
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(CircleShape),
+                modifier = Modifier.size(44.dp).clip(CircleShape),
                 contentScale = ContentScale.Crop
             )
             Spacer(modifier = Modifier.width(12.dp))
-            Text("Digital Curator", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text("Digital Curator", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = TextPrimaryColor)
         }
-        BadgedBox(badge = { Badge { Text(" ") } }) {
-            Icon(Icons.Default.Notifications, contentDescription = "Notifications")
-        }
+        Icon(Icons.Default.Notifications, contentDescription = "Notifications", tint = TextPrimaryColor)
     }
 }
 
 @Composable
-fun SkillforgeInstructorBottomBar(
-    selectedRoute: SkillforgeInstructorRoute,
-    onRouteSelected: (SkillforgeInstructorRoute) -> Unit
-) {
-    NavigationBar(
-        containerColor = SkillForgeSurfaceVariant,
-        contentColor = Color.Black
-    ) {
+fun SkillforgeInstructorBottomBar(selectedRoute: SkillforgeInstructorRoute, onRouteSelected: (SkillforgeInstructorRoute) -> Unit) {
+    NavigationBar(containerColor = SurfaceColor, contentColor = TextPrimaryColor, tonalElevation = 8.dp) {
         SkillforgeInstructorRoute.entries.forEach { route ->
             NavigationBarItem(
                 selected = selectedRoute == route,
                 onClick = { onRouteSelected(route) },
-                label = { Text(route.title) },
+                label = { Text(route.title, fontSize = 10.sp, fontWeight = if (selectedRoute == route) FontWeight.Bold else FontWeight.Normal) },
                 icon = { Icon(route.icon, contentDescription = null) },
                 colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = SkillForgePrimary,
-                    selectedTextColor = SkillForgePrimary,
-                    indicatorColor = SkillForgePrimaryContainer
+                    selectedIconColor = SurfaceColor,
+                    selectedTextColor = PrimaryOrange,
+                    indicatorColor = PrimaryOrange,
+                    unselectedIconColor = TextSecondaryColor,
+                    unselectedTextColor = TextSecondaryColor
                 )
             )
         }
-    }
-}
-
-@Composable
-fun SkillforgeStatCard(
-    title: String,
-    icon: ImageVector,
-    modifier: Modifier = Modifier,
-    value: String? = null,
-    description: String? = null,
-    actionText: String? = null,
-    hasBadge: Boolean = true,
-    badgeText: String? = null,
-    badgeColor: Color = Color.LightGray,
-    badgeTextColor: Color = Color.Black
-) {
-    ElevatedCard(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-    ) {
-        Column(
-            modifier = Modifier.padding(24.dp).fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    modifier = Modifier.size(32.dp),
-                    tint = SkillForgePrimary
-                )
-                if (hasBadge && badgeText != null) {
-                    SuggestionChip(
-                        onClick = {},
-                        label = { Text(badgeText, color = badgeTextColor, style = MaterialTheme.typography.labelSmall) },
-                        colors = SuggestionChipDefaults.suggestionChipColors(containerColor = badgeColor),
-                        border = null
-                    )
-                }
-            }
-            Text(title, style = MaterialTheme.typography.titleLarge)
-            if (value != null) {
-                Text(
-                    value,
-                    style = MaterialTheme.typography.displayMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = SkillForgePrimary
-                )
-            }
-            if (description != null) {
-                Text(description, style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
-            }
-            if (actionText != null) {
-                Text(actionText, style = MaterialTheme.typography.labelLarge, color = SkillForgePrimary, fontWeight = FontWeight.Bold)
-            }
-        }
-    }
-}
-
-@Composable
-fun SkillforgeActivityItem(index: Int) {
-    val items = listOf(
-        ActivityData(Icons.Default.Email, "New Discussion in\n\"Advanced Typography\"", "Elena Rossi commented on\nLesson 4", "2m ago"),
-        ActivityData(Icons.Default.CheckCircle, "Project Submission", "14 students submitted \"Brand\nIdentity Design\"", "1h ago"),
-        ActivityData(Icons.Default.Star, "5-Star Review Received", "\"The most comprehensive\ncourse on UI/UX yet.\"", "4h ago")
-    )
-    val data = items[index]
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(SkillForgeSurfaceVariant, RoundedCornerShape(16.dp))
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            imageVector = data.icon,
-            contentDescription = null,
-            modifier = Modifier
-                .size(24.dp)
-                .clip(CircleShape)
-                .background(SkillForgePrimaryContainer)
-                .padding(4.dp),
-            tint = SkillForgePrimary
-        )
-        Spacer(modifier = Modifier.width(16.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(data.title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-            Text(data.description, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-        }
-        Text(data.time, style = MaterialTheme.typography.labelSmall, color = Color.Gray)
-    }
-}
-
-data class ActivityData(
-    val icon: ImageVector,
-    val title: String,
-    val description: String,
-    val time: String
-)
-
-@Composable
-fun SkillforgePerformanceCard() {
-    ElevatedCard(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-    ) {
-        Column(modifier = Modifier.padding(24.dp)) {
-            PerformanceMetric(title = "Course Completion", value = "78%", progress = 0.78f)
-            Spacer(modifier = Modifier.height(16.dp))
-            PerformanceMetric(title = "Student Retention", value = "92%", progress = 0.92f)
-            Spacer(modifier = Modifier.height(24.dp))
-            Text("You're in the top 5% of instructors this month.", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-        }
-    }
-}
-
-@Composable
-fun PerformanceMetric(title: String, value: String, progress: Float) {
-    Column {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(title, style = MaterialTheme.typography.titleSmall)
-            Text(value, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = SkillForgePrimary)
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-        LinearProgressIndicator(
-            progress = { progress },
-            modifier = Modifier.fillMaxWidth(),
-            color = SkillForgePrimary,
-            trackColor = SkillForgePrimaryContainer,
-            strokeCap = StrokeCap.Round
-        )
-    }
-}
-
-@Composable
-fun SectionHeader(title: String, actionText: String? = null) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-        if (actionText != null) {
-            Text(actionText, style = MaterialTheme.typography.labelLarge, color = SkillForgePrimary)
-        }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun SkillforgeInstructorDashboardPreview() {
-    MaterialTheme {
-        SkillforgeInstructorDashboardScreen()
     }
 }
