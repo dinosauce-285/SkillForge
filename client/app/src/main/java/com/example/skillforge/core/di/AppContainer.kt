@@ -6,6 +6,7 @@ import com.example.skillforge.data.remote.ChapterApi
 import com.example.skillforge.data.remote.CourseApi
 import com.example.skillforge.data.remote.FavoriteApi
 import com.example.skillforge.data.remote.LessonApi
+import com.example.skillforge.data.remote.MaterialApi
 import com.example.skillforge.data.remote.OrderApi
 import com.example.skillforge.data.repository.AuthRepositoryImpl
 import com.example.skillforge.data.repository.CategoryRepositoryImpl
@@ -13,6 +14,7 @@ import com.example.skillforge.data.repository.CourseRepositoryImpl
 import com.example.skillforge.data.repository.ChapterRepositoryImpl
 import com.example.skillforge.data.repository.FavoriteRepositoryImpl
 import com.example.skillforge.data.repository.LessonRepositoryImpl
+import com.example.skillforge.data.repository.MaterialRepositoryImpl
 import com.example.skillforge.data.repository.OrderRepositoryImpl
 import com.example.skillforge.domain.repository.AuthRepository
 import com.example.skillforge.domain.repository.CategoryRepository
@@ -20,6 +22,7 @@ import com.example.skillforge.domain.repository.CourseRepository
 import com.example.skillforge.domain.repository.ChapterRepository
 import com.example.skillforge.domain.repository.FavoriteRepository
 import com.example.skillforge.domain.repository.LessonRepository
+import com.example.skillforge.domain.repository.MaterialRepository
 import com.example.skillforge.domain.repository.OrderRepository
 import com.example.skillforge.domain.usecase.LoginUseCase
 import com.example.skillforge.domain.usecase.RegisterUseCase
@@ -38,6 +41,14 @@ class AppContainer {
             scheme = "myapp"
             host = "callback"
         }
+    }
+
+    private val materialApi: MaterialApi by lazy {
+        retrofit.create(MaterialApi::class.java)
+    }
+
+    val materialRepository: MaterialRepository by lazy {
+        MaterialRepositoryImpl(materialApi)
     }
 
     private val retrofit = Retrofit.Builder()

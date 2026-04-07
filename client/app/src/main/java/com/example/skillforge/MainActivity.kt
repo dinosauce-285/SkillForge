@@ -48,6 +48,9 @@ import com.example.skillforge.feature.transaction.viewmodel.TransactionViewModel
 // translated comment
 import com.example.skillforge.domain.model.Category
 import com.example.skillforge.feature.home.ui.HomeScreen
+import com.example.skillforge.feature.instructor_portal.viewmodel.MaterialUploadViewModel
+import com.example.skillforge.feature.instructor_portal.viewmodel.MaterialUploadViewModelFactory
+import com.example.skillforge.feature.instructor_portal.viewmodel.UploadState
 import com.example.skillforge.feature.student_courses.ui.MyCoursesScreen
 import com.example.skillforge.feature.student_courses.ui.LessonLearningScreen
 import com.example.skillforge.feature.student_courses.ui.StudentProfileScreen
@@ -214,16 +217,23 @@ class MainActivity : ComponentActivity() {
                                     factory = InstructorPortalViewModelFactory(appContainer.courseRepository)
                                 )
 
+                                // 1. Hứng đầy đủ 3 luồng data từ ViewModel
                                 val courses by portalViewModel.courses.collectAsState()
                                 val isLoading by portalViewModel.isLoading.collectAsState()
+                                val dashboardData by portalViewModel.dashboardData.collectAsState() // 🌟 Dòng này để hết quay Dashboard
+                                val analyticsData by portalViewModel.analyticsData.collectAsState() // 🌟 Dòng này để hết quay Analytics
 
+                                // 2. Kích hoạt lấy list khóa học từ API khi vào màn hình
                                 LaunchedEffect(Unit) {
                                     portalViewModel.fetchMyCourses(route.session.accessToken)
                                 }
 
+                                // 3. Truyền TUỐT LUỐT data vào UI
                                 SkillforgeInstructorDashboardScreen(
                                     courses = courses,
                                     isLoading = isLoading,
+                                    dashboardData = dashboardData, // 🌟 TRUYỀN VÀO ĐÂY
+                                    analyticsData = analyticsData, // 🌟 TRUYỀN VÀO ĐÂY
                                     onNavigateToCreateCourse = {
                                         currentRoute = AppRoute.CourseForm(route.session)
                                     },
@@ -231,10 +241,10 @@ class MainActivity : ComponentActivity() {
                                         currentRoute = AppRoute.CourseManager(route.session, clickedCourseId)
                                     },
                                     onNavigateToUploadMaterial = {
-                                        // translated comment
+                                        // Tính năng upload chung (nếu cần)
                                     },
                                     onLogout = {
-                                        currentRoute = AppRoute.Login
+                                        // Xử lý đăng xuất
                                     }
                                 )
                             }
@@ -272,14 +282,46 @@ class MainActivity : ComponentActivity() {
                             }
 
                             is AppRoute.MaterialUpload -> {
+                                // 1. Lấy ViewModel từ Factory, bơm MaterialRepository từ AppContainer vào
+                                val uploadViewModel: MaterialUploadViewModel = viewModel(
+                                    factory = MaterialUploadViewModelFactory(appContainer.materialRepository)
+                                )
+
+                                // 2. Lắng nghe trạng thái
+                                val uploadState by uploadViewModel.uploadState.collectAsState()
+
+                                // 3. Xử lý khi trạng thái chuyển sang Success
+                                LaunchedEffect(uploadState) {
+                                    if (uploadState is UploadState.Success) {
+                                        android.widget.Toast.makeText(this@MainActivity, "Upload tài liệu thành công!", android.widget.Toast.LENGTH_SHORT).show()
+
+                                        // Xóa state để lần sau không bị nhảy lại
+                                        uploadViewModel.resetState()
+
+                                        // Quay lại màn hình Instructor Portal (hoặc truyền courseId để quay lại CourseManager)
+                                        currentRoute = AppRoute.InstructorPortal(route.session)
+                                    }
+                                }
+
+                                // 4. Đổ giao diện
                                 SkillforgeMaterialUploadScreen(
-                                    courseId = route.courseId,
+                                    courseId = route.lessonId,
+                                    isLoading = uploadState is UploadState.Loading,
                                     onNavigateBack = {
                                         currentRoute = AppRoute.InstructorPortal(route.session)
                                     },
                                     onUploadClick = { title, type, fileUri ->
-                                        println("Uploading file: $title, Type: $type")
-                                        currentRoute = AppRoute.InstructorPortal(route.session)
+                                        if (fileUri != null) {
+                                            // Ép kiểu Context cho hàm xử lý Uri to File
+                                            uploadViewModel.uploadFile(
+                                                context = this@MainActivity,
+                                                token = route.session.accessToken,
+                                                lessonId = route.lessonId,
+                                                title = title,
+                                                type = type,
+                                                uri = fileUri
+                                            )
+                                        }
                                     }
                                 )
                             }

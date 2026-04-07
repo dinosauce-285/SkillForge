@@ -48,7 +48,7 @@ sealed interface AppRoute {
 
     data class MaterialUpload(
         val session: AuthSession,
-        val courseId: String
+        val lessonId: String
     ) : AppRoute
 
     data class CourseManager(
