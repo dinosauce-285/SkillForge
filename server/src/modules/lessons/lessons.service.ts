@@ -2,15 +2,26 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
+  BadRequestException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateLessonDto } from './dto/create-lesson.dto';
 import { UpdateLessonDto } from './dto/update-lesson.dto';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 @Injectable()
 export class LessonsService {
-  constructor(private readonly prisma: PrismaService) {}
+  private supabase: SupabaseClient; // Khai báo biến supabase cho class
+
+  constructor(private readonly prisma: PrismaService) {
+    // Lấy URL và Key từ biến môi trường (file .env)
+    this.supabase = createClient(
+      process.env.SUPABASE_URL || '',
+      process.env.SUPABASE_SERVICE_ROLE_KEY || '',
+    );
+  }
 
   async findOne(id: string, user: { userId: string; role: Role }) {
     const lesson = await this.prisma.lesson.findUnique({
@@ -126,7 +137,6 @@ export class LessonsService {
 
     this.assertCanManage(lesson.chapter.course.instructorId, user);
 
-    // translated comment
     return this.prisma.lesson.update({
       where: { id },
       data: { deletedAt: new Date() },
@@ -154,6 +164,84 @@ export class LessonsService {
     if (user.role !== Role.INSTRUCTOR || instructorId !== user.userId) {
       throw new ForbiddenException(
         'You are not allowed to manage this content',
+      );
+    }
+  }
+
+  async addMaterialToLesson(
+    lessonId: string,
+    title: string,
+    type: string,
+    file: Express.Multer.File,
+  ) {
+    if (!file) {
+      throw new BadRequestException('Chưa đính kèm file!');
+    }
+
+    try {
+      // 1. Tạo một cái tên file độc nhất (chống trùng lặp)
+      const fileExt = file.originalname.split('.').pop();
+      const fileName = `${Date.now()}-${Math.floor(Math.random() * 10000)}.${fileExt}`;
+
+      const filePath = `lesson_${lessonId}/${fileName}`;
+
+      // 2. Bắn buffer từ RAM thẳng lên Supabase Storage
+      const { data: uploadData, error: uploadError } =
+        await this.supabase.storage
+          .from('materials')
+          .upload(filePath, file.buffer, {
+            contentType: file.mimetype,
+            upsert: false,
+          });
+
+      if (uploadError) {
+        console.error('Supabase Upload Error:', uploadError);
+        throw new InternalServerErrorException(
+          'Lỗi khi bắn file lên Supabase Storage.',
+        );
+      }
+
+      // 3. Lấy Public URL
+      const { data: publicUrlData } = this.supabase.storage
+        .from('materials')
+        .getPublicUrl(filePath);
+
+      const fileUrl = publicUrlData.publicUrl;
+
+      // 4. CHUẨN BỊ DỮ LIỆU KHỚP VỚI SCHEMA PRISMA CỦA BẠN
+
+      // Chuyển đổi type từ Android ("Video", "Document") sang Enum Prisma
+      let materialType: 'VIDEO' | 'DOCUMENT' | 'LINK' | 'SOURCE_CODE' =
+        'DOCUMENT';
+      if (type.toUpperCase() === 'VIDEO') materialType = 'VIDEO';
+
+      // Cập nhật lại Tên Bài Học (title) vào bảng Lesson (vì UI Android có ô nhập Lesson Title)
+      if (title && title.trim() !== '') {
+        await this.prisma.lesson.update({
+          where: { id: lessonId },
+          data: { title: title.trim() },
+        });
+      }
+
+      // 5. Lưu vào bảng LessonMaterial
+      const newMaterial = await this.prisma.lessonMaterial.create({
+        data: {
+          lessonId: lessonId,
+          type: materialType, // Dùng Enum
+          fileUrl: fileUrl, // Dùng đúng tên cột fileUrl
+          fileSize: file.size, // Truyền dung lượng file (tính bằng bytes)
+          status: 'READY', // Upload xong thì set trạng thái READY luôn
+        },
+      });
+
+      return {
+        message: 'Upload tài liệu lên Supabase thành công mĩ mãn!',
+        data: newMaterial,
+      };
+    } catch (error) {
+      console.error(error);
+      throw new InternalServerErrorException(
+        'Lỗi hệ thống khi xử lý tài liệu.',
       );
     }
   }

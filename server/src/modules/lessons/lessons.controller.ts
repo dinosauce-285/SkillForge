@@ -7,6 +7,9 @@ import {
   Patch,
   Post,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -16,6 +19,8 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { LessonsService } from './lessons.service';
 import { CreateLessonDto } from './dto/create-lesson.dto';
 import { UpdateLessonDto } from './dto/update-lesson.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('lessons')
@@ -50,5 +55,26 @@ export class LessonsController {
   @Roles(Role.INSTRUCTOR)
   remove(@Param('id') id: string, @CurrentUser() user: any) {
     return this.lessonsService.remove(id, user);
+  }
+
+  @Post(':lessonId/materials')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(), // 🌟 Giữ file ở trên RAM (Buffer)
+      limits: {
+        fileSize: 1024 * 1024 * 100, // Tối đa 100MB
+      },
+    }),
+  )
+  async uploadMaterial(
+    @Param('lessonId') lessonId: string,
+    @Body('title') title: string,
+    @Body('type') type: string,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    if (!file) throw new BadRequestException('Chưa đính kèm file!');
+
+    // Giao file (dạng Buffer) cho Service bắn lên Cloud
+    return this.lessonsService.addMaterialToLesson(lessonId, title, type, file);
   }
 }
