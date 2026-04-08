@@ -4,6 +4,7 @@ import com.example.skillforge.data.remote.AuthApi
 import com.example.skillforge.data.remote.CategoryApi
 import com.example.skillforge.data.remote.ChapterApi
 import com.example.skillforge.data.remote.CourseApi
+import com.example.skillforge.data.remote.DiscussionApi
 import com.example.skillforge.data.remote.FavoriteApi
 import com.example.skillforge.data.remote.LessonApi
 import com.example.skillforge.data.remote.MaterialApi
@@ -51,6 +52,8 @@ class AppContainer {
         MaterialRepositoryImpl(materialApi)
     }
 
+
+
     private val retrofit = Retrofit.Builder()
         .baseUrl("http://10.0.2.2:3000/")
         .addConverterFactory(GsonConverterFactory.create())
@@ -64,13 +67,16 @@ class AppContainer {
     private val chapterApi = retrofit.create(ChapterApi::class.java)
     private val favoriteApi = retrofit.create(FavoriteApi::class.java)
     private val lessonApi = retrofit.create(LessonApi::class.java)
+
+    private val discussionApi = retrofit.create(DiscussionApi::class.java)
     private val orderApi = retrofit.create(OrderApi::class.java)
     val courseRepository: CourseRepository = CourseRepositoryImpl(courseApi)
     val categoryRepository: CategoryRepository = CategoryRepositoryImpl(categoryApi)
 
     val chapterRepository: ChapterRepository = ChapterRepositoryImpl(chapterApi)
     val favoriteRepository: FavoriteRepository = FavoriteRepositoryImpl(favoriteApi)
-    val lessonRepository: LessonRepository = LessonRepositoryImpl(lessonApi)
+    val lessonRepository: LessonRepository = LessonRepositoryImpl(lessonApi, discussionApi)
+
     val orderRepository: OrderRepository = OrderRepositoryImpl(orderApi)
     val loginUseCase = LoginUseCase(authRepository)
     val registerUseCase = RegisterUseCase(authRepository)

@@ -2,6 +2,7 @@ package com.example.skillforge.feature.student_courses.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.skillforge.data.remote.DiscussionDto
 import com.example.skillforge.domain.model.Category
 import com.example.skillforge.domain.model.CourseDetails
 import com.example.skillforge.domain.model.LessonContent
@@ -35,6 +36,7 @@ data class StudentCourseDetailsUiState(
 data class LessonContentUiState(
     val isLoading: Boolean = false,
     val lesson: LessonContent? = null,
+    val discussions: List<DiscussionDto> = emptyList(),
     val errorMessage: String? = null,
 )
 
@@ -196,24 +198,67 @@ class StudentCoursesViewModel(
         }
 
         viewModelScope.launch {
-            _lessonContentState.value = LessonContentUiState(isLoading = true)
+            // SAFE: Keep existing state (like discussions), only change loading status
+            _lessonContentState.update { currentState ->
+                currentState.copy(isLoading = true, errorMessage = null)
+            }
+
+            // IMPORTANT: Start fetching discussions at the same time
+            loadDiscussions(token, lessonId)
 
             lessonRepository.getLessonDetails(token, lessonId).fold(
                 onSuccess = { lesson ->
-                    android.util.Log.d("SKILLFORGE_DEBUG", "Lesson loaded successfully in ViewModel: \${lesson.title}")
+                    android.util.Log.d("SKILLFORGE_DEBUG", "Lesson loaded successfully in ViewModel: ${lesson.title}")
                     loadedLessonId = lessonId
-                    _lessonContentState.value = LessonContentUiState(
-                        isLoading = false,
-                        lesson = lesson,
-                    )
+
+                    // SAFE: Keep existing state (like discussions), only update the lesson data
+                    _lessonContentState.update { currentState ->
+                        currentState.copy(
+                            isLoading = false,
+                            lesson = lesson
+                        )
+                    }
                 },
                 onFailure = { error ->
-                    android.util.Log.e("SKILLFORGE_DEBUG", "ViewModel failed to load lesson content: \${error.message}", error)
-                    _lessonContentState.value = LessonContentUiState(
-                        isLoading = false,
-                        errorMessage = error.message ?: "Unable to load lesson",
-                    )
+                    android.util.Log.e("SKILLFORGE_DEBUG", "ViewModel failed to load lesson content: ${error.message}", error)
+
+                    // SAFE: Keep existing state, only update the error message
+                    _lessonContentState.update { currentState ->
+                        currentState.copy(
+                            isLoading = false,
+                            errorMessage = error.message ?: "Unable to load lesson"
+                        )
+                    }
+                }
+            )
+        }
+    }
+
+    private fun loadDiscussions(token: String, lessonId: String) {
+        viewModelScope.launch {
+            lessonRepository.getDiscussions(token, lessonId).fold(
+                onSuccess = { discussionList ->
+                    _lessonContentState.update { currentState ->
+                        currentState.copy(discussions = discussionList)
+                    }
                 },
+                onFailure = { error ->
+                    error.printStackTrace()
+                }
+            )
+        }
+    }
+
+    fun postDiscussion(token: String, lessonId: String, content: String, parentId: String?) {
+        viewModelScope.launch {
+            lessonRepository.postDiscussion(token, lessonId, content, parentId).fold(
+                onSuccess = {
+                    // Refresh discussions after posting successfully
+                    loadDiscussions(token, lessonId)
+                },
+                onFailure = { error ->
+                    error.printStackTrace()
+                }
             )
         }
     }

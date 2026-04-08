@@ -83,6 +83,7 @@ import com.example.skillforge.core.designsystem.PrimaryOrange
 import com.example.skillforge.core.designsystem.SkillforgeLayout
 import com.example.skillforge.core.designsystem.SkillforgeSpacing
 import com.example.skillforge.core.designsystem.SkillforgeTheme
+import com.example.skillforge.data.remote.DiscussionDto
 import com.example.skillforge.domain.model.CourseChapter
 import com.example.skillforge.domain.model.CourseDetails
 import com.example.skillforge.domain.model.CourseLesson
@@ -159,9 +160,13 @@ fun LessonLearningScreen(
                 course = course,
                 lessonId = lessonId,
                 lesson = lessonUiState.lesson,
+                discussions = lessonUiState.discussions,
                 lessonLoading = lessonUiState.isLoading,
                 lessonError = lessonUiState.errorMessage,
                 onLessonSelected = onLessonSelected,
+                onPostComment = { content, parentId ->
+                    viewModel.postDiscussion(sessionToken, lessonId, content, parentId)
+                },
                 modifier = Modifier.padding(padding),
             )
         }
@@ -175,9 +180,11 @@ private fun LessonBody(
     course: CourseDetails,
     lessonId: String,
     lesson: LessonContent?,
+    discussions: List<DiscussionDto>,
     lessonLoading: Boolean,
     lessonError: String?,
     onLessonSelected: (String) -> Unit,
+    onPostComment: (String, String?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var selectedTab by rememberSaveable { mutableStateOf(Tab.CONTENT) }
@@ -201,7 +208,11 @@ private fun LessonBody(
                     Tab.CURRICULUM -> CurriculumPane(course, lessonId, expandedIds, { id ->
                         expandedIds = if (id in expandedIds) expandedIds - id else expandedIds + id
                     }, onLessonSelected)
-                    Tab.DISCUSSION -> DiscussionPane(lesson?.title ?: "this lesson", comment) { comment = it }
+                    Tab.DISCUSSION -> DiscussionPane(
+                        lessonTitle = lesson?.title ?: "this lesson",
+                        discussions = discussions, // Used here
+                        onPostComment = onPostComment // Used here
+                    )
                 }
             }
         }
@@ -367,41 +378,175 @@ private fun LessonRow(lesson: CourseLesson, number: Int, selected: Boolean, onCl
 }
 
 @Composable
-private fun DiscussionPane(lessonTitle: String, comment: String, onCommentChange: (String) -> Unit) {
-    val comments = remember(lessonTitle) {
-        listOf(
-            "Alex Rivera" to "This lesson on $lessonTitle was really helpful. More examples like this would be great.",
-            "Sarah Chen" to "The attached document clarified the tricky parts for me. Thanks for including it.",
-        )
-    }
+private fun DiscussionPane(
+    lessonTitle: String,
+    discussions: List<DiscussionDto>, // Pass data from ViewModel here
+    onPostComment: (content: String, parentId: String?) -> Unit
+) {
+    var commentText by rememberSaveable { mutableStateOf("") }
+    var replyingTo by remember { mutableStateOf<DiscussionDto?>(null) }
+
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             Text("Discussion", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             Surface(color = MaterialTheme.colorScheme.surfaceVariant, shape = RoundedCornerShape(99.dp)) {
-                Text(comments.size.toString(), modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp), style = MaterialTheme.typography.labelSmall)
+                Text(
+                    text = discussions.size.toString(),
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                    style = MaterialTheme.typography.labelSmall
+                )
             }
         }
-        comments.forEachIndexed { index, pair ->
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Top) {
-                Box(Modifier.size(32.dp).clip(CircleShape).background(PrimaryOrange.copy(alpha = 0.18f)), contentAlignment = Alignment.Center) {
-                    Text(pair.first.take(1), color = PrimaryOrange, fontWeight = FontWeight.Bold)
-                }
-                Column(Modifier.weight(1f).clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surface).padding(12.dp)) {
-                    Text(pair.first, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelMedium)
-                    Text(if (index == 0) "2h ago" else "4h ago", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelSmall)
-                    Spacer(Modifier.height(4.dp))
-                    Text(pair.second, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
+
+        if (discussions.isEmpty()) {
+            Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
+                Text("No discussions yet. Be the first to start one!", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        } else {
+            discussions.forEach { discussion ->
+                DiscussionItem(
+                    discussion = discussion,
+                    depth = 0,
+                    onReplyClick = { replyingTo = it }
+                )
             }
         }
-        OutlinedTextField(
-            value = comment,
-            onValueChange = onCommentChange,
+
+        // Input Area
+        Surface(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(999.dp),
-            placeholder = { Text("Add a comment...") },
-            trailingIcon = { IconButton(onClick = {}) { Icon(Icons.Default.Send, contentDescription = "Send", tint = PrimaryOrange) } },
-        )
+            color = MaterialTheme.colorScheme.surface,
+            shadowElevation = 8.dp,
+            shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                if (replyingTo != null) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Replying to ${replyingTo!!.user.fullName}",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = PrimaryOrange
+                        )
+                        Text(
+                            text = "Cancel",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.clickable { replyingTo = null }
+                        )
+                    }
+                }
+
+                OutlinedTextField(
+                    value = commentText,
+                    onValueChange = { commentText = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(24.dp),
+                    placeholder = { Text("Add a comment...") },
+                    trailingIcon = {
+                        IconButton(
+                            onClick = {
+                                if (commentText.isNotBlank()) {
+                                    onPostComment(commentText, replyingTo?.id)
+                                    commentText = ""
+                                    replyingTo = null
+                                }
+                            }
+                        ) {
+                            Icon(Icons.Default.Send, contentDescription = "Send", tint = PrimaryOrange)
+                        }
+                    },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun DiscussionItem(
+    discussion: DiscussionDto,
+    depth: Int,
+    onReplyClick: (DiscussionDto) -> Unit
+) {
+    // Dynamic indentation: 0dp for top-level, 32dp for replies
+    val maxVisualDepth = 1 // Limit indentation to 1 level (top-level and replies)
+    val effectiveDepth = minOf(depth, maxVisualDepth)
+    val paddingStart = (effectiveDepth * 32).dp
+
+    Column(modifier = Modifier.fillMaxWidth().padding(start = paddingStart, top = 8.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Top) {
+
+            // Avatar Placeholder
+            Box(
+                modifier = Modifier
+                    .size(32.dp)
+                    .clip(CircleShape)
+                    .background(PrimaryOrange.copy(alpha = 0.18f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = discussion.user.fullName.take(1).uppercase(),
+                    color = PrimaryOrange,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            // Comment Content Bubble
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(
+                        topStart = 0.dp,
+                        topEnd = 16.dp,
+                        bottomEnd = 16.dp,
+                        bottomStart = 16.dp
+                    ))
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                    .padding(12.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = discussion.user.fullName,
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.labelMedium
+                    )
+
+                    // ONLY show "Reply" button for top-level comments (depth == 0)
+                    if (depth == 0) {
+                        Text(
+                            text = "Reply",
+                            color = PrimaryOrange,
+                            style = MaterialTheme.typography.labelSmall,
+                            modifier = Modifier.clickable { onReplyClick(discussion) }
+                        )
+                    }
+                }
+
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = discussion.content,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+        }
+
+        // Recursively render replies (these will have depth = 1)
+        if (discussion.replies?.isNotEmpty() == true) {
+            discussion.replies.forEach { reply ->
+                DiscussionItem(
+                    discussion = reply,
+                    depth = depth + 1,
+                    onReplyClick = onReplyClick
+                )
+            }
+        }
     }
 }
 
@@ -509,9 +654,11 @@ private fun LessonLearningPreview() {
                     LessonMaterial("mat-2", "DOCUMENT", "https://example.com/Layout_Guidelines.pdf", 2_400_000, "READY"),
                 ),
             ),
+            discussions = emptyList(),
             lessonLoading = false,
             lessonError = null,
             onLessonSelected = {},
+            onPostComment = { _, _ -> },
         )
     }
 }
