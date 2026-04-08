@@ -55,4 +55,6 @@ sealed interface AppRoute {
         val session: AuthSession,
         val courseId: String
     ) : AppRoute
+
+    data class Home(val session: AuthSession) : AppRoute
 }
