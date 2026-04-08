@@ -49,6 +49,7 @@ import com.example.skillforge.feature.student_courses.ui.CourseCurriculumRoute
 import com.example.skillforge.feature.student_courses.ui.MyCoursesScreen
 import com.example.skillforge.feature.student_courses.ui.LessonLearningScreen
 import com.example.skillforge.feature.student_courses.ui.StudentProfileScreen
+import com.example.skillforge.feature.transaction.ui.TransactionScreen
 
 // translated comment
 import io.github.jan.supabase.auth.handleDeeplinks
@@ -179,6 +180,9 @@ class MainActivity : ComponentActivity() {
                                 onOpenCurriculum = { courseId ->
                                     currentRoute = AppRoute.CourseCurriculum(route.session, courseId)
                                 },
+                                onCheckoutSelected = { courseId ->
+                                    currentRoute = AppRoute.Checkout(route.session, courseId)
+                                },
                                 onBack = {
                                     currentRoute = AppRoute.StudentCourseListing(route.session)
                                 }
@@ -194,6 +198,15 @@ class MainActivity : ComponentActivity() {
                                 onNavigateBack = {
                                     currentRoute = AppRoute.StudentCourseDetails(route.session, route.courseId)
                                 }
+                            )
+
+                            is AppRoute.Checkout -> TransactionScreen(
+                                onBackClick = {
+                                    currentRoute = AppRoute.StudentCourseDetails(route.session, route.courseId)
+                                },
+                                onConfirmClick = {
+                                    currentRoute = AppRoute.MyCourses(route.session)
+                                },
                             )
 
                             is AppRoute.LessonLearning -> LessonLearningScreen(
