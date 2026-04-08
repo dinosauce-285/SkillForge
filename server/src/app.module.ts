@@ -9,6 +9,7 @@ import { CategoriesModule } from './modules/categories/categories.module';
 import { FavoriteModule } from './modules/favorite/favorite.module';
 import { LessonsModule } from './modules/lessons/lessons.module';
 import { ChaptersModule } from './modules/chapters/chapters.module';
+import { DiscussionsModule } from './modules/discussions/discussions.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { ChaptersModule } from './modules/chapters/chapters.module';
     FavoriteModule,
     ChaptersModule,
     LessonsModule,
+    DiscussionsModule,
   ],
   controllers: [],
   providers: [],
