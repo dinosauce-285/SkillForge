@@ -4,7 +4,7 @@ import { ProgressService } from './progress.service';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @Controller('progress')
-@UseGuards(JwtAuthGuard) // Bắt buộc đăng nhập cho toàn bộ module này
+@UseGuards(JwtAuthGuard)
 export class ProgressController {
     constructor(private readonly progressService: ProgressService) { }
 

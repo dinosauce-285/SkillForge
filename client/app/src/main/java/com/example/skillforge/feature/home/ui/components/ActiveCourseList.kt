@@ -65,7 +65,7 @@ private fun ActiveCourseItem(course: ActiveCourse) {
             .padding(SkillforgeSpacing.small),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Đã cập nhật để dùng ảnh từ mock data
+       
         coil.compose.AsyncImage(
             model = course.thumbnailUrl,
             placeholder = androidx.compose.ui.res.painterResource(id = com.example.skillforge.R.drawable.mock_course_thumbnail),

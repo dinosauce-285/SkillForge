@@ -127,7 +127,7 @@ class MainActivity : ComponentActivity() {
                                 viewModel = loginViewModel,
                                 onLoginSuccess = { session ->
                                     currentRoute = if (session.user.role.equals("STUDENT", ignoreCase = true)) {
-                                        AppRoute.Home(session) // Đã sửa để điều hướng vào Home
+                                        AppRoute.Home(session) 
                                     } else {
                                         AppRoute.InstructorPortal(session)
                                     }
