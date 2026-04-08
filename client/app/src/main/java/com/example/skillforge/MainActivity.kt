@@ -41,17 +41,19 @@ import com.example.skillforge.feature.student_courses.ui.StudentCourseDetailsRou
 import com.example.skillforge.feature.student_courses.ui.StudentCourseListingRoute
 import com.example.skillforge.feature.student_courses.viewmodel.StudentCoursesViewModel
 import com.example.skillforge.feature.student_courses.viewmodel.StudentCoursesViewModelFactory
-import com.example.skillforge.feature.transaction.ui.TransactionRoute
-import com.example.skillforge.feature.transaction.viewmodel.TransactionViewModel
-import com.example.skillforge.feature.transaction.viewmodel.TransactionViewModelFactory
 import com.example.skillforge.domain.model.Category
 import com.example.skillforge.feature.home.ui.HomeScreen
 import com.example.skillforge.feature.instructor_portal.viewmodel.MaterialUploadViewModel
 import com.example.skillforge.feature.instructor_portal.viewmodel.MaterialUploadViewModelFactory
 import com.example.skillforge.feature.instructor_portal.viewmodel.UploadState
-import com.example.skillforge.feature.student_courses.ui.MyCoursesScreen
+import com.example.skillforge.feature.student_courses.ui.CourseCurriculumRoute
 import com.example.skillforge.feature.student_courses.ui.LessonLearningScreen
+import com.example.skillforge.feature.student_courses.ui.MyCoursesScreen
 import com.example.skillforge.feature.student_courses.ui.StudentProfileScreen
+import com.example.skillforge.feature.transaction.ui.TransactionRoute
+import com.example.skillforge.feature.transaction.ui.TransactionScreen
+import com.example.skillforge.feature.transaction.viewmodel.TransactionViewModel
+import com.example.skillforge.feature.transaction.viewmodel.TransactionViewModelFactory
 import io.github.jan.supabase.auth.handleDeeplinks
 
 class MainActivity : ComponentActivity() {
@@ -82,12 +84,7 @@ class MainActivity : ComponentActivity() {
                         appContainer.categoryRepository
                     )
                 )
-                val transactionViewModel: TransactionViewModel = viewModel(
-                    factory = TransactionViewModelFactory(
-                        appContainer.courseRepository,
-                        appContainer.orderRepository,
-                    )
-                )
+               
                 var currentRoute by remember { mutableStateOf<AppRoute>(AppRoute.Login) }
 
                 Surface(modifier = Modifier.fillMaxSize()) {
@@ -101,8 +98,14 @@ class MainActivity : ComponentActivity() {
                         if (showLesson) {
                             LessonLearningScreen(
                                 sessionToken = "preview-token",
+                                courseId = "preview-course",
                                 lessonId = "preview-lesson",
                                 viewModel = studentCoursesViewModel,
+                                onLessonSelected = {},
+                                onNavigateToDiscover = {},
+                                onNavigateToLearning = {},
+                                onNavigateToWishlist = {},
+                                onNavigateToProfile = {},
                                 onNavigateBack = { showLesson = false }
                             )
                         } else if (showMyCourses) {
@@ -171,8 +174,8 @@ class MainActivity : ComponentActivity() {
                                 courseId = route.courseId,
                                 token = route.session.accessToken,
                                 viewModel = studentCoursesViewModel,
-                                onLessonSelected = { lessonId ->
-                                    currentRoute = AppRoute.LessonLearning(route.session, lessonId)
+                                onOpenCurriculum = { courseId ->
+                                    currentRoute = AppRoute.CourseCurriculum(route.session, courseId)
                                 },
                                 onCheckoutSelected = { courseId ->
                                     currentRoute = AppRoute.Checkout(route.session, courseId)
@@ -182,26 +185,57 @@ class MainActivity : ComponentActivity() {
                                 }
                             )
 
-                            is AppRoute.LessonLearning -> LessonLearningScreen(
-                                sessionToken = route.session.accessToken,
-                                lessonId = route.lessonId,
+                            is AppRoute.CourseCurriculum -> CourseCurriculumRoute(
+                                courseId = route.courseId,
+                                token = route.session.accessToken,
                                 viewModel = studentCoursesViewModel,
+                                onLessonSelected = { lessonId ->
+                                    currentRoute = AppRoute.LessonLearning(route.session, route.courseId, lessonId)
+                                },
                                 onNavigateBack = {
-                                    currentRoute = AppRoute.StudentCourseListing(route.session)
+                                    currentRoute = AppRoute.StudentCourseDetails(route.session, route.courseId)
                                 }
                             )
 
-                            is AppRoute.Checkout -> TransactionRoute(
-                                sessionToken = route.session.accessToken,
-                                courseId = route.courseId,
-                                viewModel = transactionViewModel,
+                            is AppRoute.Checkout -> TransactionScreen(
                                 onBackClick = {
                                     currentRoute = AppRoute.StudentCourseDetails(route.session, route.courseId)
                                 },
-                                onCheckoutSuccess = {
+                                onConfirmClick = {
+                                    currentRoute = AppRoute.MyCourses(route.session)
+                                },
+                            )
+
+                            is AppRoute.LessonLearning -> LessonLearningScreen(
+                                sessionToken = route.session.accessToken,
+                                courseId = route.courseId,
+                                lessonId = route.lessonId,
+                                viewModel = studentCoursesViewModel,
+                                onLessonSelected = { nextLessonId ->
+                                    currentRoute = AppRoute.LessonLearning(
+                                        session = route.session,
+                                        courseId = route.courseId,
+                                        lessonId = nextLessonId,
+                                    )
+                                },
+                                onNavigateToDiscover = {
                                     currentRoute = AppRoute.StudentCourseListing(route.session)
+                                },
+                                onNavigateToLearning = {
+                                    currentRoute = AppRoute.CourseCurriculum(route.session, route.courseId)
+                                },
+                                onNavigateToWishlist = {
+                                    currentRoute = AppRoute.Favorite(route.session)
+                                },
+                                onNavigateToProfile = {
+                                    currentRoute = AppRoute.Profile(route.session)
+                                },
+                                onNavigateBack = {
+                                    currentRoute = AppRoute.CourseCurriculum(route.session, route.courseId)
                                 }
                             )
+
+                            
 
                             is AppRoute.InstructorPortal -> {
                                 val portalViewModel: InstructorPortalViewModel = viewModel(
