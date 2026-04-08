@@ -15,7 +15,7 @@ import com.example.skillforge.core.designsystem.SkillforgeShapes
 import com.example.skillforge.core.designsystem.SkillforgeSpacing
 import com.example.skillforge.core.designsystem.components.SkillforgeCard
 import com.example.skillforge.core.designsystem.components.SkillforgeProgressBar
-import com.example.skillforge.feature.home.ui.mock.ActiveCourse
+import com.example.skillforge.domain.model.ActiveCourse
 
 @Composable
 fun ContinueLearningCard(
@@ -92,11 +92,11 @@ fun ContinueLearningCard(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Box(modifier = Modifier.weight(1f)) {
-                        SkillforgeProgressBar(progress = course.progressPercentage)
+                        SkillforgeProgressBar(progress = (course.percentage / 100f))
                     }
                     Spacer(modifier = Modifier.width(SkillforgeSpacing.medium))
                     Text(
-                        text = "${(course.progressPercentage * 100).toInt()}%",
+                        text = "${(course.percentage)}%",
                         style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

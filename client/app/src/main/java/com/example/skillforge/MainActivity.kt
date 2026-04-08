@@ -43,6 +43,8 @@ import com.example.skillforge.feature.student_courses.viewmodel.StudentCoursesVi
 import com.example.skillforge.feature.student_courses.viewmodel.StudentCoursesViewModelFactory
 import com.example.skillforge.domain.model.Category
 import com.example.skillforge.feature.home.ui.HomeScreen
+import com.example.skillforge.feature.home.viewmodel.HomeViewModel
+import com.example.skillforge.feature.home.viewmodel.HomeViewModelFactory
 import com.example.skillforge.feature.instructor_portal.viewmodel.MaterialUploadViewModel
 import com.example.skillforge.feature.instructor_portal.viewmodel.MaterialUploadViewModelFactory
 import com.example.skillforge.feature.instructor_portal.viewmodel.UploadState
@@ -50,6 +52,11 @@ import com.example.skillforge.feature.student_courses.ui.CourseCurriculumRoute
 import com.example.skillforge.feature.student_courses.ui.LessonLearningScreen
 import com.example.skillforge.feature.student_courses.ui.MyCoursesScreen
 import com.example.skillforge.feature.student_courses.ui.StudentProfileScreen
+import com.example.skillforge.feature.transaction.ui.TransactionScreen
+import com.example.skillforge.feature.student_courses.ui.LessonLearningScreen
+import com.example.skillforge.feature.student_courses.ui.MyCoursesScreen
+import com.example.skillforge.feature.student_courses.ui.StudentProfileScreen
+
 //import com.example.skillforge.feature.transaction.ui.TransactionRoute
 import com.example.skillforge.feature.transaction.ui.TransactionScreen
 //import com.example.skillforge.feature.transaction.viewmodel.TransactionViewModel
@@ -88,7 +95,6 @@ class MainActivity : ComponentActivity() {
                 var currentRoute by remember { mutableStateOf<AppRoute>(AppRoute.Login) }
 
                 Surface(modifier = Modifier.fillMaxSize()) {
-
                     val isTestingHome = false
 
                     if (isTestingHome) {
@@ -111,15 +117,18 @@ class MainActivity : ComponentActivity() {
                         } else if (showMyCourses) {
                             MyCoursesScreen(
                                 onNavigateBack = { showMyCourses = false },
-                                onCourseClick = { courseId ->
-                                    showLesson = true
-                                },
+                                onCourseClick = { courseId -> showLesson = true },
                                 onNavigateToDiscover = { showMyCourses = false },
                                 onNavigateToWishlist = {},
                                 onNavigateToProfile = {},
                             )
                         } else {
+                            val homeViewModel: HomeViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
+                                factory = HomeViewModelFactory(appContainer.progressRepository)
+                            )
                             HomeScreen(
+                                token = "preview-token",
+                                viewModel = homeViewModel,
                                 onNavigateToMyCourses = { showMyCourses = true }
                             )
                         }
@@ -129,7 +138,7 @@ class MainActivity : ComponentActivity() {
                                 viewModel = loginViewModel,
                                 onLoginSuccess = { session ->
                                     currentRoute = if (session.user.role.equals("STUDENT", ignoreCase = true)) {
-                                        AppRoute.StudentCourseListing(session)
+                                        AppRoute.Home(session) 
                                     } else {
                                         AppRoute.InstructorPortal(session)
                                     }
@@ -138,6 +147,23 @@ class MainActivity : ComponentActivity() {
                                     currentRoute = AppRoute.Register
                                 }
                             )
+
+                            is AppRoute.Home -> {
+                                val session = (currentRoute as AppRoute.Home).session
+                                val token = session.accessToken
+
+                                val homeViewModel: HomeViewModel = androidx.lifecycle.viewmodel.compose.viewModel(
+                                    factory = HomeViewModelFactory(appContainer.progressRepository)
+                                )
+
+                                HomeScreen(
+                                    token = token,
+                                    viewModel = homeViewModel,
+                                    onNavigateToMyCourses = {
+                                        // Handle navigation to My Courses
+                                    }
+                                )
+                            }
 
                             AppRoute.Register -> RegisterScreen(
                                 viewModel = registerViewModel,
@@ -262,8 +288,8 @@ class MainActivity : ComponentActivity() {
                                     onCourseClick = { clickedCourseId ->
                                         currentRoute = AppRoute.CourseManager(route.session, clickedCourseId)
                                     },
-                                    onNavigateToUploadMaterial = {
-                                    },
+                                    onNavigateToUploadMaterial = { },
+
                                     onLogout = {
                                     }
                                 )

@@ -9,6 +9,7 @@ import { CategoriesModule } from './modules/categories/categories.module';
 import { FavoriteModule } from './modules/favorite/favorite.module';
 import { LessonsModule } from './modules/lessons/lessons.module';
 import { ChaptersModule } from './modules/chapters/chapters.module';
+import { ProgressModule } from './modules/progress/progress.module';
 import { DiscussionsModule } from './modules/discussions/discussions.module';
 
 @Module({
@@ -26,6 +27,7 @@ import { DiscussionsModule } from './modules/discussions/discussions.module';
     FavoriteModule,
     ChaptersModule,
     LessonsModule,
+    ProgressModule,
     DiscussionsModule,
   ],
   controllers: [],

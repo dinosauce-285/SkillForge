@@ -9,6 +9,7 @@ import com.example.skillforge.data.remote.FavoriteApi
 import com.example.skillforge.data.remote.LessonApi
 import com.example.skillforge.data.remote.MaterialApi
 import com.example.skillforge.data.remote.OrderApi
+import com.example.skillforge.data.remote.ProgressApi
 import com.example.skillforge.data.repository.AuthRepositoryImpl
 import com.example.skillforge.data.repository.CategoryRepositoryImpl
 import com.example.skillforge.data.repository.CourseRepositoryImpl
@@ -17,6 +18,7 @@ import com.example.skillforge.data.repository.FavoriteRepositoryImpl
 import com.example.skillforge.data.repository.LessonRepositoryImpl
 import com.example.skillforge.data.repository.MaterialRepositoryImpl
 import com.example.skillforge.data.repository.OrderRepositoryImpl
+import com.example.skillforge.data.repository.ProgressRepositoryImpl
 import com.example.skillforge.domain.repository.AuthRepository
 import com.example.skillforge.domain.repository.CategoryRepository
 import com.example.skillforge.domain.repository.CourseRepository
@@ -25,6 +27,7 @@ import com.example.skillforge.domain.repository.FavoriteRepository
 import com.example.skillforge.domain.repository.LessonRepository
 import com.example.skillforge.domain.repository.MaterialRepository
 import com.example.skillforge.domain.repository.OrderRepository
+import com.example.skillforge.domain.repository.ProgressRepository
 import com.example.skillforge.domain.usecase.LoginUseCase
 import com.example.skillforge.domain.usecase.RegisterUseCase
 import io.github.jan.supabase.createSupabaseClient
@@ -59,10 +62,9 @@ class AppContainer {
         .addConverterFactory(GsonConverterFactory.create())
         .build()
 
+    // --- APIs ---
     private val authApi = retrofit.create(AuthApi::class.java)
     private val courseApi = retrofit.create(CourseApi::class.java)
-
-    private val authRepository: AuthRepository = AuthRepositoryImpl(authApi, supabase)
     private val categoryApi = retrofit.create(CategoryApi::class.java)
     private val chapterApi = retrofit.create(ChapterApi::class.java)
     private val favoriteApi = retrofit.create(FavoriteApi::class.java)
@@ -70,14 +72,22 @@ class AppContainer {
 
     private val discussionApi = retrofit.create(DiscussionApi::class.java)
     private val orderApi = retrofit.create(OrderApi::class.java)
+    private val progressApi = retrofit.create(ProgressApi::class.java) // Added here
+
+    // --- Repositories ---
+    private val authRepository: AuthRepository = AuthRepositoryImpl(authApi, supabase)
     val courseRepository: CourseRepository = CourseRepositoryImpl(courseApi)
     val categoryRepository: CategoryRepository = CategoryRepositoryImpl(categoryApi)
-
     val chapterRepository: ChapterRepository = ChapterRepositoryImpl(chapterApi)
     val favoriteRepository: FavoriteRepository = FavoriteRepositoryImpl(favoriteApi)
     val lessonRepository: LessonRepository = LessonRepositoryImpl(lessonApi, discussionApi)
 
     val orderRepository: OrderRepository = OrderRepositoryImpl(orderApi)
+    val progressRepository: ProgressRepository = ProgressRepositoryImpl(progressApi) // Added here
+
+    // --- Use Cases ---
     val loginUseCase = LoginUseCase(authRepository)
     val registerUseCase = RegisterUseCase(authRepository)
+
+
 }
