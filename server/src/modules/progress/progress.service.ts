@@ -16,7 +16,7 @@ export class ProgressService {
         });
 
         if (!lesson) {
-            throw new NotFoundException(`Lesson với id "${lessonId}" không tồn tại hoặc đã bị xóa.`);
+            throw new NotFoundException(`Lesson with id "${lessonId}" not found.`);
         }
 
         try {

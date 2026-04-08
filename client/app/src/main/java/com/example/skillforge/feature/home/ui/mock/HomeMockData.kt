@@ -2,7 +2,6 @@ package com.example.skillforge.feature.home.ui.mock
 
 import com.example.skillforge.R
 
-// Data Class đã được chuẩn hóa theo đúng Response của API /progress/dashboard
 data class ActiveCourse(
     val courseId: String,       
     val title: String,         
