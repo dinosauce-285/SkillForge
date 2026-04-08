@@ -15,14 +15,20 @@ sealed interface AppRoute {
         val courseId: String,
     ) : AppRoute
 
-    data class LessonLearning(
+    data class CourseCurriculum(
         val session: AuthSession,
-        val lessonId: String,
+        val courseId: String,
     ) : AppRoute
 
     data class Checkout(
         val session: AuthSession,
         val courseId: String,
+    ) : AppRoute
+
+    data class LessonLearning(
+        val session: AuthSession,
+        val courseId: String,
+        val lessonId: String,
     ) : AppRoute
 
     data class InstructorPortal(
@@ -48,7 +54,7 @@ sealed interface AppRoute {
 
     data class MaterialUpload(
         val session: AuthSession,
-        val courseId: String
+        val lessonId: String
     ) : AppRoute
 
     data class CourseManager(
