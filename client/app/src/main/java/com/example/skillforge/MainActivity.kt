@@ -172,9 +172,6 @@ class MainActivity : ComponentActivity() {
                                 onLessonSelected = { lessonId ->
                                     currentRoute = AppRoute.LessonLearning(route.session, lessonId)
                                 },
-                                onCheckoutSelected = { courseId ->
-                                    currentRoute = AppRoute.Checkout(route.session, courseId)
-                                },
                                 onBack = {
                                     currentRoute = AppRoute.StudentCourseListing(route.session)
                                 }
