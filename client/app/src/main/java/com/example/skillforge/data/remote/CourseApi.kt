@@ -7,6 +7,7 @@ import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
 import retrofit2.http.Path
+import retrofit2.http.Query // translated comment
 
 data class CourseListResponse(
     val data: List<CourseSummaryDto>,
@@ -48,6 +49,7 @@ data class CourseDetailsDto(
 )
 
 data class CourseCategoryDto(
+    val id: String,
     val name: String,
 )
 
@@ -78,7 +80,12 @@ data class CourseChapterDto(
 )
 
 data class CourseLessonDto(
+    val id: String,
     val title: String,
+)
+
+data class EnrollmentStatusDto(
+    val isEnrolled: Boolean
 )
 
 data class CreateCourseRequest(
@@ -96,10 +103,20 @@ data class CreateCourseResponse(
 
 interface CourseApi {
     @GET("courses")
-    suspend fun getCourses(): Response<CourseListResponse>
+    suspend fun getCourses(
+        @Query("search") searchQuery: String? = null,
+        @Query("categoryId") categoryId: String? = null,
+        @Query("level") level: String? = null,
+    ): Response<CourseListResponse>
 
     @GET("courses/{id}")
     suspend fun getCourseDetails(@Path("id") courseId: String): Response<CourseDetailsDto>
+
+    @GET("courses/{id}/enrollment-status")
+    suspend fun getEnrollmentStatus(
+        @Path("id") courseId: String,
+        @Header("Authorization") token: String
+    ): Response<EnrollmentStatusDto>
 
     @POST("courses")
     suspend fun createCourse(
@@ -116,5 +133,5 @@ interface CourseApi {
     @GET("courses/instructor/my-courses")
     suspend fun getMyCourses(
         @Header("Authorization") token: String
-    ): Response<List<CourseSummaryDto>> // Trả về List các khóa học của tôi
+    ): Response<List<CourseSummaryDto>> // translated comment
 }

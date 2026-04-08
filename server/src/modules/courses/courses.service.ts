@@ -60,11 +60,7 @@ export class CoursesService {
       ...(levelFilter ? { level: levelFilter } : {}),
       ...(search
         ? {
-            OR: [
-              { title: { contains: search, mode: 'insensitive' } },
-              { subtitle: { contains: search, mode: 'insensitive' } },
-              { summary: { contains: search, mode: 'insensitive' } },
-            ],
+            title: { contains: search, mode: 'insensitive' },
           }
         : {}),
     };
@@ -169,6 +165,21 @@ export class CoursesService {
     }
 
     return course;
+  }
+
+  async checkEnrollmentStatus(courseId: string, userId: string) {
+    const enrollment = await this.prisma.enrollment.findUnique({
+      where: {
+        userId_courseId: {
+          userId,
+          courseId,
+        },
+      },
+    });
+
+    return {
+      isEnrolled: enrollment?.status === 'ACTIVE',
+    };
   }
 
   async create(user: { userId: string; role: Role }, dto: CreateCourseDto) {

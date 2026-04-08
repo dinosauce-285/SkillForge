@@ -2,6 +2,7 @@ package com.example.skillforge.feature.student_courses.ui
 
 import com.example.skillforge.domain.model.CourseChapter
 import com.example.skillforge.domain.model.CourseDetails
+import com.example.skillforge.domain.model.CourseLesson
 import com.example.skillforge.domain.model.CourseSummary
 
 object StudentCourseMockData {
@@ -12,6 +13,7 @@ object StudentCourseMockData {
             subtitle = "Build design systems that scale across teams and releases.",
             summary = "From tokens and component architecture to governance and collaboration.",
             thumbnailUrl = "https://images.unsplash.com/photo-1545239351-1141bd82e8a6?auto=format&fit=crop&w=1200&q=80",
+            categoryId = "design",
             categoryName = "Design",
             instructorName = "Ariana Brooks",
             level = "INTERMEDIATE",
@@ -29,6 +31,7 @@ object StudentCourseMockData {
             subtitle = "Create polished mobile apps with real production patterns.",
             summary = "Learn state, architecture, navigation, and performance techniques for Compose apps.",
             thumbnailUrl = "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80",
+            categoryId = "development",
             categoryName = "Development",
             instructorName = "Marcus Lin",
             level = "BEGINNER",
@@ -46,6 +49,7 @@ object StudentCourseMockData {
             subtitle = "Plan campaigns, validate channels, and grow with clear metrics.",
             summary = "A practical starter course for product, growth, and marketing collaboration.",
             thumbnailUrl = "https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=1200&q=80",
+            categoryId = "business",
             categoryName = "Business",
             instructorName = "Alex Rivera",
             level = "INTERMEDIATE",
@@ -82,12 +86,20 @@ object StudentCourseMockData {
                 CourseChapter(
                     id = "chapter-1",
                     title = "System Foundations",
-                    lessonTitles = listOf("Why design systems fail", "Tokens and naming", "Documentation basics"),
+                    lessons = listOf(
+                        CourseLesson("lesson-1", "Why design systems fail"),
+                        CourseLesson("lesson-2", "Tokens and naming"),
+                        CourseLesson("lesson-3", "Documentation basics"),
+                    ),
                 ),
                 CourseChapter(
                     id = "chapter-2",
                     title = "Components and Governance",
-                    lessonTitles = listOf("Building component rules", "Review workflows", "Versioning decisions"),
+                    lessons = listOf(
+                        CourseLesson("lesson-4", "Building component rules"),
+                        CourseLesson("lesson-5", "Review workflows"),
+                        CourseLesson("lesson-6", "Versioning decisions"),
+                    ),
                 ),
             ),
         ),
@@ -113,12 +125,20 @@ object StudentCourseMockData {
                 CourseChapter(
                     id = "chapter-1",
                     title = "Compose Foundations",
-                    lessonTitles = listOf("Composable thinking", "Layouts and modifiers", "Material 3 setup"),
+                    lessons = listOf(
+                        CourseLesson("lesson-7", "Composable thinking"),
+                        CourseLesson("lesson-8", "Layouts and modifiers"),
+                        CourseLesson("lesson-9", "Material 3 setup"),
+                    ),
                 ),
                 CourseChapter(
                     id = "chapter-2",
                     title = "State and Screen Patterns",
-                    lessonTitles = listOf("Hoisted state", "UI state models", "Navigation basics"),
+                    lessons = listOf(
+                        CourseLesson("lesson-10", "Hoisted state"),
+                        CourseLesson("lesson-11", "UI state models"),
+                        CourseLesson("lesson-12", "Navigation basics"),
+                    ),
                 ),
             ),
         ),
@@ -144,12 +164,20 @@ object StudentCourseMockData {
                 CourseChapter(
                     id = "chapter-1",
                     title = "Growth Basics",
-                    lessonTitles = listOf("Finding your audience", "Offer clarity", "Core funnel metrics"),
+                    lessons = listOf(
+                        CourseLesson("lesson-13", "Finding your audience"),
+                        CourseLesson("lesson-14", "Offer clarity"),
+                        CourseLesson("lesson-15", "Core funnel metrics"),
+                    ),
                 ),
                 CourseChapter(
                     id = "chapter-2",
                     title = "Campaign Experiments",
-                    lessonTitles = listOf("Channel testing", "Landing page iteration", "Retention signals"),
+                    lessons = listOf(
+                        CourseLesson("lesson-16", "Channel testing"),
+                        CourseLesson("lesson-17", "Landing page iteration"),
+                        CourseLesson("lesson-18", "Retention signals"),
+                    ),
                 ),
             ),
         ),

@@ -1,5 +1,6 @@
 package com.example.skillforge.data.remote
 
+import retrofit2.Response
 import retrofit2.http.GET
 
 data class CategoryDto(
@@ -9,5 +10,5 @@ data class CategoryDto(
 
 interface CategoryApi {
     @GET("categories")
-    suspend fun getCategories(): List<CategoryDto>
+    suspend fun getCategories(): Response<List<CategoryDto>>
 }

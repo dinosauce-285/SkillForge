@@ -24,12 +24,13 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 
 import com.example.skillforge.data.remote.CategoryDto
+import com.example.skillforge.domain.model.Category
 import com.example.skillforge.feature.instructor_portal.viewmodel.CourseFormState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SkillforgeCourseFormScreen(
-    categories: List<CategoryDto> = emptyList(),
+    categories: List<Category>,
     isEditMode: Boolean = false,
     isLoading: Boolean = false,
     errorMessage: String? = null,
@@ -52,22 +53,22 @@ fun SkillforgeCourseFormScreen(
 
     if (showSuccessDialog) {
         AlertDialog(
-            onDismissRequest = { /* Không làm gì để ép user phải bấm nút */ },
-            title = { Text("Thành công!", fontWeight = FontWeight.Bold) },
-            text = { Text("Khóa học của bạn đã được xuất bản thành công.") },
+            onDismissRequest = { /* Keep open until user confirms */ },
+            title = { Text("Success!", fontWeight = FontWeight.Bold) },
+            text = { Text("Your course has been published successfully.") },
             confirmButton = {
                 Button(
                     onClick = {
                         showSuccessDialog = false
                         onNavigateBack()
                     },
-                    // 🌟 Sử dụng màu từ hệ thống thiết kế
+                    // translated comment
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary,
                         contentColor = MaterialTheme.colorScheme.onPrimary
                     )
                 ) {
-                    Text("Tuyệt vời")
+                    Text("Great")
                 }
             }
         )
@@ -111,7 +112,7 @@ fun SkillforgeCourseFormScreen(
                             onClick = { onSaveClick(courseTitle, courseSummary, coursePrice, selectedCategoryId) },
                             modifier = Modifier.weight(1f),
                             enabled = !isLoading && courseTitle.isNotBlank() && coursePrice.isNotBlank() && selectedCategoryId.isNotBlank(),
-                            // 🌟 Sử dụng màu từ hệ thống thiết kế
+                            // translated comment
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.primary,
                                 contentColor = MaterialTheme.colorScheme.onPrimary
@@ -140,7 +141,7 @@ fun SkillforgeCourseFormScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            // 🌟 Thay đổi màu Background và Border bằng colorScheme
+            // translated comment
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -148,7 +149,7 @@ fun SkillforgeCourseFormScreen(
                     .clip(RoundedCornerShape(12.dp))
                     .background(MaterialTheme.colorScheme.surfaceVariant)
                     .border(2.dp, MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(12.dp))
-                    .clickable(enabled = !isLoading) { /* Xử lý chọn ảnh sau */ },
+                    .clickable(enabled = !isLoading) { /* Handle image selection later */ },
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -156,7 +157,7 @@ fun SkillforgeCourseFormScreen(
                         Icons.Default.Add,
                         contentDescription = "Upload cover",
                         modifier = Modifier.size(48.dp),
-                        tint = MaterialTheme.colorScheme.primary // 🌟 Tint màu primary
+                        tint = MaterialTheme.colorScheme.primary // translated comment
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
@@ -187,12 +188,12 @@ fun SkillforgeCourseFormScreen(
                 modifier = Modifier.fillMaxWidth(), singleLine = true, shape = RoundedCornerShape(12.dp)
             )
 
-            // --- VÙNG HIỂN THỊ CATEGORY TỪ DATABASE ---
+            // translated comment
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("Category", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
 
                 if (categories.isEmpty()) {
-                    Text("Đang tải danh mục...", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+                    Text("Loading categories...", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                 } else {
                     LazyRow(
                         modifier = Modifier.fillMaxWidth(),
@@ -204,7 +205,7 @@ fun SkillforgeCourseFormScreen(
                                 enabled = !isLoading,
                                 onClick = { selectedCategoryId = category.id },
                                 label = { Text(category.name) },
-                                // 🌟 Tận dụng hệ màu chuẩn
+                                // translated comment
                                 colors = FilterChipDefaults.filterChipColors(
                                     selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                                     selectedLabelColor = MaterialTheme.colorScheme.primary

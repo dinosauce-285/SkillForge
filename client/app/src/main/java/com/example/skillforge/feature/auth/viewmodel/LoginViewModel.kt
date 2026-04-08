@@ -31,7 +31,7 @@ class LoginViewModel(private val loginUseCase: LoginUseCase) : ViewModel() {
                 _loginState.value = LoginState.Success(session)
             }
             result.onFailure { exception ->
-                _loginState.value = LoginState.Error(exception.message ?: "Lỗi không xác định")
+                _loginState.value = LoginState.Error(exception.message ?: "Unknown error")
             }
         }
     }
@@ -41,7 +41,7 @@ class LoginViewModel(private val loginUseCase: LoginUseCase) : ViewModel() {
             try {
                 loginUseCase.loginWithGoogle()
             } catch (e: Exception) {
-                _loginState.value = LoginState.Error(e.message ?: "Lỗi đăng nhập Google")
+                _loginState.value = LoginState.Error(e.message ?: "Google sign-in failed")
             }
         }
     }

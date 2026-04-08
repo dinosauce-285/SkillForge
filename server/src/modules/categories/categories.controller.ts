@@ -32,7 +32,7 @@ export class CategoriesController {
     return this.categoriesService.findOne(id);
   }
 
-  // API Protected: Chỉ Admin mới được tạo danh mục mới
+  // translated comment
   @Roles('ADMIN')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Post()
@@ -40,7 +40,7 @@ export class CategoriesController {
     return this.categoriesService.create(createCategoryDto);
   }
 
-  // API Protected: Chỉ Admin mới được sửa
+  // translated comment
   @Roles('ADMIN')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Patch(':id')
@@ -51,7 +51,7 @@ export class CategoriesController {
     return this.categoriesService.update(id, updateCategoryDto);
   }
 
-  // API Protected: Chỉ Admin mới được xóa
+  // translated comment
   @Roles('ADMIN')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Delete(':id')

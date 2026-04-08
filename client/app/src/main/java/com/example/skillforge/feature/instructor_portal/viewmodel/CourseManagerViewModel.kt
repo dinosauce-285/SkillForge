@@ -6,7 +6,7 @@ import com.example.skillforge.data.remote.CreateChapterRequest
 import com.example.skillforge.data.remote.CreateLessonRequest
 import com.example.skillforge.data.remote.CourseManagerDto
 import com.example.skillforge.domain.repository.ChapterRepository
-import com.example.skillforge.domain.repository.CourseRepository // 🌟 Dùng hàng chính chủ
+import com.example.skillforge.domain.repository.CourseRepository // translated comment
 import com.example.skillforge.domain.repository.LessonRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,7 +19,7 @@ sealed class CourseManagerState {
 }
 
 class CourseManagerViewModel(
-    private val courseRepo: CourseRepository, // 🌟 Nhận CourseRepository
+    private val courseRepo: CourseRepository, // translated comment
     private val chapterRepo: ChapterRepository,
     private val lessonRepo: LessonRepository
 ) : ViewModel() {
@@ -39,10 +39,10 @@ class CourseManagerViewModel(
     private fun fetchData() {
         viewModelScope.launch {
             _uiState.value = CourseManagerState.Loading
-            // 🌟 Gọi hàm từ CourseRepo
+            // translated comment
             courseRepo.getCourseForManager(currentToken, currentCourseId)
                 .onSuccess { _uiState.value = CourseManagerState.Success(it) }
-                .onFailure { _uiState.value = CourseManagerState.Error(it.message ?: "Lỗi tải dữ liệu") }
+                .onFailure { _uiState.value = CourseManagerState.Error(it.message ?: "Failed to load data") }
         }
     }
 
@@ -53,7 +53,7 @@ class CourseManagerViewModel(
             val request = CreateChapterRequest(courseId = currentCourseId, title = title)
             chapterRepo.createChapter(currentToken, request)
                 .onSuccess { fetchData() }
-                .onFailure { /* Có thể log lỗi */ }
+                .onFailure { /* Optional: add error logging */ }
         }
     }
 
@@ -64,7 +64,7 @@ class CourseManagerViewModel(
             val request = CreateLessonRequest(chapterId = chapterId, title = title)
             lessonRepo.createLesson(currentToken, request)
                 .onSuccess { fetchData() }
-                .onFailure { /* Có thể log lỗi */ }
+                .onFailure { /* Optional: add error logging */ }
         }
     }
 }

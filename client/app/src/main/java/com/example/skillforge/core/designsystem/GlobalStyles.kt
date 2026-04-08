@@ -35,6 +35,13 @@ object SkillforgeElevation {
 }
 
 object SkillforgeShapes {
+    val small = RoundedCornerShape(4.dp)
+    val medium = RoundedCornerShape(8.dp)
+    val large = RoundedCornerShape(16.dp)
+    val extraLarge = RoundedCornerShape(24.dp)
+    val pill = RoundedCornerShape(50)
+    val bottomSheet = extraLarge
+
     val input = RoundedCornerShape(SkillforgeRadius.medium)
     val button = RoundedCornerShape(SkillforgeRadius.medium)
     val card = RoundedCornerShape(SkillforgeRadius.xLarge)

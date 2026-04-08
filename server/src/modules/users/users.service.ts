@@ -6,7 +6,7 @@ import { UpdateProfileDto } from './dto/update-profile.dto';
 export class UsersService {
     constructor(private prisma: PrismaService) { }
 
-    // 1. Lấy thông tin Profile
+    // translated comment
     async getProfile(userId: string) {
         const user = await this.prisma.user.findUnique({
             where: { id: userId },
@@ -18,7 +18,7 @@ export class UsersService {
                 provider: true,
                 isActive: true,
                 createdAt: true,
-                // Nối (Join) với bảng profile
+                // translated comment
                 profile: {
                     select: {
                         avatarUrl: true,
@@ -30,24 +30,24 @@ export class UsersService {
         });
 
         if (!user) {
-            throw new NotFoundException('Không tìm thấy người dùng');
+            throw new NotFoundException('User not found');
         }
 
         return user;
     }
 
-    // 2. Cập nhật Profile
+    // translated comment
     async updateProfile(userId: string, dto: UpdateProfileDto) {
         const { fullName, avatarUrl, skills, learningGoals } = dto;
 
-        // Prisma cho phép update bảng User và upsert bảng UserProfile trong cùng 1 câu lệnh (Transaction ngầm)
+        // translated comment
         const updatedUser = await this.prisma.user.update({
             where: { id: userId },
             data: {
-                // Cập nhật bảng User
+                // translated comment
                 ...(fullName && { fullName }),
 
-                // Cập nhật hoặc tạo mới bảng UserProfile
+                // translated comment
                 profile: {
                     upsert: {
                         create: {

@@ -1,10 +1,10 @@
 import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
 
 export class LoginDto {
-  @IsEmail({}, { message: 'Email không đúng định dạng' })
-  email: string;
+  @IsEmail({}, { message: 'Invalid email format' })
+  email!: string;
 
   @IsString()
-  @IsNotEmpty({ message: 'Mật khẩu không được để trống' })
-  password: string;
+  @IsNotEmpty({ message: 'Password is required' })
+  password!: string;
 }

@@ -13,7 +13,7 @@ export class CategoriesService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(dto: CreateCategoryDto) {
-    // Kiểm tra tên danh mục đã tồn tại chưa
+    // translated comment
     const existingCategory = await this.prisma.category.findUnique({
       where: { name: dto.name.trim() },
     });
@@ -30,7 +30,7 @@ export class CategoriesService {
   }
 
   async findAll() {
-    // Trả về danh sách danh mục, đính kèm luôn số lượng khóa học trong mỗi danh mục
+    // translated comment
     return this.prisma.category.findMany({
       orderBy: { name: 'asc' },
       include: {
@@ -59,13 +59,13 @@ export class CategoriesService {
   }
 
   async update(id: string, dto: UpdateCategoryDto) {
-    await this.findOne(id); // Đảm bảo danh mục tồn tại
+    await this.findOne(id); // translated comment
 
     if (dto.name) {
       const existingCategory = await this.prisma.category.findFirst({
         where: { 
           name: dto.name.trim(),
-          NOT: { id }, // Bỏ qua chính nó
+          NOT: { id }, // translated comment
         },
       });
 
@@ -85,7 +85,7 @@ export class CategoriesService {
   async remove(id: string) {
     const category = await this.findOne(id);
 
-    // Chặn xóa nếu danh mục đang chứa khóa học
+    // translated comment
     if (category._count.courses > 0) {
       throw new BadRequestException(
         `Cannot delete category "${category.name}" because it contains ${category._count.courses} course(s).`

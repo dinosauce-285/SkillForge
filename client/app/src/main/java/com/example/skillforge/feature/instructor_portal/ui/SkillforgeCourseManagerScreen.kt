@@ -32,28 +32,28 @@ fun SkillforgeCourseManagerScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    // 🌟 Quản lý trạng thái bật/tắt Popup (Dialog)
+    // translated comment
     var showAddChapterDialog by remember { mutableStateOf(false) }
 
-    // Lưu chapterId khi bấm "Thêm Bài học" để biết đang thêm vào chương nào
+    // translated comment
     var showAddLessonDialogForChapter by remember { mutableStateOf<String?>(null) }
     var newItemTitle by remember { mutableStateOf("") }
 
-    // Gọi API lấy dữ liệu ngay khi vào màn hình
+    // translated comment
     LaunchedEffect(Unit) {
         viewModel.loadCourseStructure(token, courseId)
     }
 
-    // --- DIALOG THÊM CHƯƠNG ---
+    // translated comment
     if (showAddChapterDialog) {
         AlertDialog(
             onDismissRequest = { showAddChapterDialog = false; newItemTitle = "" },
-            title = { Text("Thêm Chương mới") },
+            title = { Text("Add New Chapter") },
             text = {
                 OutlinedTextField(
                     value = newItemTitle,
                     onValueChange = { newItemTitle = it },
-                    label = { Text("Tên chương") },
+                    label = { Text("Chapter title") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -63,24 +63,24 @@ fun SkillforgeCourseManagerScreen(
                     viewModel.createChapter(newItemTitle)
                     showAddChapterDialog = false
                     newItemTitle = ""
-                }) { Text("Tạo") }
+                }) { Text("Create") }
             },
             dismissButton = {
-                TextButton(onClick = { showAddChapterDialog = false; newItemTitle = "" }) { Text("Hủy") }
+                TextButton(onClick = { showAddChapterDialog = false; newItemTitle = "" }) { Text("Cancel") }
             }
         )
     }
 
-    // --- DIALOG THÊM BÀI HỌC ---
+    // translated comment
     if (showAddLessonDialogForChapter != null) {
         AlertDialog(
             onDismissRequest = { showAddLessonDialogForChapter = null; newItemTitle = "" },
-            title = { Text("Thêm Bài học mới") },
+            title = { Text("Add New Lesson") },
             text = {
                 OutlinedTextField(
                     value = newItemTitle,
                     onValueChange = { newItemTitle = it },
-                    label = { Text("Tên bài học") },
+                    label = { Text("Lesson title") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -92,19 +92,19 @@ fun SkillforgeCourseManagerScreen(
                     }
                     showAddLessonDialogForChapter = null
                     newItemTitle = ""
-                }) { Text("Tạo") }
+                }) { Text("Create") }
             },
             dismissButton = {
-                TextButton(onClick = { showAddLessonDialogForChapter = null; newItemTitle = "" }) { Text("Hủy") }
+                TextButton(onClick = { showAddLessonDialogForChapter = null; newItemTitle = "" }) { Text("Cancel") }
             }
         )
     }
 
-    // --- GIAO DIỆN CHÍNH ---
+    // translated comment
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Quản lý Nội dung", fontWeight = FontWeight.Bold) },
+                title = { Text("Content Management", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -114,11 +114,11 @@ fun SkillforgeCourseManagerScreen(
             )
         },
         floatingActionButton = {
-            // Nút nổi (FAB) to bự ở góc để thêm Chương
+            // translated comment
             ExtendedFloatingActionButton(
                 onClick = { showAddChapterDialog = true },
                 icon = { Icon(Icons.Default.Add, contentDescription = "Add Chapter") },
-                text = { Text("Thêm Chương") },
+                text = { Text("Add Chapter") },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary
             )
@@ -131,7 +131,7 @@ fun SkillforgeCourseManagerScreen(
                 }
                 is CourseManagerState.Error -> {
                     Text(
-                        text = "Lỗi: ${state.message}",
+                        text = "Error: ${state.message}",
                         color = MaterialTheme.colorScheme.error,
                         modifier = Modifier.align(Alignment.Center).padding(16.dp)
                     )
@@ -141,18 +141,18 @@ fun SkillforgeCourseManagerScreen(
 
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(bottom = 80.dp) // Chừa chỗ cho cái nút nổi FAB
+                        contentPadding = PaddingValues(bottom = 80.dp) // translated comment
                     ) {
-                        // Tiêu đề khóa học
+                        // translated comment
                         item {
                             Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
                                 Text(course.title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold)
-                                Text(course.category?.name ?: "Chưa có danh mục", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodyMedium)
+                                Text(course.category?.name ?: "No category", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodyMedium)
                                 Spacer(modifier = Modifier.height(16.dp))
                             }
                         }
 
-                        // Danh sách Chương
+                        // translated comment
                         items(course.chapters) { chapter ->
                             Card(
                                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
@@ -160,23 +160,23 @@ fun SkillforgeCourseManagerScreen(
                                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                             ) {
                                 Column {
-                                    // Header Chương
+                                    // translated comment
                                     Row(
                                         modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.secondaryContainer).padding(16.dp),
                                         horizontalArrangement = Arrangement.SpaceBetween,
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         Text(
-                                            text = "Chương ${chapter.orderIndex + 1}: ${chapter.title}",
+                                            text = "Chapter ${chapter.orderIndex + 1}: ${chapter.title}",
                                             style = MaterialTheme.typography.titleMedium,
                                             fontWeight = FontWeight.Bold,
                                             color = MaterialTheme.colorScheme.onSecondaryContainer
                                         )
                                     }
 
-                                    // Danh sách Bài học của Chương này
+                                    // translated comment
                                     if (chapter.lessons.isEmpty()) {
-                                        Text("Chưa có bài học nào.", modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.bodySmall)
+                                        Text("No lessons yet.", modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.bodySmall)
                                     } else {
                                         chapter.lessons.forEach { lesson ->
                                             LessonItemRow(
@@ -187,14 +187,14 @@ fun SkillforgeCourseManagerScreen(
                                         }
                                     }
 
-                                    // Nút Thêm Bài học nhét ở cuối mỗi Chương
+                                    // translated comment
                                     TextButton(
                                         onClick = { showAddLessonDialogForChapter = chapter.id },
                                         modifier = Modifier.fillMaxWidth().padding(8.dp)
                                     ) {
                                         Icon(Icons.Default.AddCircle, contentDescription = null, modifier = Modifier.size(18.dp))
                                         Spacer(Modifier.width(8.dp))
-                                        Text("Thêm Bài học")
+                                        Text("Add Lesson")
                                     }
                                 }
                             }
@@ -218,13 +218,13 @@ fun LessonItemRow(
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = "Bài ${lesson.orderIndex + 1}: ${lesson.title}",
+                text = "Lesson ${lesson.orderIndex + 1}: ${lesson.title}",
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Medium
             )
-            // Hiển thị số lượng tài liệu
+            // translated comment
             Text(
-                text = if (lesson.materials.isEmpty()) "Chưa có tài liệu" else "${lesson.materials.size} tài liệu",
+                text = if (lesson.materials.isEmpty()) "No materials" else "${lesson.materials.size} materials",
                 style = MaterialTheme.typography.bodySmall,
                 color = if (lesson.materials.isEmpty()) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
             )
@@ -234,7 +234,7 @@ fun LessonItemRow(
             onClick = onAddMaterial,
             colors = IconButtonDefaults.iconButtonColors(contentColor = MaterialTheme.colorScheme.primary)
         ) {
-            Icon(Icons.Default.Attachment, contentDescription = "Thêm tài liệu")
+            Icon(Icons.Default.Attachment, contentDescription = "Add material")
         }
     }
 }

@@ -103,7 +103,7 @@ fun LoginScreen(
                             ),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("🎓", color = Color.White)
+                        Text("L", color = Color.White)
                     }
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(

@@ -12,11 +12,11 @@ class InstructorPortalViewModel(
     private val courseRepository: CourseRepository
 ) : ViewModel() {
 
-    // Danh sách khóa học
+    // translated comment
     private val _courses = MutableStateFlow<List<CourseSummaryDto>>(emptyList())
     val courses: StateFlow<List<CourseSummaryDto>> = _courses
 
-    // Trạng thái đang tải
+    // translated comment
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
 
@@ -26,13 +26,13 @@ class InstructorPortalViewModel(
             courseRepository.getMyCourses(token)
                 .onSuccess { danhSach ->
                     _courses.value = danhSach
-                    // 🌟 Thêm dòng này để xem có lấy được cục data nào không
-                    android.util.Log.d("KiemTra", "✅ Lấy thành công ${danhSach.size} khóa học!")
+                    // translated comment
+                    android.util.Log.d("KiemTra", "Successfully loaded ${danhSach.size} courses!")
                 }
                 .onFailure {
                     _courses.value = emptyList()
-                    // 🌟 In đỏ chót ra Logcat để xem nguyên nhân
-                    android.util.Log.e("KiemTra", "❌ Lỗi rớt mạng hoặc sai kiểu dữ liệu: ${it.message}")
+                    // translated comment
+                    android.util.Log.e("KiemTra", "Network failure or data type mismatch: ${it.message}")
                     it.printStackTrace()
                 }
             _isLoading.value = false

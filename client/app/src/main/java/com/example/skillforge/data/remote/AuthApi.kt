@@ -15,8 +15,8 @@ data class UserInfo(
 
 data class LoginResponse(
     val message: String,
-    val accessToken: String, // Đổi từ token -> accessToken
-    val user: UserInfo       // Hứng luôn thông tin user
+    val accessToken: String, // translated comment
+    val user: UserInfo       // translated comment
 )
 
 data class RegisterRequest(
@@ -27,7 +27,7 @@ data class RegisterRequest(
 
 data class RegisterResponse(
     val message: String,
-    val user: UserInfo       // Hứng luôn thông tin user
+    val user: UserInfo       // translated comment
 )
 
 interface AuthApi {

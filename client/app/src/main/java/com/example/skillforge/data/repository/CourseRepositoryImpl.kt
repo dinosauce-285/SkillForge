@@ -4,6 +4,7 @@ import com.example.skillforge.data.remote.CourseApi
 import com.example.skillforge.data.remote.CreateCourseRequest
 import com.example.skillforge.domain.model.CourseChapter
 import com.example.skillforge.domain.model.CourseDetails
+import com.example.skillforge.domain.model.CourseLesson
 import com.example.skillforge.domain.model.CourseSummary
 import com.example.skillforge.domain.repository.CourseRepository
 import com.example.skillforge.data.remote.CourseManagerDto
@@ -12,9 +13,14 @@ import com.example.skillforge.data.remote.CourseSummaryDto
 class CourseRepositoryImpl(
     private val api: CourseApi,
 ) : CourseRepository {
-    override suspend fun getCourses(): Result<List<CourseSummary>> {
+
+    override suspend fun getCourses(
+        searchQuery: String?,
+        categoryId: String?,
+        level: String?,
+    ): Result<List<CourseSummary>> {
         return try {
-            val response = api.getCourses()
+            val response = api.getCourses(searchQuery, categoryId, level)
             if (response.isSuccessful && response.body() != null) {
                 Result.success(response.body()!!.data.map { dto ->
                     CourseSummary(
@@ -23,6 +29,7 @@ class CourseRepositoryImpl(
                         subtitle = dto.subtitle,
                         summary = dto.summary,
                         thumbnailUrl = dto.thumbnailUrl,
+                        categoryId = dto.category.id,
                         categoryName = dto.category.name,
                         instructorName = dto.instructor.fullName,
                         level = dto.level,
@@ -71,7 +78,12 @@ class CourseRepositoryImpl(
                             CourseChapter(
                                 id = chapter.id,
                                 title = chapter.title,
-                                lessonTitles = chapter.lessons.map { it.title },
+                                lessons = chapter.lessons.map { lesson ->
+                                    CourseLesson(
+                                        id = lesson.id,
+                                        title = lesson.title,
+                                    )
+                                },
                             )
                         },
                     )
@@ -96,10 +108,10 @@ class CourseRepositoryImpl(
                 Result.success(Unit)
             } else {
                 val errorBody = response.errorBody()?.string()
-                Result.failure(Exception("Lỗi từ server: ${response.code()} - $errorBody"))
+                Result.failure(Exception("Server error: ${response.code()} - $errorBody"))
             }
         } catch (e: Exception) {
-            Result.failure(Exception("Lỗi mạng: ${e.message}"))
+            Result.failure(Exception("Network error: ${e.message}"))
         }
     }
 
@@ -110,13 +122,13 @@ class CourseRepositoryImpl(
             if (response.isSuccessful) {
                 val body = response.body()
                 if (body != null) {
-                    // 3. Bóc thành công cục data (CourseManagerDto) ra và gửi đi
+                    // translated comment
                     Result.success(body)
                 } else {
-                    Result.failure(Exception("Dữ liệu trả về bị rỗng!"))
+                    Result.failure(Exception("Returned data is empty!"))
                 }
             } else {
-                Result.failure(Exception("Lỗi server: ${response.code()} - ${response.message()}"))
+                Result.failure(Exception("Server error: ${response.code()} - ${response.message()}"))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -129,11 +141,24 @@ class CourseRepositoryImpl(
             if (response.isSuccessful) {
                 Result.success(response.body() ?: emptyList())
             } else {
-                Result.failure(Exception("Lỗi: ${response.code()}"))
+                Result.failure(Exception("Error: ${response.code()}"))
             }
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
+    override suspend fun getEnrollmentStatus(token: String, courseId: String): Result<Boolean> {
+        return try {
+            val bearerToken = if (token.startsWith("Bearer ")) token else "Bearer $token"
+            val response = api.getEnrollmentStatus(courseId, bearerToken)
+            if (response.isSuccessful && response.body() != null) {
+                Result.success(response.body()!!.isEnrolled)
+            } else {
+                Result.failure(Exception("Failed to check enrollment status"))
+            }
+        } catch (e: Exception) {
+            Result.failure(Exception(e.message ?: "Failed to check enrollment status"))
+        }
+    }
 }

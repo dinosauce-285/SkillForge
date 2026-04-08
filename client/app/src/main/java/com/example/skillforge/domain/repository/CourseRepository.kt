@@ -6,7 +6,11 @@ import com.example.skillforge.domain.model.CourseDetails
 import com.example.skillforge.domain.model.CourseSummary
 
 interface CourseRepository {
-    suspend fun getCourses(): Result<List<CourseSummary>>
+    suspend fun getCourses(
+        searchQuery: String? = null,
+        categoryId: String? = null,
+        level: String? = null,
+    ): Result<List<CourseSummary>>
 
     suspend fun getCourseDetails(courseId: String): Result<CourseDetails>
 
@@ -20,4 +24,5 @@ interface CourseRepository {
 
     suspend fun getCourseForManager(token: String, courseId: String): Result<CourseManagerDto>
     suspend fun getMyCourses(token: String): Result<List<CourseSummaryDto>>
+    suspend fun getEnrollmentStatus(token: String, courseId: String): Result<Boolean>
 }

@@ -35,7 +35,7 @@ export class AuthService {
     });
 
     if (existingUser) {
-      throw new BadRequestException('Email này đã được đăng ký!');
+      throw new BadRequestException('This email is already registered.');
     }
 
     // Hash password with bcrypt
@@ -64,7 +64,7 @@ export class AuthService {
     });
 
     return {
-      message: 'Đăng ký thành công. Vui lòng kích hoạt tài khoản để bắt đầu.',
+      message: 'Registration successful. Please activate your account to get started.',
       user: newUser,
     };
   }
@@ -89,28 +89,28 @@ export class AuthService {
 
     // User not found (generic error to prevent email enumeration)
     if (!user) {
-      throw new UnauthorizedException('Email hoặc mật khẩu không chính xác');
+      throw new UnauthorizedException('Incorrect email or password');
     }
 
     // Check if account is currently locked due to failed attempts
     if (user.lockedUntil && user.lockedUntil > new Date()) {
       const remainingTime = Math.ceil((user.lockedUntil.getTime() - Date.now()) / 1000 / 60);
       throw new ForbiddenException(
-        `Tài khoản đang bị khóa do nhập sai mật khẩu quá nhiều lần. Vui lòng thử lại sau ${remainingTime} phút.`
+        `Your account is locked due to too many failed password attempts. Please try again in ${remainingTime} minutes.`
       );
     }
 
     // Check if account is active
     if (!user.isActive) {
       throw new ForbiddenException(
-        'Tài khoản của bạn chưa được kích hoạt hoặc đã bị khóa bởi Admin. Vui lòng liên hệ hỗ trợ.'
+        'Your account is not activated or has been locked by an administrator. Please contact support.'
       );
     }
 
     // Validate provider: if user created via OAuth, they can't login with password
     if (!user.password && user.provider !== 'LOCAL') {
       throw new BadRequestException(
-        `Tài khoản này được đăng ký bằng ${user.provider}. Vui lòng đăng nhập bằng ${user.provider}.`
+        `This account was registered with ${user.provider}. Please sign in using ${user.provider}.`
       );
     }
 
@@ -136,11 +136,11 @@ export class AuthService {
       const remainingAttempts = MAX_LOGIN_ATTEMPTS - failedAttempts;
       if (remainingAttempts > 0) {
         throw new UnauthorizedException(
-          `Email hoặc mật khẩu không chính xác. Còn ${remainingAttempts} lần thử trước khi tài khoản bị khóa.`
+          `Incorrect email or password. ${remainingAttempts} attempts remaining before the account is locked.`
         );
       } else {
         throw new ForbiddenException(
-          'Tài khoản đã bị khóa do nhập sai mật khẩu quá nhiều lần. Vui lòng thử lại sau 15 phút.'
+          'Your account has been locked due to too many failed password attempts. Please try again after 15 minutes.'
         );
       }
     }
@@ -161,7 +161,7 @@ export class AuthService {
     const accessToken = await this.jwtService.signAsync(payload);
 
     return {
-      message: 'Đăng nhập thành công',
+      message: 'Login successful',
       accessToken,
       user: {
         id: user.id,

@@ -30,37 +30,37 @@ import com.example.skillforge.core.designsystem.TextFieldBackgroundColor
 import com.example.skillforge.feature.auth.viewmodel.RegisterState
 import com.example.skillforge.feature.auth.viewmodel.RegisterViewModel
 
-// Nhớ import RegisterViewModel và RegisterState của bạn vào đây
+// translated comment
 // import com.example.skillforge.feature.auth.viewmodel.RegisterViewModel
 // import com.example.skillforge.feature.auth.viewmodel.RegisterState
 
 @Composable
 fun RegisterScreen(
     viewModel: RegisterViewModel,
-    onRegisterSuccess: (String) -> Unit, // Callback trả về câu message thành công
-    onBackToLogin: () -> Unit // Callback để quay lại màn hình Login
+    onRegisterSuccess: (String) -> Unit, // translated comment
+    onBackToLogin: () -> Unit // translated comment
 ) {
-    // 1. Biến lưu trạng thái các ô nhập liệu (Thêm biến fullName)
+    // translated comment
     var fullName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
 
-    // 2. Lắng nghe trạng thái từ ViewModel (Tạm comment để không báo lỗi build)
+    // translated comment
     val registerState by viewModel.registerState.collectAsState()
 
-    // Padding mặc định đồng bộ với Login
+    // translated comment
     val defaultPadding = 16.dp
     val cardPadding = 24.dp
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background) // Dùng màu nền từ Theme
+            .background(MaterialTheme.colorScheme.background) // translated comment
             .padding(defaultPadding),
         contentAlignment = Alignment.Center
     ) {
-        // Thẻ trắng chính bo góc lớn, đổ bóng (Giống hệt Login)
+        // translated comment
         Card(
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             shape = RoundedCornerShape(24.dp),
@@ -74,18 +74,18 @@ fun RegisterScreen(
                     .padding(cardPadding),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // 1. Logo & Tên App (Đồng bộ với Login)
+                // translated comment
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         modifier = Modifier
                             .size(36.dp)
                             .background(
-                                MaterialTheme.colorScheme.primary, // Màu cam chính
+                                MaterialTheme.colorScheme.primary, // translated comment
                                 shape = RoundedCornerShape(8.dp)
                             ),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("🎓", color = Color.White)
+                        Text("L", color = Color.White)
                     }
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
@@ -97,7 +97,7 @@ fun RegisterScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // 2. Tiêu đề chính (Đổi chữ)
+                // translated comment
                 Text(
                     text = "Create Your\nLearning Account",
                     style = MaterialTheme.typography.headlineLarge.copy(
@@ -114,10 +114,10 @@ fun RegisterScreen(
                 )
 
                 // -------------------------------------------------------------------
-                // 3. CÁC Ô NHẬP LIỆU (Đồng bộ style màu sắc, bo góc với Login)
+                // translated comment
                 // -------------------------------------------------------------------
 
-                // Ô nhập Họ và Tên (MỚI)
+                // translated comment
                 OutlinedTextField(
                     value = fullName,
                     onValueChange = { fullName = it },
@@ -125,17 +125,17 @@ fun RegisterScreen(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        unfocusedContainerColor = TextFieldBackgroundColor, // Màu custom
+                        unfocusedContainerColor = TextFieldBackgroundColor, // translated comment
                         unfocusedBorderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f),
                         unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant
                     ),
                     leadingIcon = { Icon(Icons.Default.Person, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)) },
-                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words) // Tự viết hoa chữ cái đầu
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words) // translated comment
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Ô nhập Email
+                // translated comment
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
@@ -152,7 +152,7 @@ fun RegisterScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Ô nhập Password với icon con mắt
+                // translated comment
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
@@ -177,7 +177,7 @@ fun RegisterScreen(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
                 )
 
-                // 4. Hiển thị lỗi nếu có (Xóa cái Forgot Password đi)
+                // translated comment
                 Spacer(modifier = Modifier.height(24.dp))
                  if (registerState is RegisterState.Error) {
                      Text(
@@ -188,11 +188,11 @@ fun RegisterScreen(
                      )
                  }
 
-                // 5. Nút Đăng ký (Đổi chữ thành Sign Up)
+                // translated comment
                 Button(
                     enabled = registerState !is RegisterState.Loading,
                     onClick = {
-                        viewModel.register(fullName, email, password) // GỌI HÀM REGISTER
+                        viewModel.register(fullName, email, password) // translated comment
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -208,11 +208,11 @@ fun RegisterScreen(
                      }
                 }
 
-                // (Tùy chọn: Xóa phần Or continue with Google/Facebook ở màn hình Đăng ký cho gọn)
+                // translated comment
 
                 Spacer(modifier = Modifier.height(cardPadding))
 
-                // 6. Nút chuyển về Đăng nhập (Đổi chữ)
+                // translated comment
                 Row {
                     Text(
                         "Already have an account? ",
@@ -223,7 +223,7 @@ fun RegisterScreen(
                         Text(
                             "Login",
                             style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                            color = PrimaryOrangeLight // Màu cam nhạt
+                            color = PrimaryOrangeLight // translated comment
                         )
                     }
                 }
@@ -231,13 +231,13 @@ fun RegisterScreen(
         }
     }
 
-    // Xử lý khi thành công (Đồng bộ luồng logic)
+    // translated comment
     LaunchedEffect(registerState) {
         when (val state = registerState) {
             is RegisterState.Success -> {
                 onRegisterSuccess(state.message)
             }
-            else -> { /* Không làm gì cả nếu là Idle, Loading hoặc Error */ }
+            else -> { /* No-op for Idle, Loading, or Error */ }
         }
     }
 }
@@ -245,6 +245,6 @@ fun RegisterScreen(
 //@Preview(showBackground = true)
 //@Composable
 //fun RegisterScreenPreview() {
-//    // Fake callback để xem preview
+// translated comment
 //    RegisterScreen(onRegisterSuccess = {}, onBackToLogin = {})
 //}

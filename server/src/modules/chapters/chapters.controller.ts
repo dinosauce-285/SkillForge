@@ -8,9 +8,9 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { Role } from '@prisma/client';
-import { Roles } from '../auth/decorators/roles.decorator'; // Đổi đường dẫn cho đúng project của bạn
-import { CurrentUser } from '../auth/decorators/current-user.decorator'; // Đổi đường dẫn
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'; // Đổi đường dẫn
+import { Roles } from '../auth/decorators/roles.decorator'; // translated comment
+import { CurrentUser } from '../auth/decorators/current-user.decorator'; // translated comment
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'; // translated comment
 import { ChaptersService } from './chapters.service';
 import { CreateChapterDto } from './dto/create-chapter.dto';
 import { UpdateChapterDto } from './dto/update-chapter.dto';

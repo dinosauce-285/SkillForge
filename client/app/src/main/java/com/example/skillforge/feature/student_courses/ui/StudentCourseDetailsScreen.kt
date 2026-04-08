@@ -1,7 +1,6 @@
 package com.example.skillforge.feature.student_courses.ui
-
 import androidx.compose.foundation.background
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.MenuBook
@@ -31,6 +31,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -40,10 +41,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import com.example.skillforge.R
+import coil.compose.AsyncImage
 import com.example.skillforge.core.designsystem.PrimaryOrange
 import com.example.skillforge.core.designsystem.PrimaryOrangeLight
 import com.example.skillforge.core.designsystem.SkillforgeComponentSizes
@@ -60,25 +60,32 @@ import com.example.skillforge.feature.student_courses.viewmodel.StudentCoursesVi
 @Composable
 fun StudentCourseDetailsRoute(
     courseId: String,
+    token: String,
     viewModel: StudentCoursesViewModel,
+    onLessonSelected: (String) -> Unit,
+    onCheckoutSelected: (String) -> Unit,
     onBack: () -> Unit,
 ) {
     val uiState by viewModel.courseDetailsState.collectAsState()
 
-    LaunchedEffect(courseId) {
-        viewModel.loadCourseDetails(courseId)
+    LaunchedEffect(courseId, token) {
+        viewModel.loadCourseDetails(courseId, token)
     }
 
     StudentCourseDetailsScreen(
         uiState = uiState,
+        onLessonSelected = onLessonSelected,
+        onCheckoutSelected = onCheckoutSelected,
         onBack = onBack,
-        onRetry = { viewModel.loadCourseDetails(courseId, forceReload = true) },
+        onRetry = { viewModel.loadCourseDetails(courseId, token, forceReload = true) },
     )
 }
 
 @Composable
 fun StudentCourseDetailsScreen(
     uiState: StudentCourseDetailsUiState,
+    onLessonSelected: (String) -> Unit,
+    onCheckoutSelected: (String) -> Unit,
     onBack: () -> Unit,
     onRetry: () -> Unit,
 ) {
@@ -90,7 +97,6 @@ fun StudentCourseDetailsScreen(
                 onBack = onBack,
                 onRetry = onRetry,
             )
-
             uiState.course != null -> {
                 val course = uiState.course
                 LazyColumn(
@@ -104,11 +110,23 @@ fun StudentCourseDetailsScreen(
                     verticalArrangement = Arrangement.spacedBy(SkillforgeLayout.sectionGap),
                 ) {
                     item { CourseDetailsHero(course = course, onBack = onBack) }
-                    item { CourseOverviewCard(course = course) }
+                    item { 
+                        CourseOverviewCard(
+                            course = course, 
+                            isEnrolled = uiState.isEnrolled,
+                            onLessonSelected = onLessonSelected,
+                            onCheckoutSelected = onCheckoutSelected 
+                        ) 
+                    }
                     if (course.tags.isNotEmpty()) {
                         item { CourseTagsCard(tags = course.tags) }
                     }
-                    item { CourseCurriculumCard(course = course) }
+                    item {
+                        CourseCurriculumCard(
+                            course = course,
+                            onLessonSelected = onLessonSelected,
+                        )
+                    }
                     item { InstructorCard(course = course) }
                 }
             }
@@ -156,12 +174,16 @@ private fun CourseDetailsHero(
                     .clip(SkillforgeShapes.card)
                     .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.18f)),
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.mock_course_thumbnail),
-                    contentDescription = course.title,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop,
-                )
+                val thumbnailUrl = course.thumbnailUrl?.takeIf { it.isNotBlank() }
+
+                if (thumbnailUrl != null) {
+                    AsyncImage(
+                        model = thumbnailUrl,
+                        contentDescription = course.title,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop,
+                    )
+                }
 
                 Box(
                     modifier = Modifier
@@ -204,17 +226,26 @@ private fun CourseDetailsHero(
             ) {
                 Row(horizontalArrangement = Arrangement.spacedBy(SkillforgeSpacing.xSmall)) {
                     Icon(Icons.Default.Star, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary)
-                    Text(text = course.averageRating.formatRating(), color = MaterialTheme.colorScheme.onPrimary)
+                    Text(text = formatRating(course.averageRating), color = MaterialTheme.colorScheme.onPrimary)
                 }
                 Text(text = prettyLevel(course.level), color = MaterialTheme.colorScheme.onPrimary)
-                Text(text = course.displayPrice(), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary)
+                Text(
+                    text = coursePrice(course),
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimary,
+                )
             }
         }
     }
 }
 
 @Composable
-private fun CourseOverviewCard(course: CourseDetails) {
+private fun CourseOverviewCard(
+    course: CourseDetails,
+    isEnrolled: Boolean,
+    onLessonSelected: (String) -> Unit,
+    onCheckoutSelected: (String) -> Unit,
+) {
     ElevatedCard(shape = SkillforgeShapes.card, colors = skillforgeElevatedCardColors()) {
         Column(
             modifier = Modifier.padding(SkillforgeLayout.cardContentPadding),
@@ -231,11 +262,21 @@ private fun CourseOverviewCard(course: CourseDetails) {
                 DetailsStat(title = "Chapters", value = course.chapterCount.toString())
             }
             Button(
-                onClick = {},
+                onClick = {
+                    if (isEnrolled) {
+                        val firstChapter = course.chapters.firstOrNull()
+                        val firstLesson = firstChapter?.lessons?.firstOrNull()
+                        if (firstLesson != null) {
+                            onLessonSelected(firstLesson.id)
+                        }
+                    } else {
+                        onCheckoutSelected(course.id)
+                    }
+                },
                 colors = skillforgePrimaryButtonColors(),
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                Text(text = if (course.isFree) "Start learning" else "Enroll now")
+                Text(text = if (isEnrolled) "Start learning" else if (course.isFree) "Start learning" else "Enroll now")
             }
         }
     }
@@ -249,13 +290,11 @@ private fun CourseTagsCard(tags: List<String>) {
             verticalArrangement = Arrangement.spacedBy(SkillforgeSpacing.medium),
         ) {
             Text(text = "Skills you will touch", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(SkillforgeSpacing.small),
-            ) {
-                items(tags.size) { index ->
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(SkillforgeSpacing.small)) {
+                items(tags) { tag ->
                     AssistChip(
                         onClick = {},
-                        label = { Text(text = tags[index]) },
+                        label = { Text(text = tag) },
                         colors = AssistChipDefaults.assistChipColors(
                             containerColor = MaterialTheme.colorScheme.surfaceVariant,
                         ),
@@ -267,7 +306,10 @@ private fun CourseTagsCard(tags: List<String>) {
 }
 
 @Composable
-private fun CourseCurriculumCard(course: CourseDetails) {
+private fun CourseCurriculumCard(
+    course: CourseDetails,
+    onLessonSelected: (String) -> Unit,
+) {
     ElevatedCard(shape = SkillforgeShapes.card, colors = skillforgeElevatedCardColors()) {
         Column(
             modifier = Modifier.padding(SkillforgeLayout.cardContentPadding),
@@ -281,8 +323,15 @@ private fun CourseCurriculumCard(course: CourseDetails) {
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                     )
-                    chapter.lessonTitles.forEachIndexed { lessonIndex, lessonTitle ->
+
+                    chapter.lessons.forEachIndexed { lessonIndex, lesson ->
                         Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(SkillforgeShapes.card)
+                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.18f))
+                                .clickable { onLessonSelected(lesson.id) }
+                                .padding(horizontal = SkillforgeSpacing.small, vertical = SkillforgeSpacing.small),
                             horizontalArrangement = Arrangement.spacedBy(SkillforgeSpacing.small),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
@@ -292,9 +341,13 @@ private fun CourseCurriculumCard(course: CourseDetails) {
                                 tint = PrimaryOrange,
                             )
                             Text(
-                                text = "${lessonIndex + 1}. $lessonTitle",
+                                text = "${lessonIndex + 1}. ${lesson.title}",
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.weight(1f),
                             )
+                            TextButton(onClick = { onLessonSelected(lesson.id) }) {
+                                Text("Open")
+                            }
                         }
                     }
                 }
@@ -319,7 +372,7 @@ private fun InstructorCard(course: CourseDetails) {
                     modifier = Modifier
                         .clip(androidx.compose.foundation.shape.CircleShape)
                         .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
-                        .padding(SkillforgeSpacing.medium)
+                        .padding(SkillforgeSpacing.medium),
                 ) {
                     Text(
                         text = course.instructorName.take(1),
@@ -339,13 +392,11 @@ private fun InstructorCard(course: CourseDetails) {
                 }
             }
             if (course.instructorSkills.isNotEmpty()) {
-                LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(SkillforgeSpacing.small),
-                ) {
-                    items(course.instructorSkills.size) { index ->
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(SkillforgeSpacing.small)) {
+                    items(course.instructorSkills) { skill ->
                         AssistChip(
                             onClick = {},
-                            label = { Text(course.instructorSkills[index]) },
+                            label = { Text(skill) },
                             colors = AssistChipDefaults.assistChipColors(
                                 containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
                             ),
@@ -411,11 +462,11 @@ private fun ErrorDetailsState(
     }
 }
 
-private fun CourseDetails.displayPrice(): String {
-    return if (isFree || price == 0.0) "Free" else "$" + "%,.0f".format(price)
+private fun coursePrice(course: CourseDetails): String {
+    return if (course.isFree || course.price == 0.0) "Free" else "$" + "%,.0f".format(course.price)
 }
 
-private fun Float.formatRating(): String = String.format("%.1f", this)
+private fun formatRating(value: Float): String = String.format("%.1f", value)
 
 @Preview(showBackground = true, device = "spec:width=411dp,height=891dp,dpi=420")
 @Composable
@@ -423,6 +474,8 @@ private fun StudentCourseDetailsPreview() {
     SkillforgeTheme(darkTheme = false, dynamicColor = false) {
         StudentCourseDetailsScreen(
             uiState = StudentCourseDetailsUiState(course = StudentCourseMockData.courseDetails),
+            onLessonSelected = {},
+            onCheckoutSelected = {},
             onBack = {},
             onRetry = {},
         )

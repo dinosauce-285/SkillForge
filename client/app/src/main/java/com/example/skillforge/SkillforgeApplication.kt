@@ -4,7 +4,7 @@ import android.app.Application
 import com.example.skillforge.core.di.AppContainer
 
 class SkillforgeApplication : Application() {
-    // Khởi tạo container một lần duy nhất
+    // translated comment
     lateinit var container: AppContainer
 
     override fun onCreate() {
