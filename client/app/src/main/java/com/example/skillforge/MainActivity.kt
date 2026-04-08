@@ -41,9 +41,6 @@ import com.example.skillforge.feature.student_courses.ui.StudentCourseDetailsRou
 import com.example.skillforge.feature.student_courses.ui.StudentCourseListingRoute
 import com.example.skillforge.feature.student_courses.viewmodel.StudentCoursesViewModel
 import com.example.skillforge.feature.student_courses.viewmodel.StudentCoursesViewModelFactory
-import com.example.skillforge.feature.transaction.ui.TransactionRoute
-import com.example.skillforge.feature.transaction.viewmodel.TransactionViewModel
-import com.example.skillforge.feature.transaction.viewmodel.TransactionViewModelFactory
 
 // translated comment
 import com.example.skillforge.domain.model.Category
@@ -83,12 +80,7 @@ class MainActivity : ComponentActivity() {
                         appContainer.categoryRepository
                     )
                 )
-                val transactionViewModel: TransactionViewModel = viewModel(
-                    factory = TransactionViewModelFactory(
-                        appContainer.courseRepository,
-                        appContainer.orderRepository,
-                    )
-                )
+               
                 var currentRoute by remember { mutableStateOf<AppRoute>(AppRoute.Login) }
 
                 Surface(modifier = Modifier.fillMaxSize()) {
@@ -180,9 +172,6 @@ class MainActivity : ComponentActivity() {
                                 onLessonSelected = { lessonId ->
                                     currentRoute = AppRoute.LessonLearning(route.session, lessonId)
                                 },
-                                onCheckoutSelected = { courseId ->
-                                    currentRoute = AppRoute.Checkout(route.session, courseId)
-                                },
                                 onBack = {
                                     currentRoute = AppRoute.StudentCourseListing(route.session)
                                 }
@@ -197,17 +186,7 @@ class MainActivity : ComponentActivity() {
                                 }
                             )
 
-                            is AppRoute.Checkout -> TransactionRoute(
-                                sessionToken = route.session.accessToken,
-                                courseId = route.courseId,
-                                viewModel = transactionViewModel,
-                                onBackClick = {
-                                    currentRoute = AppRoute.StudentCourseDetails(route.session, route.courseId)
-                                },
-                                onCheckoutSuccess = {
-                                    currentRoute = AppRoute.StudentCourseListing(route.session)
-                                }
-                            )
+                            
 
                             is AppRoute.InstructorPortal -> {
                                 val portalViewModel: InstructorPortalViewModel = viewModel(

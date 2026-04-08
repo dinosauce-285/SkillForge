@@ -63,7 +63,6 @@ fun StudentCourseDetailsRoute(
     token: String,
     viewModel: StudentCoursesViewModel,
     onLessonSelected: (String) -> Unit,
-    onCheckoutSelected: (String) -> Unit,
     onBack: () -> Unit,
 ) {
     val uiState by viewModel.courseDetailsState.collectAsState()
@@ -75,7 +74,6 @@ fun StudentCourseDetailsRoute(
     StudentCourseDetailsScreen(
         uiState = uiState,
         onLessonSelected = onLessonSelected,
-        onCheckoutSelected = onCheckoutSelected,
         onBack = onBack,
         onRetry = { viewModel.loadCourseDetails(courseId, token, forceReload = true) },
     )
@@ -85,7 +83,6 @@ fun StudentCourseDetailsRoute(
 fun StudentCourseDetailsScreen(
     uiState: StudentCourseDetailsUiState,
     onLessonSelected: (String) -> Unit,
-    onCheckoutSelected: (String) -> Unit,
     onBack: () -> Unit,
     onRetry: () -> Unit,
 ) {
@@ -115,7 +112,6 @@ fun StudentCourseDetailsScreen(
                             course = course, 
                             isEnrolled = uiState.isEnrolled,
                             onLessonSelected = onLessonSelected,
-                            onCheckoutSelected = onCheckoutSelected 
                         ) 
                     }
                     if (course.tags.isNotEmpty()) {
@@ -244,7 +240,6 @@ private fun CourseOverviewCard(
     course: CourseDetails,
     isEnrolled: Boolean,
     onLessonSelected: (String) -> Unit,
-    onCheckoutSelected: (String) -> Unit,
 ) {
     ElevatedCard(shape = SkillforgeShapes.card, colors = skillforgeElevatedCardColors()) {
         Column(
@@ -270,7 +265,6 @@ private fun CourseOverviewCard(
                             onLessonSelected(firstLesson.id)
                         }
                     } else {
-                        onCheckoutSelected(course.id)
                     }
                 },
                 colors = skillforgePrimaryButtonColors(),
@@ -475,7 +469,6 @@ private fun StudentCourseDetailsPreview() {
         StudentCourseDetailsScreen(
             uiState = StudentCourseDetailsUiState(course = StudentCourseMockData.courseDetails),
             onLessonSelected = {},
-            onCheckoutSelected = {},
             onBack = {},
             onRetry = {},
         )
