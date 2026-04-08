@@ -2,15 +2,25 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
+  BadRequestException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateLessonDto } from './dto/create-lesson.dto';
 import { UpdateLessonDto } from './dto/update-lesson.dto';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 @Injectable()
 export class LessonsService {
-  constructor(private readonly prisma: PrismaService) {}
+  private supabase: SupabaseClient;
+
+  constructor(private readonly prisma: PrismaService) {
+    this.supabase = createClient(
+      process.env.SUPABASE_URL || '',
+      process.env.SUPABASE_SERVICE_ROLE_KEY || '',
+    );
+  }
 
   async findOne(id: string, user: { userId: string; role: Role }) {
     const lesson = await this.prisma.lesson.findUnique({
@@ -38,7 +48,6 @@ export class LessonsService {
       throw new NotFoundException(`Lesson with id "${id}" not found`);
     }
 
-    // Check authorization
     if (user.role === Role.STUDENT) {
       const isEnrolled = await this.prisma.enrollment.findUnique({
         where: {
@@ -57,7 +66,6 @@ export class LessonsService {
         }
       }
     } else if (user.role === Role.INSTRUCTOR) {
-      // Instructors can view if they own the course
       if (lesson.chapter.course.instructorId !== user.userId) {
         throw new ForbiddenException(
           'You are not the instructor for this course',
@@ -126,7 +134,6 @@ export class LessonsService {
 
     this.assertCanManage(lesson.chapter.course.instructorId, user);
 
-    // translated comment
     return this.prisma.lesson.update({
       where: { id },
       data: { deletedAt: new Date() },
@@ -154,6 +161,76 @@ export class LessonsService {
     if (user.role !== Role.INSTRUCTOR || instructorId !== user.userId) {
       throw new ForbiddenException(
         'You are not allowed to manage this content',
+      );
+    }
+  }
+
+  async addMaterialToLesson(
+    lessonId: string,
+    title: string,
+    type: string,
+    file: Express.Multer.File,
+  ) {
+    if (!file) {
+      throw new BadRequestException('No file attached!');
+    }
+
+    try {
+      const fileExt = file.originalname.split('.').pop();
+      const fileName = `${Date.now()}-${Math.floor(Math.random() * 10000)}.${fileExt}`;
+
+      const filePath = `lesson_${lessonId}/${fileName}`;
+
+      const { data: uploadData, error: uploadError } =
+        await this.supabase.storage
+          .from('materials')
+          .upload(filePath, file.buffer, {
+            contentType: file.mimetype,
+            upsert: false,
+          });
+
+      if (uploadError) {
+        console.error('Supabase Upload Error:', uploadError);
+        throw new InternalServerErrorException(
+          'Error uploading file to Supabase Storage.',
+        );
+      }
+
+      const { data: publicUrlData } = this.supabase.storage
+        .from('materials')
+        .getPublicUrl(filePath);
+
+      const fileUrl = publicUrlData.publicUrl;
+
+      let materialType: 'VIDEO' | 'DOCUMENT' | 'LINK' | 'SOURCE_CODE' =
+        'DOCUMENT';
+      if (type.toUpperCase() === 'VIDEO') materialType = 'VIDEO';
+
+      if (title && title.trim() !== '') {
+        await this.prisma.lesson.update({
+          where: { id: lessonId },
+          data: { title: title.trim() },
+        });
+      }
+
+      const newMaterial = await this.prisma.lessonMaterial.create({
+        data: {
+          lessonId: lessonId,
+          type: materialType,
+          fileUrl: fileUrl,
+          fileSize: file.size,
+          status: 'READY',
+        },
+      });
+
+      return {
+        message: 'Successfully uploaded material to Supabase!',
+        data: newMaterial,
+      };
+    } catch (error) {
+      console.error(error);
+      throw new InternalServerErrorException(
+        'System error while processing material.',
       );
     }
   }
