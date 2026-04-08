@@ -1,6 +1,6 @@
 package com.example.skillforge.feature.student_courses.ui
+
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,14 +11,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.MenuBook
-import androidx.compose.material.icons.filled.PlayLesson
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
@@ -31,7 +29,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -62,7 +59,8 @@ fun StudentCourseDetailsRoute(
     courseId: String,
     token: String,
     viewModel: StudentCoursesViewModel,
-    onLessonSelected: (String) -> Unit,
+    onOpenCurriculum: (String) -> Unit,
+    onCheckoutSelected: (String) -> Unit,
     onBack: () -> Unit,
 ) {
     val uiState by viewModel.courseDetailsState.collectAsState()
@@ -73,7 +71,8 @@ fun StudentCourseDetailsRoute(
 
     StudentCourseDetailsScreen(
         uiState = uiState,
-        onLessonSelected = onLessonSelected,
+        onOpenCurriculum = onOpenCurriculum,
+        onCheckoutSelected = onCheckoutSelected,
         onBack = onBack,
         onRetry = { viewModel.loadCourseDetails(courseId, token, forceReload = true) },
     )
@@ -82,7 +81,8 @@ fun StudentCourseDetailsRoute(
 @Composable
 fun StudentCourseDetailsScreen(
     uiState: StudentCourseDetailsUiState,
-    onLessonSelected: (String) -> Unit,
+    onOpenCurriculum: (String) -> Unit,
+    onCheckoutSelected: (String) -> Unit,
     onBack: () -> Unit,
     onRetry: () -> Unit,
 ) {
@@ -107,21 +107,16 @@ fun StudentCourseDetailsScreen(
                     verticalArrangement = Arrangement.spacedBy(SkillforgeLayout.sectionGap),
                 ) {
                     item { CourseDetailsHero(course = course, onBack = onBack) }
-                    item { 
+                    item {
                         CourseOverviewCard(
-                            course = course, 
+                            course = course,
                             isEnrolled = uiState.isEnrolled,
-                            onLessonSelected = onLessonSelected,
-                        ) 
+                            onOpenCurriculum = onOpenCurriculum,
+                            onCheckoutSelected = onCheckoutSelected,
+                        )
                     }
                     if (course.tags.isNotEmpty()) {
                         item { CourseTagsCard(tags = course.tags) }
-                    }
-                    item {
-                        CourseCurriculumCard(
-                            course = course,
-                            onLessonSelected = onLessonSelected,
-                        )
                     }
                     item { InstructorCard(course = course) }
                 }
@@ -239,7 +234,8 @@ private fun CourseDetailsHero(
 private fun CourseOverviewCard(
     course: CourseDetails,
     isEnrolled: Boolean,
-    onLessonSelected: (String) -> Unit,
+    onOpenCurriculum: (String) -> Unit,
+    onCheckoutSelected: (String) -> Unit,
 ) {
     ElevatedCard(shape = SkillforgeShapes.card, colors = skillforgeElevatedCardColors()) {
         Column(
@@ -258,19 +254,16 @@ private fun CourseOverviewCard(
             }
             Button(
                 onClick = {
-                    if (isEnrolled) {
-                        val firstChapter = course.chapters.firstOrNull()
-                        val firstLesson = firstChapter?.lessons?.firstOrNull()
-                        if (firstLesson != null) {
-                            onLessonSelected(firstLesson.id)
-                        }
+                    if (isEnrolled || course.isFree) {
+                        onOpenCurriculum(course.id)
                     } else {
+                        onCheckoutSelected(course.id)
                     }
                 },
                 colors = skillforgePrimaryButtonColors(),
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                Text(text = if (isEnrolled) "Start learning" else if (course.isFree) "Start learning" else "Enroll now")
+                Text(text = if (isEnrolled || course.isFree) "Open curriculum" else "Enroll now")
             }
         }
     }
@@ -293,57 +286,6 @@ private fun CourseTagsCard(tags: List<String>) {
                             containerColor = MaterialTheme.colorScheme.surfaceVariant,
                         ),
                     )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun CourseCurriculumCard(
-    course: CourseDetails,
-    onLessonSelected: (String) -> Unit,
-) {
-    ElevatedCard(shape = SkillforgeShapes.card, colors = skillforgeElevatedCardColors()) {
-        Column(
-            modifier = Modifier.padding(SkillforgeLayout.cardContentPadding),
-            verticalArrangement = Arrangement.spacedBy(SkillforgeSpacing.medium),
-        ) {
-            Text(text = "Curriculum", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-            course.chapters.forEachIndexed { chapterIndex, chapter ->
-                Column(verticalArrangement = Arrangement.spacedBy(SkillforgeSpacing.small)) {
-                    Text(
-                        text = "Chapter ${chapterIndex + 1} · ${chapter.title}",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-
-                    chapter.lessons.forEachIndexed { lessonIndex, lesson ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(SkillforgeShapes.card)
-                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.18f))
-                                .clickable { onLessonSelected(lesson.id) }
-                                .padding(horizontal = SkillforgeSpacing.small, vertical = SkillforgeSpacing.small),
-                            horizontalArrangement = Arrangement.spacedBy(SkillforgeSpacing.small),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.PlayLesson,
-                                contentDescription = null,
-                                tint = PrimaryOrange,
-                            )
-                            Text(
-                                text = "${lessonIndex + 1}. ${lesson.title}",
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.weight(1f),
-                            )
-                            TextButton(onClick = { onLessonSelected(lesson.id) }) {
-                                Text("Open")
-                            }
-                        }
-                    }
                 }
             }
         }
@@ -468,7 +410,8 @@ private fun StudentCourseDetailsPreview() {
     SkillforgeTheme(darkTheme = false, dynamicColor = false) {
         StudentCourseDetailsScreen(
             uiState = StudentCourseDetailsUiState(course = StudentCourseMockData.courseDetails),
-            onLessonSelected = {},
+            onOpenCurriculum = {},
+            onCheckoutSelected = {},
             onBack = {},
             onRetry = {},
         )
