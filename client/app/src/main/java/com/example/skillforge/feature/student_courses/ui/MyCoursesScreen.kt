@@ -90,10 +90,10 @@ fun MyCoursesScreen(
                 ),
                 verticalArrangement = Arrangement.spacedBy(SkillforgeSpacing.medium)
             ) {
-                items(myCourses, key = { it.id }) { course ->
+                items(myCourses, key = { it.courseId }) { course ->
                     MyCourseCard(
                         course = course,
-                        onClick = { onCourseClick(course.id) }
+                        onClick = { onCourseClick(course.courseId) }
                     )
                 }
             }
@@ -125,7 +125,7 @@ fun MyCourseCard(
         ) {
             // Thumbnail
             AsyncImage(
-                model = com.example.skillforge.R.drawable.mock_course_thumbnail,
+                model = course.thumbnailUrl, // Sửa 3: Trỏ vào thumbnailUrl của course luôn cho đúng với API sau này
                 placeholder = androidx.compose.ui.res.painterResource(id = com.example.skillforge.R.drawable.mock_course_thumbnail),
                 contentDescription = "Course Thumbnail",
                 contentScale = ContentScale.Crop,
@@ -148,9 +148,9 @@ fun MyCourseCard(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                
+
                 Spacer(modifier = Modifier.height(4.dp))
-                
+
                 Text(
                     text = course.instructorName,
                     style = MaterialTheme.typography.bodySmall,
@@ -158,35 +158,37 @@ fun MyCourseCard(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                
+
                 Spacer(modifier = Modifier.height(SkillforgeSpacing.small))
-                
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = if (course.progressPercentage == 1f) "Completed" else "${(course.progressPercentage * 100).toInt()}% Done",
+                        text = if (course.percentage == 100) "Completed" else "${course.percentage}% Done",
                         style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
                         color = MaterialTheme.colorScheme.primary
                     )
-                    
-                    if (course.remainingLessons > 0) {
+
+                    val remaining = course.totalLessons - course.completedLessons
+                    if (remaining > 0) {
                         Text(
-                            text = "${course.remainingLessons} lessons left",
+                            text = "$remaining lessons left",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.height(4.dp))
-                SkillforgeProgressBar(progress = course.progressPercentage)
+
+                SkillforgeProgressBar(progress = course.percentage / 100f)
             }
-            
+
             Spacer(modifier = Modifier.width(SkillforgeSpacing.small))
-            
+
             // Action button
             Box(
                 modifier = Modifier

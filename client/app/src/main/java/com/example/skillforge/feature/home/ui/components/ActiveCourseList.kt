@@ -15,7 +15,7 @@ import com.example.skillforge.core.designsystem.SkillforgeLayout
 import com.example.skillforge.core.designsystem.SkillforgeShapes
 import com.example.skillforge.core.designsystem.SkillforgeSpacing
 import com.example.skillforge.core.designsystem.components.SkillforgeProgressBar
-import com.example.skillforge.feature.home.ui.mock.ActiveCourse
+import com.example.skillforge.domain.model.ActiveCourse
 
 @Composable
 fun ActiveCourseList(
@@ -65,8 +65,9 @@ private fun ActiveCourseItem(course: ActiveCourse) {
             .padding(SkillforgeSpacing.small),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        // Đã cập nhật để dùng ảnh từ mock data
         coil.compose.AsyncImage(
-            model = com.example.skillforge.R.drawable.mock_course_thumbnail,
+            model = course.thumbnailUrl,
             placeholder = androidx.compose.ui.res.painterResource(id = com.example.skillforge.R.drawable.mock_course_thumbnail),
             contentDescription = "Course Thumbnail",
             contentScale = androidx.compose.ui.layout.ContentScale.Crop,
@@ -78,7 +79,6 @@ private fun ActiveCourseItem(course: ActiveCourse) {
 
         Spacer(modifier = Modifier.width(SkillforgeSpacing.medium))
 
-        // translated comment
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = course.title,
@@ -87,13 +87,16 @@ private fun ActiveCourseItem(course: ActiveCourse) {
                 maxLines = 1
             )
             Spacer(modifier = Modifier.height(2.dp))
+
             Text(
-                text = "${course.remainingLessons} lessons left",
+                text = "${course.totalLessons - course.completedLessons} lessons left",
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+
             Spacer(modifier = Modifier.height(SkillforgeSpacing.small))
-            SkillforgeProgressBar(progress = course.progressPercentage)
+
+            SkillforgeProgressBar(progress = course.percentage / 100f)
         }
     }
 }
