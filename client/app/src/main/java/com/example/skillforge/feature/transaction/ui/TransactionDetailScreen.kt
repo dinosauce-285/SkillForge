@@ -78,13 +78,13 @@ fun TransactionDetailScreen(
                     }
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "Thanh toán thành công",
+                        text = "Payment Successful",
                         fontSize = 22.sp,
                         fontWeight = FontWeight.ExtraBold,
                         color = Color.Black
                     )
                     Text(
-                        text = "Mã đơn hàng: #ORD-88291",
+                        text = "Order ID: #ORD-88291",
                         fontSize = 14.sp,
                         color = Color.Gray,
                         fontWeight = FontWeight.Medium
@@ -102,7 +102,7 @@ fun TransactionDetailScreen(
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(
-                            text = "THÔNG TIN GIAO DỊCH",
+                            text = "TRANSACTION INFO",
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
                             color = PrimaryOrange,
@@ -111,15 +111,15 @@ fun TransactionDetailScreen(
                         Spacer(modifier = Modifier.height(16.dp))
                         Row(modifier = Modifier.fillMaxWidth()) {
                             Column(modifier = Modifier.weight(1f)) {
-                                Text("Ngày & Giờ", fontSize = 11.sp, color = Color.Gray, fontWeight = FontWeight.SemiBold)
-                                Text("14/05/2024 • 14:30", fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                                Text("Date & Time", fontSize = 11.sp, color = Color.Gray, fontWeight = FontWeight.SemiBold)
+                                Text("May 14, 2024 • 14:30", fontSize = 14.sp, fontWeight = FontWeight.Medium)
                             }
                             Column(modifier = Modifier.weight(1f)) {
-                                Text("Phương thức", fontSize = 11.sp, color = Color.Gray, fontWeight = FontWeight.SemiBold)
+                                Text("Method", fontSize = 11.sp, color = Color.Gray, fontWeight = FontWeight.SemiBold)
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(Icons.Default.CreditCard, contentDescription = null, modifier = Modifier.size(14.dp), tint = Color.Gray)
                                     Spacer(modifier = Modifier.width(4.dp))
-                                    Text("Thẻ tín dụng", fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                                    Text("Credit Card", fontSize = 14.sp, fontWeight = FontWeight.Medium)
                                 }
                             }
                         }
@@ -131,7 +131,7 @@ fun TransactionDetailScreen(
             item {
                 Column {
                     Text(
-                        text = "SẢN PHẨM ĐÃ MUA",
+                        text = "PURCHASED ITEMS",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         color = PrimaryOrange,
@@ -139,16 +139,16 @@ fun TransactionDetailScreen(
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     PurchasedItemRow(
-                        title = "Kỹ năng giao tiếp chuyên nghiệp",
-                        instructor = "Lê Hồng Nam",
-                        price = "950.000 VNĐ",
+                        title = "Professional Communication Skills",
+                        instructor = "Le Hong Nam",
+                        price = "950,000 VND",
                         imageRes = R.drawable.mock_course_thumbnail
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     PurchasedItemRow(
                         title = "UI/UX Design Masterclass 2024",
                         instructor = "Sarah Chen",
-                        price = "1.800.000 VNĐ",
+                        price = "1,800,000 VND",
                         imageRes = R.drawable.mock_course_thumbnail
                     )
                 }
@@ -164,13 +164,13 @@ fun TransactionDetailScreen(
                     HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp), thickness = 1.dp, color = Color.LightGray.copy(alpha = 0.3f))
                     
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("Tạm tính", color = Color.Gray, fontSize = 14.sp)
-                        Text("2.750.000 VNĐ", fontWeight = FontWeight.Medium, fontSize = 14.sp)
+                        Text("Subtotal", color = Color.Gray, fontSize = 14.sp)
+                        Text("2,750,000 VND", fontWeight = FontWeight.Medium, fontSize = 14.sp)
                     }
                     Spacer(modifier = Modifier.height(12.dp))
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("Giảm giá (MAYPROMO)", color = Color(0xFF00796B), fontSize = 14.sp)
-                        Text("-300.000 VNĐ", fontWeight = FontWeight.Medium, fontSize = 14.sp, color = Color(0xFF00796B))
+                        Text("Discount (MAYPROMO)", color = Color(0xFF00796B), fontSize = 14.sp)
+                        Text("-300,000 VND", fontWeight = FontWeight.Medium, fontSize = 14.sp, color = Color(0xFF00796B))
                     }
                     
                     Spacer(modifier = Modifier.height(24.dp))
@@ -185,9 +185,9 @@ fun TransactionDetailScreen(
                             modifier = Modifier.padding(24.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Text("TỔNG THANH TOÁN", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.Gray, letterSpacing = 1.sp)
+                            Text("TOTAL PAYMENT", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.Gray, letterSpacing = 1.sp)
                             Text(
-                                text = "2.450.000 VNĐ",
+                                text = "2,450,000 VND",
                                 fontSize = 32.sp,
                                 fontWeight = FontWeight.Black,
                                 color = PrimaryOrange
@@ -208,7 +208,7 @@ fun TransactionDetailScreen(
                     ) {
                         Icon(Icons.Default.Download, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Tải hóa đơn (PDF)", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        Text("Download Invoice (PDF)", fontWeight = FontWeight.Bold, fontSize = 16.sp)
                     }
                     
                     OutlinedButton(
@@ -219,7 +219,7 @@ fun TransactionDetailScreen(
                     ) {
                         Icon(Icons.Default.HelpOutline, contentDescription = null, tint = Color.DarkGray)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Liên hệ hỗ trợ", fontWeight = FontWeight.SemiBold, fontSize = 16.sp, color = Color.DarkGray)
+                        Text("Contact Support", fontWeight = FontWeight.SemiBold, fontSize = 16.sp, color = Color.DarkGray)
                     }
                 }
             }
@@ -253,7 +253,7 @@ fun PurchasedItemRow(
         )
         Column(modifier = Modifier.weight(1f)) {
             Text(text = title, fontWeight = FontWeight.Bold, fontSize = 14.sp, maxLines = 2)
-            Text(text = "Giảng viên: $instructor", fontSize = 12.sp, color = Color.Gray)
+            Text(text = "Instructor: $instructor", fontSize = 12.sp, color = Color.Gray)
         }
         Text(text = price, fontWeight = FontWeight.Bold, fontSize = 14.sp)
     }

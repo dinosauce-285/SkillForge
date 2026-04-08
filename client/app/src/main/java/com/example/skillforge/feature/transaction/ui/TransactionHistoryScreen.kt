@@ -37,7 +37,7 @@ fun TransactionHistoryScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Lịch sử mua hàng", fontWeight = FontWeight.Bold, fontSize = 18.sp) },
+                title = { Text("Purchase History", fontWeight = FontWeight.Bold, fontSize = 18.sp) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = PrimaryOrange)
@@ -62,7 +62,7 @@ fun TransactionHistoryScreen(
                     FilterChip(
                         selected = true,
                         onClick = { },
-                        label = { Text("Tất cả") },
+                        label = { Text("All") },
                         colors = FilterChipDefaults.filterChipColors(
                             selectedContainerColor = PrimaryOrange,
                             selectedLabelColor = Color.White
@@ -75,7 +75,7 @@ fun TransactionHistoryScreen(
                     FilterChip(
                         selected = false,
                         onClick = { },
-                        label = { Text("Thành công") },
+                        label = { Text("Success") },
                         shape = RoundedCornerShape(20.dp)
                     )
                 }
@@ -83,7 +83,7 @@ fun TransactionHistoryScreen(
                     FilterChip(
                         selected = false,
                         onClick = { },
-                        label = { Text("Đang chờ") },
+                        label = { Text("Pending") },
                         shape = RoundedCornerShape(20.dp)
                     )
                 }
@@ -98,15 +98,15 @@ fun TransactionHistoryScreen(
                 item {
                     TransactionCard(
                         orderId = "#ORD-88291",
-                        status = "Thành công",
+                        status = "Success",
                         statusColor = Color(0xFF388E3C),
                         statusBgColor = Color(0xFFE8F5E9),
                         items = listOf(
-                            TransactionItemData("Kỹ năng giao tiếp chuyên nghiệp cho quản lý", "22 thg 05, 2024", Icons.Default.School),
-                            TransactionItemData("UI/UX Design Masterclass 2024", "22 thg 05, 2024", Icons.Default.DesignServices)
+                            TransactionItemData("Professional Communication Skills for Managers", "May 22, 2024", Icons.Default.School),
+                            TransactionItemData("UI/UX Design Masterclass 2024", "May 22, 2024", Icons.Default.DesignServices)
                         ),
-                        totalPrice = "2.450.000 VNĐ",
-                        actionText = "Hóa đơn",
+                        totalPrice = "2,450,000 VND",
+                        actionText = "Invoice",
                         isActionPrimary = false
                     )
                 }
@@ -115,14 +115,14 @@ fun TransactionHistoryScreen(
                 item {
                     TransactionCard(
                         orderId = "#ORD-99102",
-                        status = "Chờ thanh toán",
+                        status = "Pending Payment",
                         statusColor = Color(0xFFF26724),
                         statusBgColor = Color(0xFFFFF3E0),
                         items = listOf(
-                            TransactionItemData("Khóa học Marketing 0 đồng căn bản", "Vừa xong", Icons.Default.MenuBook)
+                            TransactionItemData("Basic Zero-Cost Marketing Course", "Just now", Icons.Default.MenuBook)
                         ),
-                        totalPrice = "890.000 VNĐ",
-                        actionText = "Thanh toán ngay",
+                        totalPrice = "890,000 VND",
+                        actionText = "Pay Now",
                         isActionPrimary = true
                     )
                 }
@@ -131,14 +131,14 @@ fun TransactionHistoryScreen(
                 item {
                     TransactionCard(
                         orderId = "#ORD-77621",
-                        status = "Đã hủy",
+                        status = "Canceled",
                         statusColor = Color.Gray,
                         statusBgColor = Color(0xFFF5F5F5),
                         items = listOf(
-                            TransactionItemData("Tư duy hệ thống cho cá nhân", "15 thg 04, 2024", Icons.Default.Psychology)
+                            TransactionItemData("Systems Thinking for Individuals", "Apr 15, 2024", Icons.Default.Psychology)
                         ),
-                        totalPrice = "1.200.000 VNĐ",
-                        actionText = "Mua lại",
+                        totalPrice = "1,200,000 VND",
+                        actionText = "Re-purchase",
                         isActionPrimary = false,
                         isCanceled = true
                     )
@@ -184,7 +184,7 @@ fun TransactionCard(
             ) {
                 Column {
                     Text(
-                        text = "Mã đơn hàng",
+                        text = "Order ID",
                         fontSize = 10.sp,
                         color = Color.Gray,
                         fontWeight = FontWeight.Bold
@@ -260,7 +260,7 @@ fun TransactionCard(
             ) {
                 Column {
                     Text(
-                        text = "Tổng cộng",
+                        text = "Total",
                         fontSize = 11.sp,
                         color = Color.Gray
                     )

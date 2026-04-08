@@ -6,8 +6,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 data class TransactionUiState(
-    val courseTitle: String = "Khóa học Design UI/UX Cơ bản",
-    val instructorName: String = "Nguyễn Văn A",
+    val courseTitle: String = "UI/UX Design Basic Course",
+    val instructorName: String = "Nguyen Van A",
     val basePrice: Long = 1500000,
     val discountAmount: Long = 200000,
     val promoCode: String = "",

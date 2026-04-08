@@ -66,7 +66,7 @@ fun TransactionScreen(
                         colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange),
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text("Xác nhận & Thanh toán", fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
+                        Text("Confirm & Pay", fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
                     }
                 }
             }
@@ -84,26 +84,26 @@ fun TransactionScreen(
             // Header Section
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
-                    text = "Thanh toán",
+                    text = "Checkout",
                     fontSize = 30.sp,
                     fontWeight = FontWeight.ExtraBold,
                     color = Color.Black
                 )
                 Text(
-                    text = "Hoàn thành đăng ký để bắt đầu học ngay.",
+                    text = "Complete your registration to start learning now.",
                     fontSize = 14.sp,
                     color = Color.Gray
                 )
             }
 
-            // Sản phẩm Section
+            // Product Section
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Sản phẩm", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                    Text("Product", fontWeight = FontWeight.Bold, fontSize = 18.sp)
                     Surface(
                         color = Color(0xFFE0F2F1),
                         shape = CircleShape
@@ -144,25 +144,25 @@ fun TransactionScreen(
                         )
                         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             Text(
-                                "Khóa học Design UI/UX Cơ bản",
+                                "UI/UX Design Basic Course",
                                 fontWeight = FontWeight.Bold,
                                 lineHeight = 20.sp
                             )
-                            Text("Giảng viên: Nguyễn Văn A", fontSize = 14.sp, color = Color.Gray)
-                            Text("1.500.000 VNĐ", fontWeight = FontWeight.Bold, color = PrimaryOrange)
+                            Text("Instructor: Nguyen Van A", fontSize = 14.sp, color = Color.Gray)
+                            Text("1,500,000 VND", fontWeight = FontWeight.Bold, color = PrimaryOrange)
                         }
                     }
                 }
             }
 
-            // Mã giảm giá Section
+            // Promo Code Section
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                Text("Mã giảm giá", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Text("Promo Code", fontWeight = FontWeight.Bold, fontSize = 18.sp)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     TextField(
                         value = "",
                         onValueChange = {},
-                        placeholder = { Text("Nhập mã...", fontSize = 14.sp) },
+                        placeholder = { Text("Enter code...", fontSize = 14.sp) },
                         modifier = Modifier.weight(1.6f),
                         shape = RoundedCornerShape(12.dp),
                         colors = TextFieldDefaults.colors(
@@ -180,14 +180,14 @@ fun TransactionScreen(
                         colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange.copy(alpha = 0.2f)),
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text("Áp dụng", color = PrimaryOrange, fontWeight = FontWeight.Bold)
+                        Text("Apply", color = PrimaryOrange, fontWeight = FontWeight.Bold)
                     }
                 }
             }
 
-            // Phương thức thanh toán Section
+            // Payment Method Section
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                Text("Phương thức thanh toán", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Text("Payment Method", fontWeight = FontWeight.Bold, fontSize = 18.sp)
                 
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
@@ -212,13 +212,13 @@ fun TransactionScreen(
                                 tint = Color.Gray
                             )
                         }
-                        Text("Chuyển khoản", modifier = Modifier.weight(1f), fontWeight = FontWeight.Medium)
+                        Text("Bank Transfer", modifier = Modifier.weight(1f), fontWeight = FontWeight.Medium)
                         RadioButton(selected = true, onClick = {}, colors = RadioButtonDefaults.colors(selectedColor = PrimaryOrange))
                     }
                 }
             }
 
-            // Chi tiết thanh toán Section
+            // Payment Details Section
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 color = Color(0xFFF3F3F4),
@@ -228,16 +228,16 @@ fun TransactionScreen(
                     modifier = Modifier.padding(24.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Text("Chi tiết thanh toán", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                    Text("Payment Details", fontWeight = FontWeight.Bold, fontSize = 18.sp)
                     
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("Tạm tính", color = Color.Gray, fontSize = 14.sp)
-                        Text("1.500.000 VNĐ", fontSize = 14.sp)
+                        Text("Subtotal", color = Color.Gray, fontSize = 14.sp)
+                        Text("1,500,000 VND", fontSize = 14.sp)
                     }
                     
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("Mã giảm giá", color = Color(0xFF2E7D32), fontSize = 14.sp, fontWeight = FontWeight.Medium)
-                        Text("-200.000 VNĐ", color = Color(0xFF2E7D32), fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                        Text("Promo Code", color = Color(0xFF2E7D32), fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                        Text("-200,000 VND", color = Color(0xFF2E7D32), fontSize = 14.sp, fontWeight = FontWeight.Medium)
                     }
                     
                     HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), color = Color.LightGray.copy(alpha = 0.3f))
@@ -247,17 +247,17 @@ fun TransactionScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.Bottom
                     ) {
-                        Text("Tổng cộng", fontWeight = FontWeight.Bold)
+                        Text("Total", fontWeight = FontWeight.Bold)
                         Column(horizontalAlignment = Alignment.End) {
                             Row(verticalAlignment = Alignment.Bottom) {
                                 Text(
-                                    "1.300.000",
+                                    "1,300,000",
                                     fontSize = 30.sp,
                                     fontWeight = FontWeight.ExtraBold,
                                     color = PrimaryOrange
                                 )
                                 Text(
-                                    " VNĐ",
+                                    " VND",
                                     fontSize = 14.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = PrimaryOrange,

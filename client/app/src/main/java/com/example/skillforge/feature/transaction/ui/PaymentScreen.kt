@@ -37,7 +37,7 @@ fun PaymentScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Thanh toán chuyển khoản", fontWeight = FontWeight.Bold, fontSize = 18.sp) },
+                title = { Text("Bank Transfer Payment", fontWeight = FontWeight.Bold, fontSize = 18.sp) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = PrimaryOrange)
@@ -55,19 +55,19 @@ fun PaymentScreen(
                     selected = false,
                     onClick = { },
                     icon = { Icon(Icons.Default.Home, contentDescription = null) },
-                    label = { Text("Trang chủ", fontSize = 10.sp) }
+                    label = { Text("Home", fontSize = 10.sp) }
                 )
                 NavigationBarItem(
                     selected = false,
                     onClick = { },
                     icon = { Icon(Icons.Default.School, contentDescription = null) },
-                    label = { Text("Khóa học", fontSize = 10.sp) }
+                    label = { Text("Courses", fontSize = 10.sp) }
                 )
                 NavigationBarItem(
                     selected = true,
                     onClick = { },
-                    icon = { Icon(Icons.Default.ReceiptLong, contentDescription = null) },
-                    label = { Text("Đơn hàng", fontSize = 10.sp) },
+                    icon = { Icon(Icons.AutoMirrored.Filled.ReceiptLong, contentDescription = null) },
+                    label = { Text("Orders", fontSize = 10.sp) },
                     colors = NavigationBarItemDefaults.colors(
                         selectedIconColor = PrimaryOrange,
                         selectedTextColor = PrimaryOrange,
@@ -78,7 +78,7 @@ fun PaymentScreen(
                     selected = false,
                     onClick = { },
                     icon = { Icon(Icons.Default.Person, contentDescription = null) },
-                    label = { Text("Cá nhân", fontSize = 10.sp) }
+                    label = { Text("Profile", fontSize = 10.sp) }
                 )
             }
         },
@@ -98,7 +98,7 @@ fun PaymentScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "Tổng số tiền cần thanh toán",
+                        text = "Total amount to pay",
                         fontSize = 14.sp,
                         color = Color.Gray,
                         fontWeight = FontWeight.Medium
@@ -106,7 +106,7 @@ fun PaymentScreen(
                     Spacer(modifier = Modifier.height(8.dp))
                     Row(verticalAlignment = Alignment.Bottom) {
                         Text(
-                            text = "2.450.000",
+                            text = "2,450,000",
                             fontSize = 48.sp,
                             fontWeight = FontWeight.ExtraBold,
                             color = PrimaryOrange
@@ -136,7 +136,7 @@ fun PaymentScreen(
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = "GIAO DỊCH AN TOÀN",
+                                text = "SECURE TRANSACTION",
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFF00695C),
@@ -159,14 +159,14 @@ fun PaymentScreen(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Default.AccountBalance, contentDescription = null, tint = PrimaryOrange)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Thông tin tài khoản", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                            Text("Account Information", fontWeight = FontWeight.Bold, fontSize = 18.sp)
                         }
                         
                         Spacer(modifier = Modifier.height(24.dp))
                         
                         // Bank Name
                         BankDetailItem(
-                            label = "Ngân hàng",
+                            label = "Bank",
                             value = "Techcombank",
                             showLogo = true
                         )
@@ -175,7 +175,7 @@ fun PaymentScreen(
                         
                         // Account Number
                         BankDetailItem(
-                            label = "Số tài khoản",
+                            label = "Account Number",
                             value = "1903 4567 8901 23",
                             isBold = true,
                             hasCopy = true
@@ -185,7 +185,7 @@ fun PaymentScreen(
                         
                         // Account Name
                         BankDetailItem(
-                            label = "Chủ tài khoản",
+                            label = "Account Holder",
                             value = "NGUYEN VAN A",
                             isUppercase = true
                         )
@@ -194,7 +194,7 @@ fun PaymentScreen(
                         
                         // Transfer Content
                         BankDetailItem(
-                            label = "Nội dung chuyển khoản",
+                            label = "Transfer Content",
                             value = "COURSE99281",
                             isBold = true,
                             valueColor = PrimaryOrange,
@@ -215,12 +215,12 @@ fun PaymentScreen(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Default.Info, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color.DarkGray)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Hướng dẫn thanh toán", fontWeight = FontWeight.Bold, color = Color.DarkGray)
+                        Text("Payment Instructions", fontWeight = FontWeight.Bold, color = Color.DarkGray)
                     }
                     Spacer(modifier = Modifier.height(16.dp))
-                    InstructionStep(1, "Mở ứng dụng ngân hàng và chọn quét mã QR hoặc Chuyển tiền.")
-                    InstructionStep(2, "Nhập chính xác số tiền và nội dung chuyển khoản như trên.")
-                    InstructionStep(3, "Sau khi chuyển khoản thành công, hãy nhấn nút xác nhận bên dưới.")
+                    InstructionStep(1, "Open your banking app and select QR scan or Transfer.")
+                    InstructionStep(2, "Enter the exact amount and transfer content as shown above.")
+                    InstructionStep(3, "After successful transfer, click the confirmation button below.")
                 }
             }
 
@@ -235,7 +235,7 @@ fun PaymentScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "QUÉT ĐỂ THANH TOÁN",
+                        text = "SCAN TO PAY",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         color = PrimaryOrange,
@@ -271,7 +271,7 @@ fun PaymentScreen(
                         }
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(
-                            text = "Hỗ trợ tất cả ứng dụng\nngân hàng tại Việt Nam",
+                            text = "Supports all banking apps\nin Vietnam",
                             fontSize = 12.sp,
                             color = Color.Gray,
                             lineHeight = 18.sp
@@ -289,7 +289,7 @@ fun PaymentScreen(
                         colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange),
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text("Xác nhận đã chuyển khoản", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        Text("Confirm Transfer Completed", fontWeight = FontWeight.Bold, fontSize = 16.sp)
                         Spacer(modifier = Modifier.width(8.dp))
                         Icon(Icons.Default.ChevronRight, contentDescription = null)
                     }
@@ -300,7 +300,7 @@ fun PaymentScreen(
                         shape = RoundedCornerShape(12.dp),
                         border = BorderStroke(1.dp, Color.LightGray)
                     ) {
-                        Text("Thanh toán sau", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = PrimaryOrange)
+                        Text("Pay Later", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = PrimaryOrange)
                     }
                 }
             }
