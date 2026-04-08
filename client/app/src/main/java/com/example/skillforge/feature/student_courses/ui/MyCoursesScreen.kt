@@ -125,7 +125,7 @@ fun MyCourseCard(
         ) {
             // Thumbnail
             AsyncImage(
-                model = course.thumbnailUrl, // Sửa 3: Trỏ vào thumbnailUrl của course luôn cho đúng với API sau này
+                model = course.thumbnailUrl,
                 placeholder = androidx.compose.ui.res.painterResource(id = com.example.skillforge.R.drawable.mock_course_thumbnail),
                 contentDescription = "Course Thumbnail",
                 contentScale = ContentScale.Crop,

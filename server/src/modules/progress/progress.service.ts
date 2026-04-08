@@ -7,16 +7,15 @@ export class ProgressService {
     constructor(private readonly prisma: PrismaService) { }
 
     async markLessonCompleted(userId: string, lessonId: string, isCompleted: boolean = true) {
-        // Kiểm tra xem lessonId có tồn tại k 
+
         const lesson = await this.prisma.lesson.findFirst({
             where: {
                 id: lessonId,
-                deletedAt: null // Bỏ qua nếu bài học đã bị xóa mềm
+                deletedAt: null
             }
         });
 
         if (!lesson) {
-            // Ném ra lỗi 404 gọn gàng, NestJS sẽ tự bắt và trả về cho Frontend, KHÔNG sập server
             throw new NotFoundException(`Lesson với id "${lessonId}" không tồn tại hoặc đã bị xóa.`);
         }
 
