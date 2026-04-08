@@ -35,7 +35,6 @@ class MaterialRepositoryImpl(
 
             val fileBody = MultipartBody.Part.createFormData("file", file.name, requestFile)
 
-            // 4. Bắn API
             val response = api.uploadMaterial("Bearer $token", lessonId, titleBody, typeBody, fileBody)
 
             if (response.isSuccessful) {

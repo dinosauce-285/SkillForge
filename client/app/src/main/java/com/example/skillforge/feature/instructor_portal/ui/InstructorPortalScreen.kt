@@ -481,7 +481,7 @@ fun AnalyticsTabContent(analyticsData: InstructorAnalyticsDto?, isLoading: Boole
                     }
                     Spacer(modifier = Modifier.height(24.dp))
                     Box(modifier = Modifier.fillMaxWidth().height(150.dp).background(SearchBarBackgroundColor, RoundedCornerShape(8.dp)), contentAlignment = Alignment.Center) {
-                        Text("📊 Bar Chart Placeholder", color = TextSecondaryColor)
+                        Text("Bar Chart Placeholder", color = TextSecondaryColor)
                     }
                 }
             }

@@ -27,14 +27,12 @@ import { memoryStorage } from 'multer';
 export class LessonsController {
   constructor(private readonly lessonsService: LessonsService) {}
 
-  // API returns lesson content. Students, Instructors, and Admins can view.
   @Get(':id')
   @Roles(Role.STUDENT, Role.INSTRUCTOR, Role.ADMIN)
   findOne(@Param('id') id: string, @CurrentUser() user: any) {
     return this.lessonsService.findOne(id, user);
   }
 
-  // Only INSTRUCTOR can CRUD lessons
   @Post()
   @Roles(Role.INSTRUCTOR)
   create(@CurrentUser() user: any, @Body() createLessonDto: CreateLessonDto) {
@@ -60,9 +58,9 @@ export class LessonsController {
   @Post(':lessonId/materials')
   @UseInterceptors(
     FileInterceptor('file', {
-      storage: memoryStorage(), // 🌟 Giữ file ở trên RAM (Buffer)
+      storage: memoryStorage(),
       limits: {
-        fileSize: 1024 * 1024 * 100, // Tối đa 100MB
+        fileSize: 1024 * 1024 * 100,
       },
     }),
   )
@@ -72,9 +70,8 @@ export class LessonsController {
     @Body('type') type: string,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    if (!file) throw new BadRequestException('Chưa đính kèm file!');
+    if (!file) throw new BadRequestException('No file attached!');
 
-    // Giao file (dạng Buffer) cho Service bắn lên Cloud
     return this.lessonsService.addMaterialToLesson(lessonId, title, type, file);
   }
 }
