@@ -50,10 +50,10 @@ import com.example.skillforge.feature.student_courses.ui.CourseCurriculumRoute
 import com.example.skillforge.feature.student_courses.ui.LessonLearningScreen
 import com.example.skillforge.feature.student_courses.ui.MyCoursesScreen
 import com.example.skillforge.feature.student_courses.ui.StudentProfileScreen
-import com.example.skillforge.feature.transaction.ui.TransactionRoute
+//import com.example.skillforge.feature.transaction.ui.TransactionRoute
 import com.example.skillforge.feature.transaction.ui.TransactionScreen
-import com.example.skillforge.feature.transaction.viewmodel.TransactionViewModel
-import com.example.skillforge.feature.transaction.viewmodel.TransactionViewModelFactory
+//import com.example.skillforge.feature.transaction.viewmodel.TransactionViewModel
+//import com.example.skillforge.feature.transaction.viewmodel.TransactionViewModelFactory
 import io.github.jan.supabase.auth.handleDeeplinks
 
 class MainActivity : ComponentActivity() {
