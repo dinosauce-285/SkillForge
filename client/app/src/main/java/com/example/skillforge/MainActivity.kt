@@ -48,6 +48,7 @@ import com.example.skillforge.feature.transaction.viewmodel.TransactionViewModel
 // translated comment
 import com.example.skillforge.domain.model.Category
 import com.example.skillforge.feature.home.ui.HomeScreen
+import com.example.skillforge.feature.student_courses.ui.CourseCurriculumRoute
 import com.example.skillforge.feature.student_courses.ui.MyCoursesScreen
 import com.example.skillforge.feature.student_courses.ui.LessonLearningScreen
 import com.example.skillforge.feature.student_courses.ui.StudentProfileScreen
@@ -106,8 +107,14 @@ class MainActivity : ComponentActivity() {
                         if (showLesson) {
                             LessonLearningScreen(
                                 sessionToken = "preview-token",
+                                courseId = "preview-course",
                                 lessonId = "preview-lesson",
                                 viewModel = studentCoursesViewModel,
+                                onLessonSelected = {},
+                                onNavigateToDiscover = {},
+                                onNavigateToLearning = {},
+                                onNavigateToWishlist = {},
+                                onNavigateToProfile = {},
                                 onNavigateBack = { showLesson = false }
                             )
                         } else if (showMyCourses) {
@@ -177,8 +184,8 @@ class MainActivity : ComponentActivity() {
                                 courseId = route.courseId,
                                 token = route.session.accessToken,
                                 viewModel = studentCoursesViewModel,
-                                onLessonSelected = { lessonId ->
-                                    currentRoute = AppRoute.LessonLearning(route.session, lessonId)
+                                onOpenCurriculum = { courseId ->
+                                    currentRoute = AppRoute.CourseCurriculum(route.session, courseId)
                                 },
                                 onCheckoutSelected = { courseId ->
                                     currentRoute = AppRoute.Checkout(route.session, courseId)
@@ -188,12 +195,44 @@ class MainActivity : ComponentActivity() {
                                 }
                             )
 
+                            is AppRoute.CourseCurriculum -> CourseCurriculumRoute(
+                                courseId = route.courseId,
+                                token = route.session.accessToken,
+                                viewModel = studentCoursesViewModel,
+                                onLessonSelected = { lessonId ->
+                                    currentRoute = AppRoute.LessonLearning(route.session, route.courseId, lessonId)
+                                },
+                                onNavigateBack = {
+                                    currentRoute = AppRoute.StudentCourseDetails(route.session, route.courseId)
+                                }
+                            )
+
                             is AppRoute.LessonLearning -> LessonLearningScreen(
                                 sessionToken = route.session.accessToken,
+                                courseId = route.courseId,
                                 lessonId = route.lessonId,
                                 viewModel = studentCoursesViewModel,
-                                onNavigateBack = {
+                                onLessonSelected = { nextLessonId ->
+                                    currentRoute = AppRoute.LessonLearning(
+                                        session = route.session,
+                                        courseId = route.courseId,
+                                        lessonId = nextLessonId,
+                                    )
+                                },
+                                onNavigateToDiscover = {
                                     currentRoute = AppRoute.StudentCourseListing(route.session)
+                                },
+                                onNavigateToLearning = {
+                                    currentRoute = AppRoute.CourseCurriculum(route.session, route.courseId)
+                                },
+                                onNavigateToWishlist = {
+                                    currentRoute = AppRoute.Favorite(route.session)
+                                },
+                                onNavigateToProfile = {
+                                    currentRoute = AppRoute.Profile(route.session)
+                                },
+                                onNavigateBack = {
+                                    currentRoute = AppRoute.CourseCurriculum(route.session, route.courseId)
                                 }
                             )
 
