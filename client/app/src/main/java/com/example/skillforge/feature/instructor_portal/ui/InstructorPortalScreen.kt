@@ -46,7 +46,7 @@ import com.example.skillforge.feature.instructor_portal.viewmodel.InstructorDash
 enum class SkillforgeInstructorRoute(val title: String, val icon: ImageVector) {
     Dashboard("Dashboard", Icons.Default.Home),
     Courses("Courses", Icons.AutoMirrored.Filled.List),
-    Analytics("Analytics", Icons.Default.Info), // Sửa lỗi Icons.Default.Insights không tồn tại
+    Analytics("Analytics", Icons.Default.Info),
     Account("Account", Icons.Default.AccountCircle)
 }
 
@@ -110,9 +110,6 @@ fun SkillforgeInstructorDashboardScreen(
     }
 }
 
-// ==========================================
-// 🌟 TAB 0: DASHBOARD
-// ==========================================
 @Composable
 fun DashboardTabContent(
     dashboardData: InstructorDashboardDto?,
@@ -300,10 +297,6 @@ fun DashboardStatCard(modifier: Modifier = Modifier, title: String, value: Strin
         }
     }
 }
-
-// ==========================================
-// 🌟 TAB 1: COURSES
-// ==========================================
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CourseListTabContent(
@@ -424,9 +417,6 @@ fun InstructorCourseItemCard(course: CourseSummaryDto, onClick: () -> Unit) {
     }
 }
 
-// ==========================================
-// 🌟 TAB 2: ANALYTICS
-// ==========================================
 @Composable
 fun AnalyticsTabContent(analyticsData: InstructorAnalyticsDto?, isLoading: Boolean) {
     if (isLoading || analyticsData == null) {
@@ -531,10 +521,6 @@ fun AnalyticsMetricCard(title: String, value: String, growth: String, progressCo
         }
     }
 }
-
-// ==========================================
-// THÀNH PHẦN CHUNG: TopBar & BottomBar
-// ==========================================
 @Composable
 fun SkillforgeInstructorTopBar() {
     Row(
@@ -544,7 +530,7 @@ fun SkillforgeInstructorTopBar() {
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Image(
-                imageVector = Icons.Default.AccountCircle, // Đúng rồi, không dùng Icons.Default.Image nữa!
+                imageVector = Icons.Default.AccountCircle,
                 contentDescription = "Instructor Avatar",
                 modifier = Modifier.size(44.dp).clip(CircleShape),
                 contentScale = ContentScale.Crop

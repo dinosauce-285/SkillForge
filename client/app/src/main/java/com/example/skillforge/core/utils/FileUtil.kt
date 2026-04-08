@@ -7,7 +7,6 @@ import java.io.File
 import java.io.FileOutputStream
 
 object FileUtil {
-    // Hàm này bạn đã có rồi nè, để lấy tên file hiển thị trên UI
     fun getFileName(context: Context, uri: Uri): String {
         var name = "Unknown_File"
         val cursor = context.contentResolver.query(uri, null, null, null, null)
@@ -20,7 +19,6 @@ object FileUtil {
         return name
     }
 
-    // 🌟 HÀM MỚI BẮT BUỘC THÊM: Copy Uri ra file tạm để upload
     fun uriToFile(context: Context, uri: Uri): File? {
         val fileName = getFileName(context, uri)
         val tempFile = File(context.cacheDir, fileName)

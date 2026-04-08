@@ -28,20 +28,18 @@ class MaterialUploadViewModel(
         viewModelScope.launch {
             _uploadState.value = UploadState.Loading
 
-            // 1. Biến Uri thành File thật
             val file = FileUtil.uriToFile(context, uri)
             if (file == null) {
-                _uploadState.value = UploadState.Error("Không thể đọc file. Vui lòng thử lại!")
+                _uploadState.value = UploadState.Error("Cannot read file. Please try again.")
                 return@launch
             }
 
-            // 2. Gửi lên Repository
             materialRepository.uploadMaterial(token, lessonId, title, type, file)
                 .onSuccess {
                     _uploadState.value = UploadState.Success
                 }
                 .onFailure {
-                    _uploadState.value = UploadState.Error(it.message ?: "Lỗi upload!")
+                    _uploadState.value = UploadState.Error(it.message ?: "Upload error!")
                 }
         }
     }

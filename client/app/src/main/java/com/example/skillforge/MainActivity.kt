@@ -44,8 +44,6 @@ import com.example.skillforge.feature.student_courses.viewmodel.StudentCoursesVi
 import com.example.skillforge.feature.transaction.ui.TransactionRoute
 import com.example.skillforge.feature.transaction.viewmodel.TransactionViewModel
 import com.example.skillforge.feature.transaction.viewmodel.TransactionViewModelFactory
-
-// translated comment
 import com.example.skillforge.domain.model.Category
 import com.example.skillforge.feature.home.ui.HomeScreen
 import com.example.skillforge.feature.instructor_portal.viewmodel.MaterialUploadViewModel
@@ -54,8 +52,6 @@ import com.example.skillforge.feature.instructor_portal.viewmodel.UploadState
 import com.example.skillforge.feature.student_courses.ui.MyCoursesScreen
 import com.example.skillforge.feature.student_courses.ui.LessonLearningScreen
 import com.example.skillforge.feature.student_courses.ui.StudentProfileScreen
-
-// translated comment
 import io.github.jan.supabase.auth.handleDeeplinks
 
 class MainActivity : ComponentActivity() {
@@ -96,13 +92,9 @@ class MainActivity : ComponentActivity() {
 
                 Surface(modifier = Modifier.fillMaxSize()) {
 
-                    // ===================================================================
-                    // translated comment
                     val isTestingHome = false
-                    // ===================================================================
 
                     if (isTestingHome) {
-                        // translated comment
                         var showMyCourses by remember { mutableStateOf(false) }
                         var showLesson by remember { mutableStateOf(false) }
 
@@ -129,7 +121,6 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                     } else {
-                        // translated comment
                         when (val route = currentRoute) {
                             AppRoute.Login -> LoginScreen(
                                 viewModel = loginViewModel,
@@ -217,23 +208,20 @@ class MainActivity : ComponentActivity() {
                                     factory = InstructorPortalViewModelFactory(appContainer.courseRepository)
                                 )
 
-                                // 1. Hứng đầy đủ 3 luồng data từ ViewModel
                                 val courses by portalViewModel.courses.collectAsState()
                                 val isLoading by portalViewModel.isLoading.collectAsState()
-                                val dashboardData by portalViewModel.dashboardData.collectAsState() // 🌟 Dòng này để hết quay Dashboard
-                                val analyticsData by portalViewModel.analyticsData.collectAsState() // 🌟 Dòng này để hết quay Analytics
+                                val dashboardData by portalViewModel.dashboardData.collectAsState()
+                                val analyticsData by portalViewModel.analyticsData.collectAsState()
 
-                                // 2. Kích hoạt lấy list khóa học từ API khi vào màn hình
                                 LaunchedEffect(Unit) {
                                     portalViewModel.fetchMyCourses(route.session.accessToken)
                                 }
 
-                                // 3. Truyền TUỐT LUỐT data vào UI
                                 SkillforgeInstructorDashboardScreen(
                                     courses = courses,
                                     isLoading = isLoading,
-                                    dashboardData = dashboardData, // 🌟 TRUYỀN VÀO ĐÂY
-                                    analyticsData = analyticsData, // 🌟 TRUYỀN VÀO ĐÂY
+                                    dashboardData = dashboardData,
+                                    analyticsData = analyticsData,
                                     onNavigateToCreateCourse = {
                                         currentRoute = AppRoute.CourseForm(route.session)
                                     },
@@ -241,10 +229,8 @@ class MainActivity : ComponentActivity() {
                                         currentRoute = AppRoute.CourseManager(route.session, clickedCourseId)
                                     },
                                     onNavigateToUploadMaterial = {
-                                        // Tính năng upload chung (nếu cần)
                                     },
                                     onLogout = {
-                                        // Xử lý đăng xuất
                                     }
                                 )
                             }
@@ -282,28 +268,22 @@ class MainActivity : ComponentActivity() {
                             }
 
                             is AppRoute.MaterialUpload -> {
-                                // 1. Lấy ViewModel từ Factory, bơm MaterialRepository từ AppContainer vào
                                 val uploadViewModel: MaterialUploadViewModel = viewModel(
                                     factory = MaterialUploadViewModelFactory(appContainer.materialRepository)
                                 )
 
-                                // 2. Lắng nghe trạng thái
                                 val uploadState by uploadViewModel.uploadState.collectAsState()
 
-                                // 3. Xử lý khi trạng thái chuyển sang Success
                                 LaunchedEffect(uploadState) {
                                     if (uploadState is UploadState.Success) {
-                                        android.widget.Toast.makeText(this@MainActivity, "Upload tài liệu thành công!", android.widget.Toast.LENGTH_SHORT).show()
+                                        android.widget.Toast.makeText(this@MainActivity, "Upload successful!", android.widget.Toast.LENGTH_SHORT).show()
 
-                                        // Xóa state để lần sau không bị nhảy lại
                                         uploadViewModel.resetState()
 
-                                        // Quay lại màn hình Instructor Portal (hoặc truyền courseId để quay lại CourseManager)
                                         currentRoute = AppRoute.InstructorPortal(route.session)
                                     }
                                 }
 
-                                // 4. Đổ giao diện
                                 SkillforgeMaterialUploadScreen(
                                     courseId = route.lessonId,
                                     isLoading = uploadState is UploadState.Loading,
@@ -312,7 +292,6 @@ class MainActivity : ComponentActivity() {
                                     },
                                     onUploadClick = { title, type, fileUri ->
                                         if (fileUri != null) {
-                                            // Ép kiểu Context cho hàm xử lý Uri to File
                                             uploadViewModel.uploadFile(
                                                 context = this@MainActivity,
                                                 token = route.session.accessToken,

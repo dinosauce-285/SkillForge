@@ -20,23 +20,19 @@ class MaterialRepositoryImpl(
         file: File
     ): Result<Any> {
         return try {
-            // 1. Chuyển Text thành RequestBody
             val titleBody = title.toRequestBody("text/plain".toMediaTypeOrNull())
             val typeBody = type.toRequestBody("text/plain".toMediaTypeOrNull())
 
-            // 2. Định dạng loại file (MimeType)
             val mimeType = when (file.extension.lowercase()) {
                 "pdf" -> "application/pdf"
                 "mp4" -> "video/mp4"
                 "zip" -> "application/zip"
                 "doc", "docx" -> "application/msword"
-                else -> "application/octet-stream" // Mặc định
+                else -> "application/octet-stream"
             }
 
-            // 3. Đóng gói File thành MultipartBody.Part
             val requestFile = file.asRequestBody(mimeType.toMediaTypeOrNull())
 
-            // 🌟 Chữ "file" ở đây PHẢI KHỚP với tên field @UploadedFile('file') bên NestJS
             val fileBody = MultipartBody.Part.createFormData("file", file.name, requestFile)
 
             // 4. Bắn API
@@ -45,7 +41,7 @@ class MaterialRepositoryImpl(
             if (response.isSuccessful) {
                 Result.success(response.body() ?: Any())
             } else {
-                Result.failure(Exception("Upload thất bại: Lỗi ${response.code()}"))
+                Result.failure(Exception("Upload failed: Error ${response.code()}"))
             }
         } catch (e: Exception) {
             Result.failure(e)

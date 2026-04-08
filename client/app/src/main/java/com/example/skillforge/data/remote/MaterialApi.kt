@@ -11,12 +11,12 @@ import retrofit2.http.Path
 
 interface MaterialApi {
     @Multipart
-    @POST("lessons/{lessonId}/materials") // Sửa lại URL cho khớp với NestJS của bạn
+    @POST("lessons/{lessonId}/materials")
     suspend fun uploadMaterial(
         @Header("Authorization") token: String,
         @Path("lessonId") lessonId: String,
         @Part("title") title: RequestBody,
         @Part("type") type: RequestBody,
         @Part file: MultipartBody.Part
-    ): Response<Any> // Tạm để Any, bạn có thể đổi thành MaterialDto nếu NestJS trả về data
+    ): Response<Any>
 }

@@ -9,7 +9,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-// DTO cho tab Analytics
 data class InstructorAnalyticsDto(
     val totalRevenue: Double,
     val revenueGrowth: Double,
@@ -19,7 +18,6 @@ data class InstructorAnalyticsDto(
     val satisfactionRank: String
 )
 
-// DTO cho tab Dashboard
 data class InstructorDashboardDto(
     val instructorName: String,
     val totalStudents: Int,
@@ -32,7 +30,7 @@ data class InstructorDashboardDto(
 )
 
 data class ActivityData(
-    val iconType: String, // "comment", "submission", "review"
+    val iconType: String,
     val title: String,
     val description: String,
     val timeAgo: String
@@ -55,7 +53,6 @@ class InstructorPortalViewModel(
     val isLoading: StateFlow<Boolean> = _isLoading
 
     init {
-        // Tự động fetch data thống kê khi khởi tạo ViewModel
         fetchAnalyticsData()
         fetchDashboardData()
     }
@@ -64,20 +61,17 @@ class InstructorPortalViewModel(
         viewModelScope.launch {
             _isLoading.value = true
             courseRepository.getMyCourses(token)
-                .onSuccess { danhSach ->
-                    _courses.value = danhSach
-                    android.util.Log.d("KiemTra", "Successfully loaded ${danhSach.size} courses!")
+                .onSuccess { list ->
+                    _courses.value = list
                 }
                 .onFailure {
                     _courses.value = emptyList()
-                    android.util.Log.e("KiemTra", "Network failure or data type mismatch: ${it.message}")
                     it.printStackTrace()
                 }
             _isLoading.value = false
         }
     }
 
-    // Giả lập API cho Analytics
     private fun fetchAnalyticsData() {
         viewModelScope.launch {
             delay(1000)
@@ -92,7 +86,6 @@ class InstructorPortalViewModel(
         }
     }
 
-    // Giả lập API cho Dashboard
     private fun fetchDashboardData() {
         viewModelScope.launch {
             delay(1000)
