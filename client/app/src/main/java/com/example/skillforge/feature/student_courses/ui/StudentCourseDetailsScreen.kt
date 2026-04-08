@@ -112,7 +112,6 @@ fun StudentCourseDetailsScreen(
                             course = course, 
                             isEnrolled = uiState.isEnrolled,
                             onLessonSelected = onLessonSelected,
-                            onCheckoutSelected = onCheckoutSelected 
                         ) 
                     }
                     if (course.tags.isNotEmpty()) {
@@ -241,7 +240,6 @@ private fun CourseOverviewCard(
     course: CourseDetails,
     isEnrolled: Boolean,
     onLessonSelected: (String) -> Unit,
-    onCheckoutSelected: (String) -> Unit,
 ) {
     ElevatedCard(shape = SkillforgeShapes.card, colors = skillforgeElevatedCardColors()) {
         Column(
@@ -267,7 +265,6 @@ private fun CourseOverviewCard(
                             onLessonSelected(firstLesson.id)
                         }
                     } else {
-                        onCheckoutSelected(course.id)
                     }
                 },
                 colors = skillforgePrimaryButtonColors(),
@@ -472,7 +469,6 @@ private fun StudentCourseDetailsPreview() {
         StudentCourseDetailsScreen(
             uiState = StudentCourseDetailsUiState(course = StudentCourseMockData.courseDetails),
             onLessonSelected = {},
-            onCheckoutSelected = {},
             onBack = {},
             onRetry = {},
         )
