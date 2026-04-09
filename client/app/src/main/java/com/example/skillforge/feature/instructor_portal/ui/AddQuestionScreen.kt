@@ -58,10 +58,10 @@ fun AddQuestionScreen(
         },
         bottomBar = {
             QuizBuilderBottomBar(
-                selectedTab = 0, // Mặc định ở tab Builder khi đang thêm câu hỏi
+                selectedTab = 0, // Default to Builder tab when adding a question
                 onTabSelected = {
                     if (it == 1) {
-                        // Chuyển trực tiếp sang màn hình Settings của Quiz Builder
+                        // Navigate directly to Quiz Builder Settings screen
                         onNavigateToSettings()
                     }
                 }
