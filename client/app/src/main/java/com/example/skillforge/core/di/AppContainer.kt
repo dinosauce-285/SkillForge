@@ -1,5 +1,6 @@
 package com.example.skillforge.core.di
 
+import com.example.skillforge.BuildConfig
 import com.example.skillforge.data.remote.AuthApi
 import com.example.skillforge.data.remote.CategoryApi
 import com.example.skillforge.data.remote.ChapterApi
@@ -58,7 +59,7 @@ class AppContainer {
 
 
     private val retrofit = Retrofit.Builder()
-        .baseUrl("http://192.168.1.16:3000/")
+        .baseUrl(BuildConfig.API_BASE_URL)
         .addConverterFactory(GsonConverterFactory.create())
         .build()
 
