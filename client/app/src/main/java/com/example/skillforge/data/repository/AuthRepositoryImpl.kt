@@ -13,10 +13,13 @@ import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.Google
 import io.github.jan.supabase.auth.status.SessionStatus
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
+import com.example.skillforge.data.local.AuthPreferences
 
 class AuthRepositoryImpl(
     private val api: AuthApi,
+    private val authPreferences: AuthPreferences,
     private val supabase: SupabaseClient
 ) : AuthRepository {
 
@@ -38,11 +41,43 @@ class AuthRepositoryImpl(
         }
     }
 
+    override suspend fun verifySession(): Result<AuthSession> {
+        return try {
+            val token = authPreferences.accessToken.firstOrNull()
+            if (token.isNullOrEmpty()) {
+                return Result.failure(Exception("No token found"))
+            }
+
+            val response = api.getMe()
+            if (response.isSuccessful && response.body() != null) {
+                val userInfo = response.body()!!
+                Result.success(
+                    AuthSession(
+                        accessToken = token,
+                        user = AuthUser(
+                            id = userInfo.id,
+                            email = userInfo.email,
+                            fullName = userInfo.fullName,
+                            role = userInfo.role
+                        )
+                    )
+                )
+            } else {
+                authPreferences.clearSession()
+                Result.failure(Exception("Session expired or unauthorized"))
+            }
+        } catch (e: Exception) {
+            authPreferences.clearSession()
+            Result.failure(Exception(e.message ?: "Network error during session verification"))
+        }
+    }
+
     override suspend fun login(email: String, password: String): Result<AuthSession> {
         return try {
             val response = api.login(LoginRequest(email, password))
             if (response.isSuccessful && response.body() != null) {
                 val data = response.body()!!
+                authPreferences.saveTokens(data.accessToken, data.refreshToken)
                 Result.success(
                     AuthSession(
                         accessToken = data.accessToken,
