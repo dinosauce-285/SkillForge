@@ -54,7 +54,9 @@ import com.example.skillforge.feature.student_courses.ui.CourseCurriculumRoute
 import com.example.skillforge.feature.student_courses.ui.LessonLearningScreen
 import com.example.skillforge.feature.student_courses.ui.MyCoursesScreen
 import com.example.skillforge.feature.student_courses.ui.StudentProfileScreen
-import com.example.skillforge.feature.transaction.ui.TransactionScreen
+import com.example.skillforge.feature.transaction.ui.TransactionScreenRoute
+import com.example.skillforge.feature.transaction.viewmodel.TransactionViewModel
+import com.example.skillforge.feature.transaction.viewmodel.TransactionViewModelFactory
 import io.github.jan.supabase.auth.handleDeeplinks
 
 class MainActivity : ComponentActivity() {
@@ -74,6 +76,12 @@ class MainActivity : ComponentActivity() {
                         appContainer.courseRepository,
                         appContainer.categoryRepository,
                         appContainer.lessonRepository,
+                    )
+                )
+                val transactionViewModel: TransactionViewModel = viewModel(
+                    factory = TransactionViewModelFactory(
+                        appContainer.courseRepository,
+                        appContainer.orderRepository,
                     )
                 )
                 val favoriteViewModel: FavoriteViewModel = viewModel(
@@ -117,6 +125,9 @@ class MainActivity : ComponentActivity() {
                                 viewModel = homeViewModel,
                                 onNavigateToMyCourses = {
                                     currentRoute = AppRoute.MyCourses(session)
+                                },
+                                onNavigateToDiscovery = {
+                                    currentRoute = AppRoute.StudentCourseListing(session)
                                 }
                             )
                         }
@@ -179,12 +190,18 @@ class MainActivity : ComponentActivity() {
                             }
                         )
 
-                        is AppRoute.Checkout -> TransactionScreen(
+                        is AppRoute.Checkout -> TransactionScreenRoute(
+                            courseId = route.courseId,
+                            token = route.session.accessToken,
+                            viewModel = transactionViewModel,
                             onBackClick = {
                                 currentRoute = AppRoute.StudentCourseDetails(route.session, route.courseId)
                             },
-                            onConfirmClick = {
-                                currentRoute = AppRoute.MyCourses(route.session)
+                            onPaymentSuccess = {
+                                // Reload course details to update enrollment status
+                                studentCoursesViewModel.loadCourseDetails(route.courseId, route.session.accessToken, forceReload = true)
+                                // Navigate to course curriculum to start learning
+                                currentRoute = AppRoute.CourseCurriculum(route.session, route.courseId)
                             },
                         )
 
@@ -341,11 +358,12 @@ class MainActivity : ComponentActivity() {
                         )
 
                         is AppRoute.MyCourses -> MyCoursesScreen(
+                            token = route.session.accessToken,
                             onNavigateBack = {
                                 currentRoute = AppRoute.StudentCourseListing(route.session)
                             },
-                            onCourseClick = {
-                                currentRoute = AppRoute.StudentCourseListing(route.session)
+                            onCourseClick = { courseId ->
+                                currentRoute = AppRoute.CourseCurriculum(route.session, courseId)
                             },
                             onNavigateToDiscover = {
                                 currentRoute = AppRoute.StudentCourseListing(route.session)

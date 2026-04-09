@@ -34,7 +34,8 @@ import com.example.skillforge.feature.home.viewmodel.HomeViewModel
 fun HomeScreen(
     token: String,
     viewModel: HomeViewModel,
-    onNavigateToMyCourses: () -> Unit = {}
+    onNavigateToMyCourses: () -> Unit = {},
+    onNavigateToDiscovery: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -44,14 +45,16 @@ fun HomeScreen(
 
     HomeScreenContent(
         uiState = uiState,
-        onNavigateToMyCourses = onNavigateToMyCourses
+        onNavigateToMyCourses = onNavigateToMyCourses,
+        onNavigateToDiscovery = onNavigateToDiscovery
     )
 }
 
 @Composable
 fun HomeScreenContent(
     uiState: HomeUiState,
-    onNavigateToMyCourses: () -> Unit = {}
+    onNavigateToMyCourses: () -> Unit = {},
+    onNavigateToDiscovery: () -> Unit = {}
 ) {
     Scaffold { paddingValues ->
         Box(
@@ -86,7 +89,8 @@ fun HomeScreenContent(
 
                         HomeWelcomeHeader(
                             studentName = "Student",
-                            onNotificationClick = { }
+                            onNotificationClick = { },
+                            onNavigateToDiscovery = onNavigateToDiscovery
                         )
 
                         Spacer(modifier = Modifier.height(SkillforgeSpacing.large))

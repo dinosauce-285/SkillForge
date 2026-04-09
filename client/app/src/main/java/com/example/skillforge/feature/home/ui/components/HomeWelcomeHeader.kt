@@ -4,7 +4,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -17,20 +19,20 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.skillforge.core.designsystem.SkillforgeLayout
 import com.example.skillforge.core.designsystem.SkillforgeSpacing
+import com.example.skillforge.core.designsystem.skillforgePrimaryButtonColors
 
 @Composable
 fun HomeWelcomeHeader(
     studentName: String,
     onNotificationClick: () -> Unit,
+    onNavigateToDiscovery: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Row(
+    Column(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = SkillforgeLayout.screenHorizontalPadding)
-            .padding(top = SkillforgeSpacing.medium, bottom = SkillforgeSpacing.medium),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+            .padding(top = SkillforgeSpacing.medium, bottom = SkillforgeSpacing.medium)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
@@ -63,6 +65,8 @@ fun HomeWelcomeHeader(
                 )
             }
 
+            Spacer(modifier = Modifier.weight(1f))
+
             IconButton(onClick = onNotificationClick) {
                 Icon(
                     imageVector = Icons.Outlined.Notifications,
@@ -70,6 +74,27 @@ fun HomeWelcomeHeader(
                     tint = MaterialTheme.colorScheme.onBackground
                 )
             }
+        }
+
+        Spacer(modifier = Modifier.height(SkillforgeSpacing.medium))
+
+        Button(
+            onClick = onNavigateToDiscovery,
+            colors = skillforgePrimaryButtonColors(),
+            contentPadding = PaddingValues(
+                horizontal = SkillforgeSpacing.large,
+                vertical = SkillforgeSpacing.small,
+            )
+        ) {
+            Text(
+                text = "Explore courses",
+                fontWeight = FontWeight.SemiBold,
+            )
+            Spacer(modifier = Modifier.width(SkillforgeSpacing.small))
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                contentDescription = null,
+            )
         }
     }
 
