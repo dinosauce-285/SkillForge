@@ -193,10 +193,6 @@ class StudentCoursesViewModel(
     }
 
     fun loadLessonContent(token: String, lessonId: String, forceReload: Boolean = false) {
-        if (!forceReload && loadedLessonId == lessonId && _lessonContentState.value.lesson != null) {
-            return
-        }
-
         viewModelScope.launch {
             // SAFE: Keep existing state (like discussions), only change loading status
             _lessonContentState.update { currentState ->

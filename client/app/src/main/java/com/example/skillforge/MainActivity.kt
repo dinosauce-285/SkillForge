@@ -13,9 +13,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -34,14 +31,11 @@ import com.example.skillforge.feature.home.ui.HomeScreen
 import com.example.skillforge.feature.home.viewmodel.HomeViewModel
 import com.example.skillforge.feature.home.viewmodel.HomeViewModelFactory
 import com.example.skillforge.feature.instructor_portal.ui.SkillforgeCourseFormScreen
-import com.example.skillforge.feature.instructor_portal.ui.SkillforgeCourseManagerScreen
 import com.example.skillforge.feature.instructor_portal.ui.SkillforgeInstructorDashboardScreen
 import com.example.skillforge.feature.instructor_portal.ui.SkillforgeMaterialUploadScreen
 import com.example.skillforge.feature.instructor_portal.viewmodel.CourseFormState
 import com.example.skillforge.feature.instructor_portal.viewmodel.CourseFormViewModel
 import com.example.skillforge.feature.instructor_portal.viewmodel.CourseFormViewModelFactory
-import com.example.skillforge.feature.instructor_portal.viewmodel.CourseManagerViewModel
-import com.example.skillforge.feature.instructor_portal.viewmodel.CourseManagerViewModelFactory
 import com.example.skillforge.feature.instructor_portal.viewmodel.InstructorPortalViewModel
 import com.example.skillforge.feature.instructor_portal.viewmodel.InstructorPortalViewModelFactory
 import com.example.skillforge.feature.instructor_portal.viewmodel.MaterialUploadViewModel
@@ -49,16 +43,15 @@ import com.example.skillforge.feature.instructor_portal.viewmodel.MaterialUpload
 import com.example.skillforge.feature.instructor_portal.viewmodel.UploadState
 import com.example.skillforge.feature.student_courses.ui.CourseCurriculumRoute
 import com.example.skillforge.feature.student_courses.ui.LessonLearningScreen
-import com.example.skillforge.feature.student_courses.ui.MyCoursesScreen
 import com.example.skillforge.feature.student_courses.ui.StudentCourseDetailsRoute
 import com.example.skillforge.feature.student_courses.ui.StudentCourseListingRoute
-import com.example.skillforge.feature.student_courses.ui.StudentProfileScreen
 import com.example.skillforge.feature.student_courses.viewmodel.StudentCoursesViewModel
 import com.example.skillforge.feature.student_courses.viewmodel.StudentCoursesViewModelFactory
 import com.example.skillforge.feature.main.viewmodel.MainViewModel
 import com.example.skillforge.feature.main.viewmodel.MainViewModelFactory
-import com.example.skillforge.feature.transaction.ui.TransactionScreen
-import io.github.jan.supabase.auth.handleDeeplinks
+import com.example.skillforge.feature.transaction.ui.TransactionScreenRoute
+import com.example.skillforge.feature.transaction.viewmodel.TransactionViewModel
+import com.example.skillforge.feature.transaction.viewmodel.TransactionViewModelFactory
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -81,6 +74,12 @@ class MainActivity : ComponentActivity() {
                         appContainer.lessonRepository,
                     )
                 )
+                val transactionViewModel: TransactionViewModel = viewModel(
+                    factory = TransactionViewModelFactory(
+                        appContainer.courseRepository,
+                        appContainer.orderRepository,
+                    )
+                )
                 val favoriteViewModel: FavoriteViewModel = viewModel(
                     factory = FavoriteViewModelFactory(appContainer.favoriteRepository)
                 )
@@ -90,11 +89,10 @@ class MainActivity : ComponentActivity() {
                         appContainer.categoryRepository
                     )
                 )
-
                 val mainViewModel: MainViewModel = viewModel(
                     factory = MainViewModelFactory(appContainer.checkSessionUseCase)
                 )
-                
+
                 val currentRoute by mainViewModel.uiState.collectAsState()
 
                 LaunchedEffect(Unit) {
@@ -110,316 +108,265 @@ class MainActivity : ComponentActivity() {
                     } else {
                         when (route) {
                             AppRoute.Login -> LoginScreen(
-                            viewModel = loginViewModel,
-                            onLoginSuccess = { session ->
-                                // Update: Route directly to Course Listing to easily test APIs
-                                mainViewModel.navigateTo(if (session.user.role.equals("STUDENT", ignoreCase = true)) {
-                                    AppRoute.StudentCourseListing(session)
-                                } else {
-                                    AppRoute.InstructorPortal(session)
-                                })
-                            },
-                            onNavigateToRegister = {
-                                mainViewModel.navigateTo(AppRoute.Register)
-                            }
-                        )
-
-                        is AppRoute.Home -> {
-                            val homeViewModel: HomeViewModel = viewModel(
-                                factory = HomeViewModelFactory(appContainer.progressRepository)
-                            )
-                            HomeScreen(
-                                token = route.session.accessToken,
-                                viewModel = homeViewModel,
-                                onNavigateToMyCourses = {
-                                    mainViewModel.navigateTo(AppRoute.MyCourses(route.session))
+                                viewModel = loginViewModel,
+                                onLoginSuccess = { session ->
+                                   
+                                    mainViewModel.navigateTo(
+                                        if (session.user.role.equals("STUDENT", ignoreCase = true)) {
+                                            AppRoute.Home(session) 
+                                        } else {
+                                            AppRoute.InstructorPortal(session)
+                                        }
+                                    )
+                                },
+                                onNavigateToRegister = {
+                                    mainViewModel.navigateTo(AppRoute.Register)
                                 }
                             )
-                        }
 
-                        AppRoute.Register -> RegisterScreen(
-                            viewModel = registerViewModel,
-                            onRegisterSuccess = {
-                                mainViewModel.navigateTo(AppRoute.Login)
-                            },
-                            onBackToLogin = {
-                                mainViewModel.navigateTo(AppRoute.Login)
+                            is AppRoute.Home -> {
+                                val session = route.session
+                                val token = session.accessToken
+
+                                val homeViewModel: HomeViewModel = viewModel(
+                                    factory = HomeViewModelFactory(appContainer.progressRepository)
+                                )
+
+                                HomeScreen(
+                                    token = token,
+                                    viewModel = homeViewModel,
+                                    onNavigateToMyCourses = {
+                                        mainViewModel.navigateTo(AppRoute.MyCourses(session))
+                                    },
+                                    onNavigateToDiscovery = {
+                                        mainViewModel.navigateTo(AppRoute.StudentCourseListing(session))
+                                    }
+                                )
                             }
-                        )
 
-                        is AppRoute.StudentCourseListing -> StudentCourseListingRoute(
-                            session = route.session,
-                            viewModel = studentCoursesViewModel,
-                            onCourseSelected = { courseId ->
-                                mainViewModel.navigateTo(AppRoute.StudentCourseDetails(
-                                    session = route.session,
-                                    courseId = courseId,
-                                ))
-                            },
-                            onNavigateToFavorites = {
-                                mainViewModel.navigateTo(AppRoute.Favorite(route.session))
-                            },
-                            onNavigateToLearning = {
-                                mainViewModel.navigateTo(AppRoute.MyCourses(route.session))
-                            },
-                            onNavigateToProfile = {
-                                mainViewModel.navigateTo(AppRoute.Profile(route.session))
-                            },
-                            onLogout = {
-                                mainViewModel.navigateTo(AppRoute.Login)
-                            }
-                        )
-
-                        is AppRoute.StudentCourseDetails -> StudentCourseDetailsRoute(
-                            courseId = route.courseId,
-                            token = route.session.accessToken,
-                            viewModel = studentCoursesViewModel,
-                            onOpenCurriculum = { courseId ->
-                                mainViewModel.navigateTo(AppRoute.CourseCurriculum(route.session, courseId))
-                            },
-                            onCheckoutSelected = { courseId ->
-                                mainViewModel.navigateTo(AppRoute.Checkout(route.session, courseId))
-                            },
-                            onBack = {
-                                mainViewModel.navigateTo(AppRoute.StudentCourseListing(route.session))
-                            }
-                        )
-
-                        is AppRoute.CourseCurriculum -> CourseCurriculumRoute(
-                            courseId = route.courseId,
-                            token = route.session.accessToken,
-                            viewModel = studentCoursesViewModel,
-                            onLessonSelected = { lessonId ->
-                                mainViewModel.navigateTo(AppRoute.LessonLearning(route.session, route.courseId, lessonId))
-                            },
-                            onNavigateBack = {
-                                mainViewModel.navigateTo(AppRoute.StudentCourseDetails(route.session, route.courseId))
-                            }
-                        )
-
-                        is AppRoute.Checkout -> TransactionScreen(
-                            onBackClick = {
-                                mainViewModel.navigateTo(AppRoute.StudentCourseDetails(route.session, route.courseId))
-                            },
-                            onConfirmClick = {
-                                mainViewModel.navigateTo(AppRoute.MyCourses(route.session))
-                            },
-                        )
-
-                        is AppRoute.LessonLearning -> LessonLearningScreen(
-                            sessionToken = route.session.accessToken,
-                            courseId = route.courseId,
-                            lessonId = route.lessonId,
-                            viewModel = studentCoursesViewModel,
-                            onLessonSelected = { nextLessonId ->
-                                mainViewModel.navigateTo(AppRoute.LessonLearning(
-                                    session = route.session,
-                                    courseId = route.courseId,
-                                    lessonId = nextLessonId,
-                                ))
-                            },
-                            onNavigateToDiscover = {
-                                mainViewModel.navigateTo(AppRoute.StudentCourseListing(route.session))
-                            },
-                            onNavigateToLearning = {
-                                mainViewModel.navigateTo(AppRoute.CourseCurriculum(route.session, route.courseId))
-                            },
-                            onNavigateToWishlist = {
-                                mainViewModel.navigateTo(AppRoute.Favorite(route.session))
-                            },
-                            onNavigateToProfile = {
-                                mainViewModel.navigateTo(AppRoute.Profile(route.session))
-                            },
-                            onNavigateBack = {
-                                mainViewModel.navigateTo(AppRoute.CourseCurriculum(route.session, route.courseId))
-                            }
-                        )
-
-                        is AppRoute.InstructorPortal -> {
-                            val portalViewModel: InstructorPortalViewModel = viewModel(
-                                factory = InstructorPortalViewModelFactory(appContainer.courseRepository)
+                            AppRoute.Register -> RegisterScreen(
+                                viewModel = registerViewModel,
+                                onRegisterSuccess = {
+                                    mainViewModel.navigateTo(AppRoute.Login)
+                                },
+                                onBackToLogin = {
+                                    mainViewModel.navigateTo(AppRoute.Login)
+                                }
                             )
 
-                            val courses by portalViewModel.courses.collectAsState()
-                            val isLoading by portalViewModel.isLoading.collectAsState()
-                            val dashboardData by portalViewModel.dashboardData.collectAsState()
-                            val analyticsData by portalViewModel.analyticsData.collectAsState()
-
-                            LaunchedEffect(Unit) {
-                                portalViewModel.fetchMyCourses(route.session.accessToken)
-                            }
-
-                            SkillforgeInstructorDashboardScreen(
-                                courses = courses,
-                                isLoading = isLoading,
-                                dashboardData = dashboardData,
-                                analyticsData = analyticsData,
-                                onNavigateToCreateCourse = {
-                                    mainViewModel.navigateTo(AppRoute.CourseForm(route.session))
+                            is AppRoute.StudentCourseListing -> StudentCourseListingRoute(
+                                session = route.session,
+                                viewModel = studentCoursesViewModel,
+                                onCourseSelected = { courseId ->
+                                    mainViewModel.navigateTo(AppRoute.StudentCourseDetails(route.session, courseId))
                                 },
-                                onCourseClick = { clickedCourseId ->
-                                    mainViewModel.navigateTo(AppRoute.CourseManager(route.session, clickedCourseId))
+                                onNavigateToFavorites = {
+                                    mainViewModel.navigateTo(AppRoute.Favorite(route.session))
                                 },
-                                onNavigateToUploadMaterial = { },
+                                onNavigateToLearning = {
+                                    mainViewModel.navigateTo(AppRoute.MyCourses(route.session))
+                                },
+                                onNavigateToProfile = {
+                                    mainViewModel.navigateTo(AppRoute.Profile(route.session))
+                                },
                                 onLogout = {
                                     mainViewModel.navigateTo(AppRoute.Login)
                                 }
                             )
-                        }
 
-                        is AppRoute.CourseForm -> {
-                            val uiState by courseFormViewModel.uiState.collectAsState()
-                            val categories by courseFormViewModel.categories.collectAsState()
-
-                            LaunchedEffect(Unit) {
-                                courseFormViewModel.fetchCategories()
-                            }
-
-                            LaunchedEffect(uiState) {
-                                if (uiState is CourseFormState.Success) {
-                                    courseFormViewModel.resetState()
-                                    mainViewModel.navigateTo(AppRoute.InstructorPortal(route.session))
-                                }
-                            }
-
-                            SkillforgeCourseFormScreen(
-                                categories = categories,
-                                isEditMode = route.courseId != null,
-                                isLoading = uiState is CourseFormState.Loading,
-                                errorMessage = if (uiState is CourseFormState.Error) (uiState as CourseFormState.Error).message else null,
-                                uiState = uiState,
-                                onNavigateBack = {
-                                    courseFormViewModel.resetState()
-                                    mainViewModel.navigateTo(AppRoute.InstructorPortal(route.session))
+                            is AppRoute.StudentCourseDetails -> StudentCourseDetailsRoute(
+                                courseId = route.courseId,
+                                token = route.session.accessToken,
+                                viewModel = studentCoursesViewModel,
+                                onOpenCurriculum = { courseId ->
+                                    mainViewModel.navigateTo(AppRoute.CourseCurriculum(route.session, courseId))
                                 },
-                                onSaveClick = { title, summary, price, categoryId ->
-                                    val myToken = route.session.accessToken
-                                    courseFormViewModel.createCourse(myToken, title, summary, price, categoryId)
+                                onCheckoutSelected = { courseId ->
+                                    mainViewModel.navigateTo(AppRoute.Checkout(route.session, courseId))
+                                },
+                                onBack = {
+                                    mainViewModel.navigateTo(AppRoute.StudentCourseListing(route.session))
                                 }
                             )
-                        }
 
-                        is AppRoute.MaterialUpload -> {
-                            val uploadViewModel: MaterialUploadViewModel = viewModel(
-                                factory = MaterialUploadViewModelFactory(appContainer.materialRepository)
+                            is AppRoute.CourseCurriculum -> CourseCurriculumRoute(
+                                courseId = route.courseId,
+                                token = route.session.accessToken,
+                                viewModel = studentCoursesViewModel,
+                                onLessonSelected = { lessonId ->
+                                    mainViewModel.navigateTo(AppRoute.LessonLearning(route.session, route.courseId, lessonId))
+                                },
+                                onNavigateBack = {
+                                    mainViewModel.navigateTo(AppRoute.StudentCourseDetails(route.session, route.courseId))
+                                }
                             )
 
-                            val uploadState by uploadViewModel.uploadState.collectAsState()
-
-                            LaunchedEffect(uploadState) {
-                                if (uploadState is UploadState.Success) {
-                                    Toast.makeText(this@MainActivity, "Upload successful!", Toast.LENGTH_SHORT).show()
-                                    uploadViewModel.resetState()
-                                    mainViewModel.navigateTo(AppRoute.InstructorPortal(route.session))
+                            is AppRoute.Checkout -> TransactionScreenRoute(
+                                // Merge: Sử dụng TransactionScreenRoute mới từ dev
+                                courseId = route.courseId,
+                                token = route.session.accessToken,
+                                viewModel = transactionViewModel,
+                                onBackClick = {
+                                    mainViewModel.navigateTo(AppRoute.StudentCourseDetails(route.session, route.courseId))
+                                },
+                                onPaymentSuccess = {
+                                    studentCoursesViewModel.loadCourseDetails(route.courseId, route.session.accessToken, forceReload = true)
+                                    mainViewModel.navigateTo(AppRoute.CourseCurriculum(route.session, route.courseId))
                                 }
+                            )
+
+                            is AppRoute.LessonLearning -> LessonLearningScreen(
+                                sessionToken = route.session.accessToken,
+                                courseId = route.courseId,
+                                lessonId = route.lessonId,
+                                viewModel = studentCoursesViewModel,
+                                onLessonSelected = { nextLessonId ->
+                                    mainViewModel.navigateTo(AppRoute.LessonLearning(route.session, route.courseId, nextLessonId))
+                                },
+                                onNavigateToDiscover = {
+                                    mainViewModel.navigateTo(AppRoute.StudentCourseListing(route.session))
+                                },
+                                onNavigateToLearning = {
+                                    mainViewModel.navigateTo(AppRoute.CourseCurriculum(route.session, route.courseId))
+                                },
+                                onNavigateToWishlist = {
+                                    mainViewModel.navigateTo(AppRoute.Favorite(route.session))
+                                },
+                                onNavigateToProfile = {
+                                    mainViewModel.navigateTo(AppRoute.Profile(route.session))
+                                },
+                                onNavigateBack = {
+                                    mainViewModel.navigateTo(AppRoute.CourseCurriculum(route.session, route.courseId))
+                                }
+                            )
+
+                            is AppRoute.InstructorPortal -> {
+                                val portalViewModel: InstructorPortalViewModel = viewModel(
+                                    factory = InstructorPortalViewModelFactory(appContainer.courseRepository)
+                                )
+
+                                val courses by portalViewModel.courses.collectAsState()
+                                val isLoading by portalViewModel.isLoading.collectAsState()
+                                val dashboardData by portalViewModel.dashboardData.collectAsState()
+                                val analyticsData by portalViewModel.analyticsData.collectAsState()
+
+                                LaunchedEffect(Unit) {
+                                    portalViewModel.fetchMyCourses(route.session.accessToken)
+                                }
+
+                                SkillforgeInstructorDashboardScreen(
+                                    courses = courses,
+                                    isLoading = isLoading,
+                                    dashboardData = dashboardData,
+                                    analyticsData = analyticsData,
+                                    onNavigateToCreateCourse = {
+                                        mainViewModel.navigateTo(AppRoute.CourseForm(route.session))
+                                    },
+                                    onCourseClick = { clickedCourseId ->
+                                        mainViewModel.navigateTo(AppRoute.CourseManager(route.session, clickedCourseId))
+                                    },
+                                    onNavigateToUploadMaterial = { },
+                                    onLogout = {
+                                        mainViewModel.navigateTo(AppRoute.Login)
+                                    }
+                                )
                             }
 
-                            SkillforgeMaterialUploadScreen(
-                                courseId = route.lessonId,
-                                isLoading = uploadState is UploadState.Loading,
-                                onNavigateBack = {
-                                    mainViewModel.navigateTo(AppRoute.InstructorPortal(route.session))
-                                },
-                                onUploadClick = { title, type, fileUri ->
-                                    if (fileUri != null) {
-                                        uploadViewModel.uploadFile(
-                                            context = this@MainActivity,
-                                            token = route.session.accessToken,
-                                            lessonId = route.lessonId,
-                                            title = title,
-                                            type = type,
-                                            uri = fileUri
-                                        )
+                            is AppRoute.CourseForm -> {
+                                val uiState by courseFormViewModel.uiState.collectAsState()
+                                val categories by courseFormViewModel.categories.collectAsState()
+
+                                LaunchedEffect(Unit) {
+                                    courseFormViewModel.fetchCategories()
+                                }
+
+                                LaunchedEffect(uiState) {
+                                    if (uiState is CourseFormState.Success) {
+                                        courseFormViewModel.resetState()
+                                        mainViewModel.navigateTo(AppRoute.InstructorPortal(route.session))
                                     }
                                 }
-                            )
-                        }
 
-                        is AppRoute.Favorite -> FavoriteRoute(
-                            session = route.session,
-                            viewModel = favoriteViewModel,
-                            onBackClick = {
-                                mainViewModel.navigateTo(AppRoute.StudentCourseListing(route.session))
-                            },
-                            onCourseClick = { courseId ->
-                                mainViewModel.navigateTo(AppRoute.StudentCourseDetails(route.session, courseId))
-                            },
-                            onNavigateToDiscovery = {
-                                mainViewModel.navigateTo(AppRoute.StudentCourseListing(route.session))
-                            },
-                            onNavigateToLearning = {
-                                mainViewModel.navigateTo(AppRoute.MyCourses(route.session))
-                            },
-                            onNavigateToProfile = {
-                                mainViewModel.navigateTo(AppRoute.Profile(route.session))
-                            }
-                        )
-
-                        is AppRoute.MyCourses -> MyCoursesScreen(
-                            onNavigateBack = {
-                                mainViewModel.navigateTo(AppRoute.StudentCourseListing(route.session))
-                            },
-                            onCourseClick = {
-                                mainViewModel.navigateTo(AppRoute.StudentCourseListing(route.session))
-                            },
-                            onNavigateToDiscover = {
-                                mainViewModel.navigateTo(AppRoute.StudentCourseListing(route.session))
-                            },
-                            onNavigateToWishlist = {
-                                mainViewModel.navigateTo(AppRoute.Favorite(route.session))
-                            },
-                            onNavigateToProfile = {
-                                mainViewModel.navigateTo(AppRoute.Profile(route.session))
-                            }
-                        )
-
-                        is AppRoute.Profile -> StudentProfileScreen(
-                            session = route.session,
-                            onNavigateToDiscover = {
-                                mainViewModel.navigateTo(AppRoute.StudentCourseListing(route.session))
-                            },
-                            onNavigateToLearning = {
-                                mainViewModel.navigateTo(AppRoute.MyCourses(route.session))
-                            },
-                            onNavigateToWishlist = {
-                                mainViewModel.navigateTo(AppRoute.Favorite(route.session))
-                            },
-                            onLogout = {
-                                mainViewModel.navigateTo(AppRoute.Login)
-                            }
-                        )
-
-                        is AppRoute.CourseManager -> {
-                            val managerViewModel: CourseManagerViewModel = viewModel(
-                                factory = CourseManagerViewModelFactory(
-                                    appContainer.courseRepository,
-                                    appContainer.chapterRepository,
-                                    appContainer.lessonRepository
+                                SkillforgeCourseFormScreen(
+                                    categories = categories,
+                                    isEditMode = route.courseId != null,
+                                    isLoading = uiState is CourseFormState.Loading,
+                                    errorMessage = if (uiState is CourseFormState.Error) (uiState as CourseFormState.Error).message else null,
+                                    uiState = uiState,
+                                    onNavigateBack = {
+                                        courseFormViewModel.resetState()
+                                        mainViewModel.navigateTo(AppRoute.InstructorPortal(route.session))
+                                    },
+                                    onSaveClick = { title, summary, price, categoryId ->
+                                        val myToken = route.session.accessToken
+                                        courseFormViewModel.createCourse(myToken, title, summary, price, categoryId)
+                                    }
                                 )
-                            )
+                            }
 
-                            SkillforgeCourseManagerScreen(
-                                courseId = route.courseId,
-                                viewModel = managerViewModel,
-                                token = route.session.accessToken,
-                                onBack = {
-                                    mainViewModel.navigateTo(AppRoute.InstructorPortal(route.session))
+                            is AppRoute.MaterialUpload -> {
+                                val uploadViewModel: MaterialUploadViewModel = viewModel(
+                                    factory = MaterialUploadViewModelFactory(appContainer.materialRepository)
+                                )
+
+                                val uploadState by uploadViewModel.uploadState.collectAsState()
+
+                                LaunchedEffect(uploadState) {
+                                    if (uploadState is UploadState.Success) {
+                                        Toast.makeText(this@MainActivity, "Upload successful!", Toast.LENGTH_SHORT).show()
+                                        uploadViewModel.resetState()
+                                        mainViewModel.navigateTo(AppRoute.InstructorPortal(route.session))
+                                    }
+                                }
+
+                                SkillforgeMaterialUploadScreen(
+                                    
+                                    lessonId = route.lessonId, 
+                                    isLoading = uploadState is UploadState.Loading,
+                                    onNavigateBack = {
+                                        mainViewModel.navigateTo(AppRoute.InstructorPortal(route.session))
+                                    },
+                                   
+                                    onUploadClick = { title, type, fileUri ->
+                                        if (fileUri != null) {
+                                            uploadViewModel.uploadFile(
+                                                context = this@MainActivity,
+                                                token = route.session.accessToken,
+                                                lessonId = route.lessonId,
+                                                title = title,
+                                                type = type,
+                                                uri = fileUri
+                                            )
+                                        }
+                                    }
+                                )
+                            }
+
+                            is AppRoute.Favorite -> FavoriteRoute(
+                                session = route.session,
+                                viewModel = favoriteViewModel,
+                                onBackClick = {
+                                    mainViewModel.navigateTo(AppRoute.StudentCourseListing(route.session))
                                 },
-                                onNavigateToUpload = { lessonId ->
-                                    mainViewModel.navigateTo(AppRoute.MaterialUpload(route.session, lessonId))
+                                onCourseClick = { courseId ->
+                                    mainViewModel.navigateTo(AppRoute.StudentCourseDetails(route.session, courseId))
+                                },
+                                onNavigateToDiscovery = {
+                                    mainViewModel.navigateTo(AppRoute.StudentCourseListing(route.session))
+                                },
+                                onNavigateToLearning = {
+                                    mainViewModel.navigateTo(AppRoute.MyCourses(route.session))
+                                },
+                                onNavigateToProfile = {
+                                    mainViewModel.navigateTo(AppRoute.Profile(route.session))
                                 }
                             )
+                            
+                            else -> {} 
                         }
-                    }
                     }
                 }
             }
         }
-    }
-
-    override fun onNewIntent(intent: Intent) {
-        super.onNewIntent(intent)
-        val appContainer = (applicationContext as SkillforgeApplication).container
-        appContainer.supabase.handleDeeplinks(intent)
     }
 }

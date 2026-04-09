@@ -11,6 +11,12 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.PlayCircleOutline
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -24,20 +30,52 @@ import com.example.skillforge.core.designsystem.SkillforgeShapes
 import com.example.skillforge.core.designsystem.SkillforgeSpacing
 import com.example.skillforge.core.designsystem.SkillforgeTheme
 import com.example.skillforge.core.designsystem.components.SkillforgeProgressBar
-import com.example.skillforge.feature.home.ui.mock.ActiveCourse
-import com.example.skillforge.feature.home.ui.mock.HomeMockData
+import com.example.skillforge.domain.model.ActiveCourse
 import com.example.skillforge.feature.student_courses.ui.components.StudentBottomNavigationBar
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.skillforge.feature.home.viewmodel.HomeViewModel
+import com.example.skillforge.feature.home.viewmodel.HomeViewModelFactory
+import androidx.compose.ui.platform.LocalContext
+
+sealed interface MyCoursesState {
+    data object Loading : MyCoursesState
+    data class Success(val courses: List<ActiveCourse>) : MyCoursesState
+    data class Error(val message: String) : MyCoursesState
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyCoursesScreen(
+    token: String = "",
     onNavigateBack: () -> Unit,
     onCourseClick: (String) -> Unit,
     onNavigateToDiscover: () -> Unit,
     onNavigateToWishlist: () -> Unit,
     onNavigateToProfile: () -> Unit,
 ) {
+    // Create home view model to load dashboard
+    val context = LocalContext.current
+    val appContainer = (context.applicationContext as? com.example.skillforge.SkillforgeApplication)?.container
+
+    if (appContainer == null) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text("Error loading courses", color = MaterialTheme.colorScheme.error)
+        }
+        return
+    }
+
+    val homeViewModel: HomeViewModel = viewModel(
+        factory = HomeViewModelFactory(appContainer.progressRepository)
+    )
+    val homeUiState by homeViewModel.uiState.collectAsState()
+
+    LaunchedEffect(token) {
+        if (token.isNotEmpty()) {
+            homeViewModel.fetchDashboard(token)
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -70,31 +108,59 @@ fun MyCoursesScreen(
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
-        // For demonstration, we use the mock data from HomeMockData
-        val myCourses = listOf(HomeMockData.mockMostRecentCourse) + HomeMockData.mockActiveCourses
-
-        if (myCourses.isEmpty()) {
-            EmptyMyCoursesState(
-                modifier = Modifier.padding(paddingValues).fillMaxSize()
-            )
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-                contentPadding = PaddingValues(
-                    start = SkillforgeLayout.screenHorizontalPadding,
-                    end = SkillforgeLayout.screenHorizontalPadding,
-                    top = SkillforgeSpacing.medium,
-                    bottom = SkillforgeSpacing.large
-                ),
-                verticalArrangement = Arrangement.spacedBy(SkillforgeSpacing.medium)
-            ) {
-                items(myCourses, key = { it.courseId }) { course ->
-                    MyCourseCard(
-                        course = course,
-                        onClick = { onCourseClick(course.courseId) }
+        when (homeUiState) {
+            is com.example.skillforge.feature.home.viewmodel.HomeUiState.Loading -> {
+                Box(
+                    modifier = Modifier
+                        .padding(paddingValues)
+                        .fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
+            is com.example.skillforge.feature.home.viewmodel.HomeUiState.Error -> {
+                Box(
+                    modifier = Modifier
+                        .padding(paddingValues)
+                        .fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = (homeUiState as com.example.skillforge.feature.home.viewmodel.HomeUiState.Error).message,
+                        color = MaterialTheme.colorScheme.error
                     )
+                }
+            }
+            is com.example.skillforge.feature.home.viewmodel.HomeUiState.Success -> {
+                val myCourses = (homeUiState as com.example.skillforge.feature.home.viewmodel.HomeUiState.Success).courses
+
+                if (myCourses.isEmpty()) {
+                    EmptyMyCoursesState(
+                        modifier = Modifier
+                            .padding(paddingValues)
+                            .fillMaxSize()
+                    )
+                } else {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(paddingValues),
+                        contentPadding = PaddingValues(
+                            start = SkillforgeLayout.screenHorizontalPadding,
+                            end = SkillforgeLayout.screenHorizontalPadding,
+                            top = SkillforgeSpacing.medium,
+                            bottom = SkillforgeSpacing.large
+                        ),
+                        verticalArrangement = Arrangement.spacedBy(SkillforgeSpacing.medium)
+                    ) {
+                        items(myCourses, key = { it.courseId }) { course ->
+                            MyCourseCard(
+                                course = course,
+                                onClick = { onCourseClick(course.courseId) }
+                            )
+                        }
+                    }
                 }
             }
         }

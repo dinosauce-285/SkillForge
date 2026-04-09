@@ -24,7 +24,7 @@ class MaterialUploadViewModel(
     private val _uploadState = MutableStateFlow<UploadState>(UploadState.Idle)
     val uploadState: StateFlow<UploadState> = _uploadState
 
-    fun uploadFile(context: Context, token: String, lessonId: String, title: String, type: String, uri: Uri) {
+    fun uploadFile(context: Context, token: String, lessonId: String, type: String, uri: Uri) {
         viewModelScope.launch {
             _uploadState.value = UploadState.Loading
 
@@ -34,7 +34,7 @@ class MaterialUploadViewModel(
                 return@launch
             }
 
-            materialRepository.uploadMaterial(token, lessonId, title, type, file)
+            materialRepository.uploadMaterial(token, lessonId, "", type, file)
                 .onSuccess {
                     _uploadState.value = UploadState.Success
                 }

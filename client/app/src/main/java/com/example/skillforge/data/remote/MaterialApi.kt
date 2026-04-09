@@ -15,7 +15,6 @@ interface MaterialApi {
     suspend fun uploadMaterial(
         @Header("Authorization") token: String,
         @Path("lessonId") lessonId: String,
-        @Part("title") title: RequestBody,
         @Part("type") type: RequestBody,
         @Part file: MultipartBody.Part
     ): Response<Any>

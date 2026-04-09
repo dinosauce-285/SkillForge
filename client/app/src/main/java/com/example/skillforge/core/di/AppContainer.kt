@@ -1,6 +1,7 @@
 package com.example.skillforge.core.di
 
 import android.content.Context
+import com.example.skillforge.BuildConfig
 import com.example.skillforge.core.network.AuthInterceptor
 import com.example.skillforge.core.network.TokenAuthenticator
 import com.example.skillforge.data.local.AuthPreferences
@@ -71,7 +72,7 @@ class AppContainer(private val applicationContext: Context) {
     // --- Retrofit Configuration ---
     // Attach the custom OkHttpClient to Retrofit
     private val retrofit = Retrofit.Builder()
-        .baseUrl("http://10.0.2.2:3000/")
+        .baseUrl(BuildConfig.API_BASE_URL)
         .client(okHttpClient)
         .addConverterFactory(GsonConverterFactory.create())
         .build()

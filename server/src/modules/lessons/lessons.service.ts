@@ -73,7 +73,34 @@ export class LessonsService {
       }
     }
 
-    return lesson;
+    const materials = await Promise.all(
+      lesson.materials.map(async (material) => {
+        const storagePath = this.extractMaterialsStoragePath(material.fileUrl);
+
+        if (!storagePath) {
+          return material;
+        }
+
+        const { data: signedData, error: signedError } =
+          await this.supabase.storage
+            .from('materials')
+            .createSignedUrl(storagePath, 60 * 60);
+
+        if (signedError || !signedData?.signedUrl) {
+          return material;
+        }
+
+        return {
+          ...material,
+          fileUrl: signedData.signedUrl,
+        };
+      }),
+    );
+
+    return {
+      ...lesson,
+      materials,
+    };
   }
 
   async create(user: { userId: string; role: Role }, dto: CreateLessonDto) {
@@ -165,17 +192,69 @@ export class LessonsService {
     }
   }
 
+  private extractMaterialsStoragePath(fileUrl: string): string | null {
+    if (!fileUrl) {
+      return null;
+    }
+
+    if (!fileUrl.startsWith('http')) {
+      return fileUrl;
+    }
+
+    const markers = [
+      '/storage/v1/object/public/materials/',
+      '/storage/v1/object/sign/materials/',
+      '/storage/v1/object/authenticated/materials/',
+    ];
+
+    for (const marker of markers) {
+      const markerIndex = fileUrl.indexOf(marker);
+      if (markerIndex === -1) {
+        continue;
+      }
+
+      const pathWithQuery = fileUrl.substring(markerIndex + marker.length);
+      const pathOnly = pathWithQuery.split('?')[0];
+      return pathOnly || null;
+    }
+
+    return null;
+  }
+
   async addMaterialToLesson(
     lessonId: string,
-    title: string,
     type: string,
     file: Express.Multer.File,
+    user: { userId: string; role: Role },
   ) {
     if (!file) {
       throw new BadRequestException('No file attached!');
     }
 
     try {
+      // Verify lesson exists and user is the instructor
+      const lesson = await this.prisma.lesson.findUnique({
+        where: { id: lessonId },
+        include: {
+          chapter: {
+            include: {
+              course: true,
+            },
+          },
+        },
+      });
+
+      if (!lesson || lesson.deletedAt) {
+        throw new NotFoundException(`Lesson with id "${lessonId}" not found`);
+      }
+
+      // Verify user is the course instructor
+      if (lesson.chapter.course.instructorId !== user.userId) {
+        throw new ForbiddenException(
+          'You are not the instructor for this course',
+        );
+      }
+
       const fileExt = file.originalname.split('.').pop();
       const fileName = `${Date.now()}-${Math.floor(Math.random() * 10000)}.${fileExt}`;
 
@@ -205,13 +284,6 @@ export class LessonsService {
       let materialType: 'VIDEO' | 'DOCUMENT' | 'LINK' | 'SOURCE_CODE' =
         'DOCUMENT';
       if (type.toUpperCase() === 'VIDEO') materialType = 'VIDEO';
-
-      if (title && title.trim() !== '') {
-        await this.prisma.lesson.update({
-          where: { id: lessonId },
-          data: { title: title.trim() },
-        });
-      }
 
       const newMaterial = await this.prisma.lessonMaterial.create({
         data: {
