@@ -317,18 +317,17 @@ class MainActivity : ComponentActivity() {
                             }
 
                             SkillforgeMaterialUploadScreen(
-                                courseId = route.lessonId,
+                                lessonId = route.lessonId,
                                 isLoading = uploadState is UploadState.Loading,
                                 onNavigateBack = {
                                     currentRoute = AppRoute.InstructorPortal(route.session)
                                 },
-                                onUploadClick = { title, type, fileUri ->
+                                onUploadClick = { type, fileUri ->
                                     if (fileUri != null) {
                                         uploadViewModel.uploadFile(
                                             context = this@MainActivity,
                                             token = route.session.accessToken,
                                             lessonId = route.lessonId,
-                                            title = title,
                                             type = type,
                                             uri = fileUri
                                         )

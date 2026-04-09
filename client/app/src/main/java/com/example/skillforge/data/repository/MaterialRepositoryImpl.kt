@@ -20,7 +20,6 @@ class MaterialRepositoryImpl(
         file: File
     ): Result<Any> {
         return try {
-            val titleBody = title.toRequestBody("text/plain".toMediaTypeOrNull())
             val typeBody = type.toRequestBody("text/plain".toMediaTypeOrNull())
 
             val mimeType = when (file.extension.lowercase()) {
@@ -35,7 +34,7 @@ class MaterialRepositoryImpl(
 
             val fileBody = MultipartBody.Part.createFormData("file", file.name, requestFile)
 
-            val response = api.uploadMaterial("Bearer $token", lessonId, titleBody, typeBody, fileBody)
+            val response = api.uploadMaterial("Bearer $token", lessonId, typeBody, fileBody)
 
             if (response.isSuccessful) {
                 Result.success(response.body() ?: Any())

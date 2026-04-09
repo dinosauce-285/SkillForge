@@ -77,6 +77,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.MediaItem
+import androidx.media3.common.PlaybackException
+import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import com.example.skillforge.core.designsystem.PrimaryOrange
@@ -221,14 +223,71 @@ private fun LessonBody(
 
 @Composable
 private fun VideoArea(lesson: LessonContent?, loading: Boolean, error: String?) {
-    val video = lesson?.materials?.firstOrNull { it.type == "VIDEO" }
+    val video = lesson?.materials?.firstOrNull {
+        it.type.equals("VIDEO", ignoreCase = true) ||
+            it.fileUrl.substringBefore('?').lowercase().endsWith(".mp4") ||
+            it.fileUrl.substringBefore('?').lowercase().endsWith(".m3u8")
+    }
     when {
         loading && lesson == null -> LoadingState(Modifier.fillMaxWidth().height(240.dp))
         error != null && lesson == null -> ErrorState(error, Modifier.padding(16.dp))
+        video != null && isYouTubeUrl(video.fileUrl) -> ExternalVideoCard(video.fileUrl)
         video != null -> VideoPlayer(video.fileUrl)
         else -> Box(Modifier.fillMaxWidth().aspectRatio(16f / 9f).background(Color.Black), contentAlignment = Alignment.Center) {
             Text("This lesson has no video", color = Color.White.copy(alpha = 0.85f))
         }
+    }
+}
+
+@Composable
+private fun ExternalVideoCard(url: String) {
+    val context = LocalContext.current
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .aspectRatio(16f / 9f)
+            .background(Color.Black)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Spacer(modifier = Modifier.weight(1f))
+        Text(
+            text = "This video is hosted on YouTube.",
+            color = Color.White,
+            style = MaterialTheme.typography.titleMedium,
+            textAlign = TextAlign.Center,
+        )
+        Text(
+            text = "Open it in YouTube or browser to watch.",
+            color = Color.White.copy(alpha = 0.85f),
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = TextAlign.Center,
+        )
+        Button(
+            onClick = {
+                val videoId = extractYouTubeVideoId(url)
+                val appIntent = if (videoId != null) {
+                    Intent(Intent.ACTION_VIEW, Uri.parse("vnd.youtube:$videoId"))
+                } else {
+                    Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                }
+
+                try {
+                    context.startActivity(appIntent)
+                } catch (_: Exception) {
+                    try {
+                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                    } catch (_: Exception) {
+                        // no-op: keep UI stable if no app can handle the URL
+                    }
+                }
+            },
+            colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange),
+        ) {
+            Text("Open Video")
+        }
+        Spacer(modifier = Modifier.weight(1f))
     }
 }
 
@@ -586,27 +645,76 @@ private fun LessonNavBar(course: CourseDetails, lessonId: String, onLessonSelect
 @Composable
 private fun VideoPlayer(url: String) {
     val context = LocalContext.current
+    var playbackError by remember(url) { mutableStateOf<String?>(null) }
     val player = remember(url) {
         ExoPlayer.Builder(context).build().apply {
             setMediaItem(MediaItem.fromUri(url))
             prepare()
             playWhenReady = false
+            addListener(
+                object : Player.Listener {
+                    override fun onPlayerError(error: PlaybackException) {
+                        playbackError = error.errorCodeName
+                    }
+                },
+            )
         }
     }
     DisposableEffect(player) { onDispose { player.release() } }
     Box(Modifier.fillMaxWidth().aspectRatio(16f / 9f).background(Color.Black)) {
-        AndroidView(factory = { PlayerView(it).apply { this.player = player } }, modifier = Modifier.fillMaxSize())
-        Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.18f)))))
-        Row(Modifier.align(Alignment.TopEnd).padding(16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Icon(Icons.Default.Settings, contentDescription = null, tint = Color.White)
+        AndroidView(
+            factory = {
+                PlayerView(it).apply {
+                    this.player = player
+                    useController = true
+                    controllerAutoShow = true
+                }
+            },
+            modifier = Modifier.fillMaxSize(),
+        )
+
+        if (playbackError != null) {
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .background(Color.Black.copy(alpha = 0.7f))
+                    .padding(12.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Text(
+                    text = "Unable to play this video ($playbackError)",
+                    color = Color.White,
+                    style = MaterialTheme.typography.bodySmall,
+                )
+                Button(
+                    onClick = {
+                        try {
+                            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                        } catch (_: Exception) {
+                            // no-op: keep UI stable if no app can handle the URL
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange),
+                ) {
+                    Text("Open with another app")
+                }
+            }
         }
-        Row(Modifier.align(Alignment.BottomEnd).padding(16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Icon(Icons.Default.Subtitles, contentDescription = null, tint = Color.White)
-            Icon(Icons.Default.Fullscreen, contentDescription = null, tint = Color.White)
-        }
-        Box(Modifier.align(Alignment.Center).size(64.dp).clip(CircleShape).background(PrimaryOrange.copy(alpha = 0.92f)), contentAlignment = Alignment.Center) {
-            Icon(Icons.Default.PlayArrow, contentDescription = null, tint = Color.White, modifier = Modifier.size(34.dp))
-        }
+    }
+}
+
+private fun isYouTubeUrl(url: String): Boolean {
+    val normalized = url.lowercase()
+    return normalized.contains("youtube.com") || normalized.contains("youtu.be")
+}
+
+private fun extractYouTubeVideoId(url: String): String? {
+    return when {
+        url.contains("youtu.be/") -> url.substringAfter("youtu.be/").substringBefore('?').substringBefore('&').ifBlank { null }
+        url.contains("youtube.com/watch") -> url.substringAfter("v=").substringBefore('&').ifBlank { null }
+        url.contains("youtube.com/shorts/") -> url.substringAfter("shorts/").substringBefore('?').substringBefore('&').ifBlank { null }
+        else -> null
     }
 }
 

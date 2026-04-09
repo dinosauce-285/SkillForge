@@ -36,14 +36,13 @@ import com.example.skillforge.core.utils.getFileName
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SkillforgeMaterialUploadScreen(
-    courseId: String = "123",
-    isLoading: Boolean = false, // translated comment
+    lessonId: String = "123",
+    isLoading: Boolean = false,
     onNavigateBack: () -> Unit = {},
-    onUploadClick: (title: String, type: String, fileUri: Uri?) -> Unit = { _, _, _ -> }
+    onUploadClick: (type: String, fileUri: Uri?) -> Unit = { _, _ -> }
 ) {
     val context = LocalContext.current
 
-    var lessonTitle by remember { mutableStateOf("") }
     var selectedType by remember { mutableStateOf("Video") }
     var selectedFileUri by remember { mutableStateOf<Uri?>(null) }
     var selectedFileName by remember { mutableStateOf<String?>(null) }
@@ -75,9 +74,9 @@ fun SkillforgeMaterialUploadScreen(
                 Row(modifier = Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                     OutlinedButton(onClick = onNavigateBack, modifier = Modifier.weight(1f), enabled = !isLoading) { Text("Cancel") }
                     Button(
-                        onClick = { onUploadClick(lessonTitle, selectedType, selectedFileUri) },
+                        onClick = { onUploadClick(selectedType, selectedFileUri) },
                         modifier = Modifier.weight(1f),
-                        enabled = !isLoading && lessonTitle.isNotBlank() && selectedFileUri != null
+                        enabled = !isLoading && selectedFileUri != null
                     ) {
                         if (isLoading) CircularProgressIndicator(modifier = Modifier.size(24.dp), color = Color.White)
                         else Text("Upload")
@@ -86,20 +85,8 @@ fun SkillforgeMaterialUploadScreen(
             }
         }
     ) { innerPadding ->
-        Column(modifier = Modifier.padding(innerPadding).padding(16.dp)) {
-            // translated comment
-            OutlinedTextField(
-                value = lessonTitle,
-                onValueChange = { lessonTitle = it },
-                label = { Text("Lesson Title") },
-                placeholder = { Text("e.g. Introduction to Compose") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                enabled = !isLoading,
-                shape = RoundedCornerShape(12.dp)
-            )
-
-            // translated comment
+        Column(modifier = Modifier.padding(innerPadding).padding(16.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(20.dp)) {
+            // Material Type
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
                     "Material Type",
