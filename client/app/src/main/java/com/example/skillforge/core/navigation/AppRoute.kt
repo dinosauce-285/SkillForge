@@ -71,7 +71,7 @@ sealed interface AppRoute {
 
     data class AddQuestion(
         val session: AuthSession,
-        val courseId: String, // Thêm courseId vào đây
+        val courseId: String,
         val quizId: String? = null
     ) : AppRoute
 

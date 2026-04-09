@@ -32,7 +32,7 @@ import sh.calvin.reorderable.rememberReorderableLazyListState
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun QuizBuilderScreen(
-    initialTab: Int = 0, // Đảm bảo tham số này tồn tại
+    initialTab: Int = 0, // Ensure this parameter exists for navigation
     onBackClick: () -> Unit = {},
     onPublishClick: () -> Unit = {},
     onAddQuestionClick: () -> Unit = {}
@@ -40,10 +40,10 @@ fun QuizBuilderScreen(
     var quizTitle by remember { mutableStateOf("") }
     var quizDescription by remember { mutableStateOf("") }
     
-    // Sử dụng initialTab để quản lý selectedTab
+    // Manage selected tab using initialTab
     var selectedTab by remember { mutableStateOf(initialTab) }
 
-    // Đồng bộ tab nếu initialTab thay đổi từ bên ngoài
+    // Synchronize tab state if initialTab changes from outside
     LaunchedEffect(initialTab) {
         selectedTab = initialTab
     }
@@ -108,7 +108,7 @@ fun QuizBuilderScreen(
                 contentPadding = PaddingValues(24.dp),
                 verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
-                // ... (Các thành phần item trong LazyColumn giữ nguyên)
+                // Creation Suite Items
                 item {
                     Column {
                         Text(text = "CREATION SUITE", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = PrimaryOrange, letterSpacing = 2.sp)
@@ -171,8 +171,6 @@ fun QuizBuilderScreen(
         }
     }
 }
-
-// ... (Các thành phần khác: QuizBuilderBottomBar, QuizNavButton, QuizInput, QuestionCard, Badge giữ nguyên)
 
 @Composable
 fun QuizBuilderBottomBar(
