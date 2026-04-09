@@ -50,9 +50,6 @@ export class AuthController {
   @UseGuards(JwtRefreshAuthGuard)
   @Post('refresh')
   refresh(@Request() req: ExpressRequest & { user: JwtRefreshPayload }) {
-    console.log('==============================================');
-    console.log('🔥 ẢO THUẬT ĐÂY: CLIENT VỪA GỌI REFRESH TOKEN!');
-    console.log('==============================================');
     // req.user contains the strictly-typed JwtRefreshPayload decoded from the Bearer token
     return this.authService.refreshTokens(req.user);
   }
