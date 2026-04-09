@@ -110,10 +110,10 @@ class MainActivity : ComponentActivity() {
                             AppRoute.Login -> LoginScreen(
                                 viewModel = loginViewModel,
                                 onLoginSuccess = { session ->
-                                   
+
                                     mainViewModel.navigateTo(
                                         if (session.user.role.equals("STUDENT", ignoreCase = true)) {
-                                            AppRoute.Home(session) 
+                                            AppRoute.Home(session)
                                         } else {
                                             AppRoute.InstructorPortal(session)
                                         }
@@ -202,7 +202,7 @@ class MainActivity : ComponentActivity() {
                             )
 
                             is AppRoute.Checkout -> TransactionScreenRoute(
-                            
+
                                 courseId = route.courseId,
                                 token = route.session.accessToken,
                                 viewModel = transactionViewModel,
@@ -320,20 +320,17 @@ class MainActivity : ComponentActivity() {
                                 }
 
                                 SkillforgeMaterialUploadScreen(
-                                    
-                                    lessonId = route.lessonId, 
+                                    lessonId = route.lessonId,
                                     isLoading = uploadState is UploadState.Loading,
                                     onNavigateBack = {
                                         mainViewModel.navigateTo(AppRoute.InstructorPortal(route.session))
                                     },
-                                   
-                                    onUploadClick = { title, type, fileUri ->
+                                    onUploadClick = { type, fileUri ->
                                         if (fileUri != null) {
                                             uploadViewModel.uploadFile(
                                                 context = this@MainActivity,
                                                 token = route.session.accessToken,
                                                 lessonId = route.lessonId,
-                                                title = title,
                                                 type = type,
                                                 uri = fileUri
                                             )
@@ -361,8 +358,8 @@ class MainActivity : ComponentActivity() {
                                     mainViewModel.navigateTo(AppRoute.Profile(route.session))
                                 }
                             )
-                            
-                            else -> {} 
+
+                            else -> {}
                         }
                     }
                 }
