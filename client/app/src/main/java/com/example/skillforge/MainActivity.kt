@@ -202,7 +202,7 @@ class MainActivity : ComponentActivity() {
                             )
 
                             is AppRoute.Checkout -> TransactionScreenRoute(
-                                // Merge: Sử dụng TransactionScreenRoute mới từ dev
+                            
                                 courseId = route.courseId,
                                 token = route.session.accessToken,
                                 viewModel = transactionViewModel,
