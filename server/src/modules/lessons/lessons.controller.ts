@@ -56,6 +56,7 @@ export class LessonsController {
   }
 
   @Post(':lessonId/materials')
+  @Roles(Role.INSTRUCTOR)
   @UseInterceptors(
     FileInterceptor('file', {
       storage: memoryStorage(),
@@ -66,12 +67,12 @@ export class LessonsController {
   )
   async uploadMaterial(
     @Param('lessonId') lessonId: string,
-    @Body('title') title: string,
     @Body('type') type: string,
     @UploadedFile() file: Express.Multer.File,
+    @CurrentUser() user: any,
   ) {
     if (!file) throw new BadRequestException('No file attached!');
 
-    return this.lessonsService.addMaterialToLesson(lessonId, title, type, file);
+    return this.lessonsService.addMaterialToLesson(lessonId, type, file, user);
   }
 }
