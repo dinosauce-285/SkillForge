@@ -10,6 +10,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Attachment
+import androidx.compose.material.icons.filled.Quiz
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.skillforge.core.designsystem.PrimaryOrange
 import com.example.skillforge.data.remote.LessonDto
 import com.example.skillforge.feature.instructor_portal.viewmodel.CourseManagerState
 import com.example.skillforge.feature.instructor_portal.viewmodel.CourseManagerViewModel
@@ -28,23 +30,19 @@ fun SkillforgeCourseManagerScreen(
     viewModel: CourseManagerViewModel,
     token: String,
     onBack: () -> Unit,
-    onNavigateToUpload: (lessonId: String) -> Unit
+    onNavigateToUpload: (lessonId: String) -> Unit,
+    onNavigateToQuizBuilder: (courseId: String, chapterId: String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    // translated comment
     var showAddChapterDialog by remember { mutableStateOf(false) }
-
-    // translated comment
     var showAddLessonDialogForChapter by remember { mutableStateOf<String?>(null) }
     var newItemTitle by remember { mutableStateOf("") }
 
-    // translated comment
     LaunchedEffect(Unit) {
         viewModel.loadCourseStructure(token, courseId)
     }
 
-    // translated comment
     if (showAddChapterDialog) {
         AlertDialog(
             onDismissRequest = { showAddChapterDialog = false; newItemTitle = "" },
@@ -63,15 +61,14 @@ fun SkillforgeCourseManagerScreen(
                     viewModel.createChapter(newItemTitle)
                     showAddChapterDialog = false
                     newItemTitle = ""
-                }) { Text("Create") }
+                }, colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange)) { Text("Create") }
             },
             dismissButton = {
-                TextButton(onClick = { showAddChapterDialog = false; newItemTitle = "" }) { Text("Cancel") }
+                TextButton(onClick = { showAddChapterDialog = false; newItemTitle = "" }, colors = ButtonDefaults.textButtonColors(contentColor = Color.Gray)) { Text("Cancel") }
             }
         )
     }
 
-    // translated comment
     if (showAddLessonDialogForChapter != null) {
         AlertDialog(
             onDismissRequest = { showAddLessonDialogForChapter = null; newItemTitle = "" },
@@ -92,15 +89,14 @@ fun SkillforgeCourseManagerScreen(
                     }
                     showAddLessonDialogForChapter = null
                     newItemTitle = ""
-                }) { Text("Create") }
+                }, colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange)) { Text("Create") }
             },
             dismissButton = {
-                TextButton(onClick = { showAddLessonDialogForChapter = null; newItemTitle = "" }) { Text("Cancel") }
+                TextButton(onClick = { showAddLessonDialogForChapter = null; newItemTitle = "" }, colors = ButtonDefaults.textButtonColors(contentColor = Color.Gray)) { Text("Cancel") }
             }
         )
     }
 
-    // translated comment
     Scaffold(
         topBar = {
             TopAppBar(
@@ -114,20 +110,19 @@ fun SkillforgeCourseManagerScreen(
             )
         },
         floatingActionButton = {
-            // translated comment
             ExtendedFloatingActionButton(
                 onClick = { showAddChapterDialog = true },
                 icon = { Icon(Icons.Default.Add, contentDescription = "Add Chapter") },
                 text = { Text("Add Chapter") },
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
+                containerColor = PrimaryOrange,
+                contentColor = Color.White
             )
         }
     ) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
             when (val state = uiState) {
                 is CourseManagerState.Loading -> {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center), color = PrimaryOrange)
                 }
                 is CourseManagerState.Error -> {
                     Text(
@@ -141,18 +136,16 @@ fun SkillforgeCourseManagerScreen(
 
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(bottom = 80.dp) // translated comment
+                        contentPadding = PaddingValues(bottom = 80.dp)
                     ) {
-                        // translated comment
                         item {
                             Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
                                 Text(course.title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold)
-                                Text(course.category?.name ?: "No category", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodyMedium)
+                                Text(course.category?.name ?: "No category", color = PrimaryOrange, style = MaterialTheme.typography.bodyMedium)
                                 Spacer(modifier = Modifier.height(16.dp))
                             }
                         }
 
-                        // translated comment
                         items(course.chapters) { chapter ->
                             Card(
                                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
@@ -160,9 +153,8 @@ fun SkillforgeCourseManagerScreen(
                                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                             ) {
                                 Column {
-                                    // translated comment
                                     Row(
-                                        modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.secondaryContainer).padding(16.dp),
+                                        modifier = Modifier.fillMaxWidth().background(PrimaryOrange.copy(alpha = 0.1f)).padding(16.dp),
                                         horizontalArrangement = Arrangement.SpaceBetween,
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
@@ -170,11 +162,10 @@ fun SkillforgeCourseManagerScreen(
                                             text = "Chapter ${chapter.orderIndex + 1}: ${chapter.title}",
                                             style = MaterialTheme.typography.titleMedium,
                                             fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                                            color = PrimaryOrange
                                         )
                                     }
 
-                                    // translated comment
                                     if (chapter.lessons.isEmpty()) {
                                         Text("No lessons yet.", modifier = Modifier.padding(16.dp), style = MaterialTheme.typography.bodySmall)
                                     } else {
@@ -187,14 +178,31 @@ fun SkillforgeCourseManagerScreen(
                                         }
                                     }
 
-                                    // translated comment
-                                    TextButton(
-                                        onClick = { showAddLessonDialogForChapter = chapter.id },
-                                        modifier = Modifier.fillMaxWidth().padding(8.dp)
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth().padding(8.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                                     ) {
-                                        Icon(Icons.Default.AddCircle, contentDescription = null, modifier = Modifier.size(18.dp))
-                                        Spacer(Modifier.width(8.dp))
-                                        Text("Add Lesson")
+                                        // Add Lesson Button
+                                        TextButton(
+                                            onClick = { showAddLessonDialogForChapter = chapter.id },
+                                            modifier = Modifier.weight(1f),
+                                            colors = ButtonDefaults.textButtonColors(contentColor = PrimaryOrange)
+                                        ) {
+                                            Icon(Icons.Default.AddCircle, contentDescription = null, modifier = Modifier.size(18.dp))
+                                            Spacer(Modifier.width(8.dp))
+                                            Text("Add Lesson", fontWeight = FontWeight.Bold)
+                                        }
+                                        
+                                        // Add Quiz Button - Updated to match Add Lesson style
+                                        TextButton(
+                                            onClick = { onNavigateToQuizBuilder(courseId, chapter.id) },
+                                            modifier = Modifier.weight(1f),
+                                            colors = ButtonDefaults.textButtonColors(contentColor = PrimaryOrange)
+                                        ) {
+                                            Icon(Icons.Default.Quiz, contentDescription = null, modifier = Modifier.size(18.dp))
+                                            Spacer(Modifier.width(8.dp))
+                                            Text("Add Quiz", fontWeight = FontWeight.Bold)
+                                        }
                                     }
                                 }
                             }
@@ -222,17 +230,16 @@ fun LessonItemRow(
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Medium
             )
-            // translated comment
             Text(
                 text = if (lesson.materials.isEmpty()) "No materials" else "${lesson.materials.size} materials",
                 style = MaterialTheme.typography.bodySmall,
-                color = if (lesson.materials.isEmpty()) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+                color = if (lesson.materials.isEmpty()) MaterialTheme.colorScheme.error else PrimaryOrange
             )
         }
 
         IconButton(
             onClick = onAddMaterial,
-            colors = IconButtonDefaults.iconButtonColors(contentColor = MaterialTheme.colorScheme.primary)
+            colors = IconButtonDefaults.iconButtonColors(contentColor = PrimaryOrange)
         ) {
             Icon(Icons.Default.Attachment, contentDescription = "Add material")
         }
