@@ -31,11 +31,14 @@ import com.example.skillforge.feature.home.ui.HomeScreen
 import com.example.skillforge.feature.home.viewmodel.HomeViewModel
 import com.example.skillforge.feature.home.viewmodel.HomeViewModelFactory
 import com.example.skillforge.feature.instructor_portal.ui.SkillforgeCourseFormScreen
+import com.example.skillforge.feature.instructor_portal.ui.SkillforgeCourseManagerScreen
 import com.example.skillforge.feature.instructor_portal.ui.SkillforgeInstructorDashboardScreen
 import com.example.skillforge.feature.instructor_portal.ui.SkillforgeMaterialUploadScreen
 import com.example.skillforge.feature.instructor_portal.viewmodel.CourseFormState
 import com.example.skillforge.feature.instructor_portal.viewmodel.CourseFormViewModel
 import com.example.skillforge.feature.instructor_portal.viewmodel.CourseFormViewModelFactory
+import com.example.skillforge.feature.instructor_portal.viewmodel.CourseManagerViewModel
+import com.example.skillforge.feature.instructor_portal.viewmodel.CourseManagerViewModelFactory
 import com.example.skillforge.feature.instructor_portal.viewmodel.InstructorPortalViewModel
 import com.example.skillforge.feature.instructor_portal.viewmodel.InstructorPortalViewModelFactory
 import com.example.skillforge.feature.instructor_portal.viewmodel.MaterialUploadViewModel
@@ -43,8 +46,10 @@ import com.example.skillforge.feature.instructor_portal.viewmodel.MaterialUpload
 import com.example.skillforge.feature.instructor_portal.viewmodel.UploadState
 import com.example.skillforge.feature.student_courses.ui.CourseCurriculumRoute
 import com.example.skillforge.feature.student_courses.ui.LessonLearningScreen
+import com.example.skillforge.feature.student_courses.ui.MyCoursesScreen
 import com.example.skillforge.feature.student_courses.ui.StudentCourseDetailsRoute
 import com.example.skillforge.feature.student_courses.ui.StudentCourseListingRoute
+import com.example.skillforge.feature.student_courses.ui.StudentProfileScreen
 import com.example.skillforge.feature.student_courses.viewmodel.StudentCoursesViewModel
 import com.example.skillforge.feature.student_courses.viewmodel.StudentCoursesViewModelFactory
 import com.example.skillforge.feature.main.viewmodel.MainViewModel
@@ -339,6 +344,35 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
 
+                            is AppRoute.CourseManager -> {
+                                val managerViewModel: CourseManagerViewModel = viewModel(
+                                    factory = CourseManagerViewModelFactory(
+                                        appContainer.courseRepository,
+                                        appContainer.chapterRepository,
+                                        appContainer.lessonRepository
+                                    )
+                                )
+
+                                LaunchedEffect(route.session.accessToken, route.courseId) {
+                                    managerViewModel.loadCourseStructure(route.session.accessToken, route.courseId)
+                                }
+
+                                SkillforgeCourseManagerScreen(
+                                    courseId = route.courseId,
+                                    viewModel = managerViewModel,
+                                    token = route.session.accessToken,
+                                    onBack = {
+                                        mainViewModel.navigateTo(AppRoute.InstructorPortal(route.session))
+                                    },
+                                    onNavigateToUpload = { lessonId ->
+                                        mainViewModel.navigateTo(AppRoute.MaterialUpload(route.session, lessonId))
+                                    },
+                                    onNavigateToQuizBuilder = { courseId, chapterId ->
+                                        mainViewModel.navigateTo(AppRoute.QuizBuilder(route.session, courseId, chapterId))
+                                    }
+                                )
+                            }
+
                             is AppRoute.Favorite -> FavoriteRoute(
                                 session = route.session,
                                 viewModel = favoriteViewModel,
@@ -356,6 +390,52 @@ class MainActivity : ComponentActivity() {
                                 },
                                 onNavigateToProfile = {
                                     mainViewModel.navigateTo(AppRoute.Profile(route.session))
+                                }
+                            )
+
+                            is AppRoute.MyCourses -> {
+                                val homeViewModel: HomeViewModel = viewModel(
+                                    factory = HomeViewModelFactory(appContainer.progressRepository)
+                                )
+                                val courses by homeViewModel.uiState.collectAsState()
+
+                                LaunchedEffect(route.session.accessToken) {
+                                    homeViewModel.fetchDashboard(route.session.accessToken)
+                                }
+
+                                MyCoursesScreen(
+                                    token = route.session.accessToken,
+                                    onNavigateBack = {
+                                        mainViewModel.navigateTo(AppRoute.StudentCourseListing(route.session))
+                                    },
+                                    onCourseClick = { courseId ->
+                                        mainViewModel.navigateTo(AppRoute.CourseCurriculum(route.session, courseId))
+                                    },
+                                    onNavigateToDiscover = {
+                                        mainViewModel.navigateTo(AppRoute.StudentCourseListing(route.session))
+                                    },
+                                    onNavigateToWishlist = {
+                                        mainViewModel.navigateTo(AppRoute.Favorite(route.session))
+                                    },
+                                    onNavigateToProfile = {
+                                        mainViewModel.navigateTo(AppRoute.Profile(route.session))
+                                    }
+                                )
+                            }
+
+                            is AppRoute.Profile -> StudentProfileScreen(
+                                session = route.session,
+                                onNavigateToDiscover = {
+                                    mainViewModel.navigateTo(AppRoute.StudentCourseListing(route.session))
+                                },
+                                onNavigateToLearning = {
+                                    mainViewModel.navigateTo(AppRoute.MyCourses(route.session))
+                                },
+                                onNavigateToWishlist = {
+                                    mainViewModel.navigateTo(AppRoute.Favorite(route.session))
+                                },
+                                onLogout = {
+                                    mainViewModel.navigateTo(AppRoute.Login)
                                 }
                             )
 
