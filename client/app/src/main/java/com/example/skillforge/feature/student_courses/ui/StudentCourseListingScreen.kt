@@ -52,6 +52,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -102,6 +103,10 @@ fun StudentCourseListingRoute(
     onLogout: () -> Unit,
 ) {
     val uiState by viewModel.courseListState.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.refreshCatalog()
+    }
 
     StudentCourseListingScreen(
         session = session,
