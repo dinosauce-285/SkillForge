@@ -14,7 +14,7 @@ android {
     defaultConfig {
         applicationId = "com.example.skillforge"
         minSdk = 24
-        targetSdk = 36
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
         buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:3000/\"")
@@ -32,8 +32,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     buildFeatures {
         buildConfig = true
@@ -64,7 +64,6 @@ dependencies {
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2")
     implementation("androidx.navigation:navigation-compose:2.7.7")
-    implementation("io.coil-kt:coil-compose:2.4.0")
     implementation("androidx.datastore:datastore-preferences:1.0.0")
 
     // Supabase
