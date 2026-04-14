@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -80,10 +79,10 @@ import com.example.skillforge.domain.model.AuthSession
 import com.example.skillforge.domain.model.AuthUser
 import com.example.skillforge.domain.model.Category
 import com.example.skillforge.domain.model.CourseSummary
-import com.example.skillforge.feature.student_courses.ui.components.StudentBottomNavigationBar
+import com.example.skillforge.core.designsystem.components.SkillForgeBottomNavigationBar
 import com.example.skillforge.feature.student_courses.viewmodel.StudentCourseListUiState
 import com.example.skillforge.feature.student_courses.viewmodel.StudentCoursesViewModel
-
+import androidx.compose.ui.platform.LocalConfiguration
 private val levelOptions = listOf(
     null to "All levels",
     "BEGINNER" to "Beginner",
@@ -97,9 +96,6 @@ fun StudentCourseListingRoute(
     session: AuthSession,
     viewModel: StudentCoursesViewModel,
     onCourseSelected: (String) -> Unit,
-    onNavigateToFavorites: () -> Unit,
-    onNavigateToLearning: () -> Unit,
-    onNavigateToProfile: () -> Unit,
     onLogout: () -> Unit,
 ) {
     val uiState by viewModel.courseListState.collectAsState()
@@ -117,9 +113,6 @@ fun StudentCourseListingRoute(
         onResetFilters = viewModel::resetFilters,
         onRetry = viewModel::refreshCatalog,
         onCourseSelected = onCourseSelected,
-        onNavigateToFavorites = onNavigateToFavorites,
-        onNavigateToLearning = onNavigateToLearning,
-        onNavigateToProfile = onNavigateToProfile,
         onLogout = onLogout,
     )
 }
@@ -134,9 +127,6 @@ fun StudentCourseListingScreen(
     onResetFilters: () -> Unit,
     onRetry: () -> Unit,
     onCourseSelected: (String) -> Unit,
-    onNavigateToFavorites: () -> Unit,
-    onNavigateToLearning: () -> Unit,
-    onNavigateToProfile: () -> Unit,
     onLogout: () -> Unit,
 ) {
     var isFilterPanelOpen by remember { mutableStateOf(false) }
@@ -149,15 +139,7 @@ fun StudentCourseListingScreen(
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        containerColor = MaterialTheme.colorScheme.background,
-        bottomBar = {
-            StudentBottomNavigationBar(
-                currentRoute = "Discover",
-                onNavigateToLearning = onNavigateToLearning,
-                onNavigateToWishlist = onNavigateToFavorites,
-                onNavigateToProfile = onNavigateToProfile,
-            )
-        },
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Box(
             modifier = Modifier
@@ -882,9 +864,6 @@ private fun StudentCourseListingPreview() {
             onResetFilters = {},
             onRetry = {},
             onCourseSelected = {},
-            onNavigateToFavorites = {},
-            onNavigateToLearning = {},
-            onNavigateToProfile = {},
             onLogout = {},
         )
     }

@@ -18,15 +18,13 @@ import androidx.compose.ui.text.font.FontWeight
 import com.example.skillforge.core.designsystem.SkillforgeLayout
 import com.example.skillforge.core.designsystem.SkillforgeSpacing
 import com.example.skillforge.domain.model.AuthSession
-import com.example.skillforge.feature.student_courses.ui.components.StudentBottomNavigationBar
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StudentProfileScreen(
     session: AuthSession,
-    onNavigateToDiscover: () -> Unit,
-    onNavigateToLearning: () -> Unit,
-    onNavigateToWishlist: () -> Unit,
+
     onLogout: () -> Unit,
 ) {
     Scaffold(
@@ -41,14 +39,6 @@ fun StudentProfileScreen(
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background,
                 ),
-            )
-        },
-        bottomBar = {
-            StudentBottomNavigationBar(
-                currentRoute = "Profile",
-                onNavigateToDiscover = onNavigateToDiscover,
-                onNavigateToLearning = onNavigateToLearning,
-                onNavigateToWishlist = onNavigateToWishlist,
             )
         },
         containerColor = MaterialTheme.colorScheme.background,

@@ -14,9 +14,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -31,7 +28,6 @@ import com.example.skillforge.core.designsystem.SkillforgeSpacing
 import com.example.skillforge.core.designsystem.SkillforgeTheme
 import com.example.skillforge.core.designsystem.components.SkillforgeProgressBar
 import com.example.skillforge.domain.model.ActiveCourse
-import com.example.skillforge.feature.student_courses.ui.components.StudentBottomNavigationBar
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.skillforge.feature.home.viewmodel.HomeViewModel
@@ -50,11 +46,8 @@ fun MyCoursesScreen(
     token: String = "",
     onNavigateBack: () -> Unit,
     onCourseClick: (String) -> Unit,
-    onNavigateToDiscover: () -> Unit,
-    onNavigateToWishlist: () -> Unit,
-    onNavigateToProfile: () -> Unit,
 ) {
-    // Create home view model to load dashboard
+
     val context = LocalContext.current
     val appContainer = (context.applicationContext as? com.example.skillforge.SkillforgeApplication)?.container
 
@@ -98,14 +91,6 @@ fun MyCoursesScreen(
                 )
             )
         },
-        bottomBar = {
-            StudentBottomNavigationBar(
-                currentRoute = "Learning",
-                onNavigateToDiscover = onNavigateToDiscover,
-                onNavigateToWishlist = onNavigateToWishlist,
-                onNavigateToProfile = onNavigateToProfile,
-            )
-        },
         containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         when (homeUiState) {
@@ -133,7 +118,7 @@ fun MyCoursesScreen(
                 }
             }
             is com.example.skillforge.feature.home.viewmodel.HomeUiState.Success -> {
-                val myCourses = (homeUiState as com.example.skillforge.feature.home.viewmodel.HomeUiState.Success).courses
+                val myCourses = (homeUiState as com.example.skillforge.feature.home.viewmodel.HomeUiState.Success).dashboard.courses
 
                 if (myCourses.isEmpty()) {
                     EmptyMyCoursesState(
@@ -300,9 +285,6 @@ fun MyCoursesScreenPreview() {
         MyCoursesScreen(
             onNavigateBack = {},
             onCourseClick = {},
-            onNavigateToDiscover = {},
-            onNavigateToWishlist = {},
-            onNavigateToProfile = {},
         )
     }
 }

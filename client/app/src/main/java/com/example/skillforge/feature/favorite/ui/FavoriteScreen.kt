@@ -56,11 +56,10 @@ import com.example.skillforge.core.designsystem.SurfaceColor
 import com.example.skillforge.core.designsystem.TextPrimaryColor
 import com.example.skillforge.core.designsystem.TextSecondaryColor
 import com.example.skillforge.domain.model.AuthSession
-import com.example.skillforge.domain.model.AuthUser
 import com.example.skillforge.domain.model.FavoriteCourse
 import com.example.skillforge.feature.favorite.viewmodel.FavoriteUiState
 import com.example.skillforge.feature.favorite.viewmodel.FavoriteViewModel
-import com.example.skillforge.feature.student_courses.ui.components.StudentBottomNavigationBar
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -70,8 +69,6 @@ fun FavoriteRoute(
     onBackClick: () -> Unit,
     onCourseClick: (String) -> Unit,
     onNavigateToDiscovery: () -> Unit,
-    onNavigateToLearning: () -> Unit,
-    onNavigateToProfile: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -84,8 +81,6 @@ fun FavoriteRoute(
         onBackClick = onBackClick,
         onCourseClick = onCourseClick,
         onNavigateToDiscovery = onNavigateToDiscovery,
-        onNavigateToLearning = onNavigateToLearning,
-        onNavigateToProfile = onNavigateToProfile,
     )
 }
 
@@ -96,8 +91,6 @@ fun FavoriteScreen(
     onBackClick: () -> Unit,
     onCourseClick: (String) -> Unit,
     onNavigateToDiscovery: () -> Unit,
-    onNavigateToLearning: () -> Unit,
-    onNavigateToProfile: () -> Unit,
 ) {
     Scaffold(
         topBar = {
@@ -123,15 +116,6 @@ fun FavoriteScreen(
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = BackgroundColor,
                 ),
-            )
-        },
-        bottomBar = {
-            StudentBottomNavigationBar(
-                currentRoute = "Wishlist",
-                onNavigateToDiscover = onNavigateToDiscovery,
-                onNavigateToLearning = onNavigateToLearning,
-                onNavigateToWishlist = {},
-                onNavigateToProfile = onNavigateToProfile,
             )
         },
         containerColor = BackgroundColor,
@@ -439,7 +423,5 @@ fun FavoriteScreenPreview() {
         onBackClick = {},
         onCourseClick = {},
         onNavigateToDiscovery = {},
-        onNavigateToLearning = {},
-        onNavigateToProfile = {},
     )
 }
