@@ -31,15 +31,11 @@ import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
-import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.OndemandVideo
 import androidx.compose.material.icons.filled.PictureAsPdf
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.PlayLesson
 import androidx.compose.material.icons.filled.Send
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.Subtitles
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -67,7 +63,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -91,8 +86,8 @@ import com.example.skillforge.domain.model.CourseDetails
 import com.example.skillforge.domain.model.CourseLesson
 import com.example.skillforge.domain.model.LessonContent
 import com.example.skillforge.domain.model.LessonMaterial
-import com.example.skillforge.feature.student_courses.ui.components.StudentBottomNavigationBar
 import com.example.skillforge.feature.student_courses.viewmodel.StudentCoursesViewModel
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -103,10 +98,7 @@ fun LessonLearningScreen(
     viewModel: StudentCoursesViewModel,
     onLessonSelected: (String) -> Unit = {},
     onNavigateBack: () -> Unit = {},
-    onNavigateToDiscover: () -> Unit = {},
-    onNavigateToLearning: () -> Unit = {},
-    onNavigateToWishlist: () -> Unit = {},
-    onNavigateToProfile: () -> Unit = {},
+
 ) {
     val lessonUiState by viewModel.lessonContentState.collectAsState()
     val courseUiState by viewModel.courseDetailsState.collectAsState()
@@ -140,17 +132,8 @@ fun LessonLearningScreen(
             )
         },
         bottomBar = {
-            Column {
-                courseUiState.course?.let {
-                    LessonNavBar(it, lessonId, onLessonSelected)
-                }
-                StudentBottomNavigationBar(
-                    currentRoute = "Learning",
-                    onNavigateToDiscover = onNavigateToDiscover,
-                    onNavigateToLearning = onNavigateToLearning,
-                    onNavigateToWishlist = onNavigateToWishlist,
-                    onNavigateToProfile = onNavigateToProfile,
-                )
+            courseUiState.course?.let {
+                LessonNavBar(it, lessonId, onLessonSelected)
             }
         },
         containerColor = MaterialTheme.colorScheme.background,
