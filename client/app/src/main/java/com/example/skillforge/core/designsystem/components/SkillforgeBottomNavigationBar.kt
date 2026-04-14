@@ -1,8 +1,9 @@
-package com.example.skillforge.feature.student_courses.ui.components
+package com.example.skillforge.core.designsystem.components
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayCircleOutline
 import androidx.compose.material3.Icon
@@ -15,8 +16,9 @@ import androidx.compose.runtime.Composable
 import com.example.skillforge.core.designsystem.SkillforgeSpacing
 
 @Composable
-fun StudentBottomNavigationBar(
-    currentRoute: String = "Learning",
+fun SkillForgeBottomNavigationBar(
+    currentRoute: String = "Home",
+    onNavigateToHome: () -> Unit = {},
     onNavigateToDiscover: () -> Unit = {},
     onNavigateToLearning: () -> Unit = {},
     onNavigateToWishlist: () -> Unit = {},
@@ -32,6 +34,14 @@ fun StudentBottomNavigationBar(
             selectedTextColor = MaterialTheme.colorScheme.primary,
             unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
             unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        NavigationBarItem(
+            selected = currentRoute == "Home",
+            onClick = onNavigateToHome,
+            icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
+            label = { Text("Home") },
+            colors = colors
         )
 
         NavigationBarItem(

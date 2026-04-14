@@ -18,7 +18,7 @@ class MainViewModel(private val checkSessionUseCase: CheckSessionUseCase) : View
             val result = checkSessionUseCase()
             result.onSuccess { session ->
                 _uiState.value = if (session.user.role.equals("STUDENT", ignoreCase = true)) {
-                    AppRoute.StudentCourseListing(session)
+                    AppRoute.Home(session)
                 } else {
                     AppRoute.InstructorPortal(session)
                 }
