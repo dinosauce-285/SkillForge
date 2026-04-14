@@ -9,7 +9,7 @@ export class ProgressController {
     constructor(private readonly progressService: ProgressService) { }
 
     @Post('lessons/:lessonId/mark')
-    markLeseson(
+    markLesson(
         @CurrentUser('userId') userId: string,
         @Param('lessonId', new ParseUUIDPipe()) lessonId: string,
         @Body('isCompleted') isCompleted?: boolean,
@@ -21,7 +21,7 @@ export class ProgressController {
 
     @Get('dashboard')
     getDashboard(@CurrentUser('userId') userId: string) {
-        return this.progressService.getDashboardProgress(userId)
+        return this.progressService.getDashboardData(userId)
     }
 
     @Get('courses/:courseId')
@@ -31,4 +31,6 @@ export class ProgressController {
     ) {
         return this.progressService.getCourseProgress(userId, courseId);
     }
+
+
 }
