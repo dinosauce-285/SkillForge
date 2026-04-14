@@ -1,4 +1,4 @@
-package com.example.skillforge.feature.student_courses.ui.components
+package com.example.skillforge.core.designsystem.components
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Explore
