@@ -25,14 +25,13 @@ import com.example.skillforge.core.designsystem.skillforgePrimaryButtonColors
 fun HomeWelcomeHeader(
     studentName: String,
     onNotificationClick: () -> Unit,
-    onNavigateToDiscovery: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = SkillforgeLayout.screenHorizontalPadding)
-            .padding(top = SkillforgeSpacing.medium, bottom = SkillforgeSpacing.medium)
+            .padding(bottom = SkillforgeSpacing.small)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
@@ -78,24 +77,6 @@ fun HomeWelcomeHeader(
 
         Spacer(modifier = Modifier.height(SkillforgeSpacing.medium))
 
-        Button(
-            onClick = onNavigateToDiscovery,
-            colors = skillforgePrimaryButtonColors(),
-            contentPadding = PaddingValues(
-                horizontal = SkillforgeSpacing.large,
-                vertical = SkillforgeSpacing.small,
-            )
-        ) {
-            Text(
-                text = "Explore courses",
-                fontWeight = FontWeight.SemiBold,
-            )
-            Spacer(modifier = Modifier.width(SkillforgeSpacing.small))
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                contentDescription = null,
-            )
-        }
     }
 
 }

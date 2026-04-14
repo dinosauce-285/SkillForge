@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import com.example.skillforge.core.designsystem.SkillforgeSpacing
 import com.example.skillforge.core.designsystem.SkillforgeTheme
 import com.example.skillforge.domain.model.ActiveCourse
+import com.example.skillforge.domain.model.HomeDashboard
 import com.example.skillforge.feature.home.ui.components.ActiveCourseList
 import com.example.skillforge.feature.home.ui.components.ContinueLearningCard
 import com.example.skillforge.feature.home.ui.components.EmptyDashboardState
@@ -36,10 +37,11 @@ fun HomeScreen(
     viewModel: HomeViewModel,
     onNavigateToMyCourses: () -> Unit = {},
     onNavigateToDiscovery: () -> Unit = {}
+
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(token) {
         viewModel.fetchDashboard(token)
     }
 
@@ -54,9 +56,11 @@ fun HomeScreen(
 fun HomeScreenContent(
     uiState: HomeUiState,
     onNavigateToMyCourses: () -> Unit = {},
-    onNavigateToDiscovery: () -> Unit = {}
+    onNavigateToDiscovery: () -> Unit = {},
 ) {
-    Scaffold { paddingValues ->
+    Scaffold(
+        contentWindowInsets = WindowInsets(0.dp)
+    ) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -78,25 +82,23 @@ fun HomeScreenContent(
                 }
 
                 is HomeUiState.Success -> {
-                    val courses = uiState.courses
+                    val dashboard = uiState.dashboard
+                    val courses = dashboard.courses
 
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
                             .verticalScroll(rememberScrollState())
                     ) {
-                        Spacer(modifier = Modifier.height(SkillforgeSpacing.large))
-
                         HomeWelcomeHeader(
-                            studentName = "Student",
+                            studentName = dashboard.studentName,
                             onNotificationClick = { },
-                            onNavigateToDiscovery = onNavigateToDiscovery
                         )
 
                         Spacer(modifier = Modifier.height(SkillforgeSpacing.large))
 
                         if (courses.isEmpty()) {
-                            EmptyDashboardState()
+                            EmptyDashboardState(onExploreClick = onNavigateToDiscovery)
                         } else {
                             val mostRecent = courses.firstOrNull()
                             val otherCourses = if (courses.size > 1) courses.drop(1) else emptyList()
@@ -105,12 +107,12 @@ fun HomeScreenContent(
                                 ContinueLearningCard(
                                     course = course
                                 )
-                                Spacer(modifier = Modifier.height(SkillforgeSpacing.large))
+//                                Spacer(modifier = Modifier.height(SkillforgeSpacing.large))
                             }
 
                             StudentStatsRow(
-                                hoursSpent = 12.5,
-                                badgesEarned = 4
+                                hoursSpent = dashboard.hoursSpent,
+                                badgesEarned = dashboard.badgesEarned
                             )
 
                             Spacer(modifier = Modifier.height(SkillforgeSpacing.large))
@@ -141,7 +143,12 @@ fun HomeScreenEmptyPreview() {
     SkillforgeTheme {
         HomeScreenContent(
             uiState = HomeUiState.Success(
-                courses = emptyList()
+                dashboard = HomeDashboard(
+                    studentName = "Alex",
+                    hoursSpent = 0.0,
+                    badgesEarned = 0,
+                    courses = emptyList()
+                )
             )
         )
     }

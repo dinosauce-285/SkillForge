@@ -2,7 +2,7 @@ package com.example.skillforge.feature.home.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.skillforge.domain.model.ActiveCourse
+import com.example.skillforge.domain.model.HomeDashboard
 import com.example.skillforge.domain.repository.ProgressRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -11,7 +11,7 @@ import kotlinx.coroutines.launch
 
 sealed interface HomeUiState {
     data object Loading : HomeUiState
-    data class Success(val courses: List<ActiveCourse>) : HomeUiState
+    data class Success(val dashboard: HomeDashboard) : HomeUiState
     data class Error(val message: String) : HomeUiState
 }
 

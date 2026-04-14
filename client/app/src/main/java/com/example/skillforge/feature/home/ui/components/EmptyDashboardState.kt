@@ -3,6 +3,7 @@ package com.example.skillforge.feature.home.ui.components
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.School
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -14,7 +15,10 @@ import androidx.compose.ui.unit.dp
 import com.example.skillforge.core.designsystem.SkillforgeSpacing
 
 @Composable
-fun EmptyDashboardState(modifier: Modifier = Modifier) {
+fun EmptyDashboardState(
+    modifier: Modifier = Modifier,
+    onExploreClick: () -> Unit
+    ) {
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -46,5 +50,14 @@ fun EmptyDashboardState(modifier: Modifier = Modifier) {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center
         )
+
+        Spacer(modifier = Modifier.height(SkillforgeSpacing.large))
+
+        Button(
+            onClick = onExploreClick,
+            shape = MaterialTheme.shapes.medium
+        ) {
+            Text("Explore Catalog")
+        }
     }
 }
