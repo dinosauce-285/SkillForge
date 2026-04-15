@@ -15,10 +15,12 @@ import com.example.skillforge.data.remote.LessonApi
 import com.example.skillforge.data.remote.MaterialApi
 import com.example.skillforge.data.remote.OrderApi
 import com.example.skillforge.data.remote.ProgressApi
+import com.example.skillforge.data.remote.DashboardApi
 import com.example.skillforge.data.repository.AuthRepositoryImpl
 import com.example.skillforge.data.repository.CategoryRepositoryImpl
 import com.example.skillforge.data.repository.CourseRepositoryImpl
 import com.example.skillforge.data.repository.ChapterRepositoryImpl
+import com.example.skillforge.data.repository.DashboardRepositoryImpl
 import com.example.skillforge.data.repository.FavoriteRepositoryImpl
 import com.example.skillforge.data.repository.LessonRepositoryImpl
 import com.example.skillforge.data.repository.MaterialRepositoryImpl
@@ -28,6 +30,7 @@ import com.example.skillforge.domain.repository.AuthRepository
 import com.example.skillforge.domain.repository.CategoryRepository
 import com.example.skillforge.domain.repository.CourseRepository
 import com.example.skillforge.domain.repository.ChapterRepository
+import com.example.skillforge.domain.repository.DashboardRepository
 import com.example.skillforge.domain.repository.FavoriteRepository
 import com.example.skillforge.domain.repository.LessonRepository
 import com.example.skillforge.domain.repository.MaterialRepository
@@ -87,6 +90,8 @@ class AppContainer(private val applicationContext: Context) {
     private val discussionApi = retrofit.create(DiscussionApi::class.java)
     private val orderApi = retrofit.create(OrderApi::class.java)
     private val progressApi = retrofit.create(ProgressApi::class.java)
+
+    private val dashboardApi= retrofit.create(DashboardApi::class.java)
     
     private val materialApi: MaterialApi by lazy {
         retrofit.create(MaterialApi::class.java)
@@ -107,6 +112,8 @@ class AppContainer(private val applicationContext: Context) {
     val materialRepository: MaterialRepository by lazy {
         MaterialRepositoryImpl(materialApi)
     }
+
+    val dashboardRepository: DashboardRepository = DashboardRepositoryImpl(dashboardApi)
 
     // --- Use Cases ---
     val loginUseCase = LoginUseCase(authRepository)

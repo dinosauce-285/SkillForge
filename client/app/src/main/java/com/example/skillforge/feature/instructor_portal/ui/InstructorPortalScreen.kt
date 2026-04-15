@@ -40,8 +40,8 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.skillforge.core.designsystem.*
 import com.example.skillforge.data.remote.CourseSummaryDto
-import com.example.skillforge.feature.instructor_portal.viewmodel.InstructorAnalyticsDto
-import com.example.skillforge.feature.instructor_portal.viewmodel.InstructorDashboardDto
+import com.example.skillforge.data.remote.InstructorDashboardDto
+import com.example.skillforge.data.remote.InstructorAnalyticsDto
 
 enum class SkillforgeInstructorRoute(val title: String, val icon: ImageVector) {
     Dashboard("Dashboard", Icons.Default.Home),
@@ -110,6 +110,8 @@ fun SkillforgeInstructorDashboardScreen(
     }
 }
 
+// ... inside InstructorPortalScreen.kt
+
 @Composable
 fun DashboardTabContent(
     dashboardData: InstructorDashboardDto?,
@@ -117,9 +119,14 @@ fun DashboardTabContent(
     onNavigateToCreateCourse: () -> Unit
 ) {
     if (dashboardData == null) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator(color = PrimaryOrange) }
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator(color = PrimaryOrange)
+        }
         return
     }
+
+    val stats = dashboardData.stats
+    val chartData = dashboardData.chartData
 
     LazyColumn(
         modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
@@ -129,51 +136,16 @@ fun DashboardTabContent(
         item {
             Spacer(modifier = Modifier.height(16.dp))
             Text("INSTRUCTOR PORTAL", fontSize = 12.sp, color = PrimaryOrange, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
-            Text("Good Morning,\n${dashboardData.instructorName}.", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.ExtraBold, color = TextPrimaryColor, lineHeight = 36.sp)
+            Text("Welcome back", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.ExtraBold, color = TextPrimaryColor)
             Spacer(modifier = Modifier.height(16.dp))
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Button(
-                    onClick = onNavigateToReports,
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(containerColor = ChipUnselectedBorderColor, contentColor = TextPrimaryColor),
-                    shape = RoundedCornerShape(24.dp)
-                ) { Text("View Reports", fontWeight = FontWeight.Bold) }
-
-                Button(
                     onClick = onNavigateToCreateCourse,
-                    modifier = Modifier.weight(1.2f),
+                    modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange, contentColor = SurfaceColor),
                     shape = RoundedCornerShape(24.dp)
-                ) { Text("Create New Course", fontWeight = FontWeight.Bold) }
-            }
-        }
-
-        item {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = SurfaceColor)
-            ) {
-                Box(modifier = Modifier.padding(24.dp)) {
-                    Column(modifier = Modifier.fillMaxWidth(0.8f)) {
-                        Text("Ready to expand?", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = TextPrimaryColor)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text("Launch a new learning module or curate your existing materials into a specialized workshop.", color = TextSecondaryColor, style = MaterialTheme.typography.bodyMedium)
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("Quick Start", color = PrimaryOrange, fontWeight = FontWeight.Bold)
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = PrimaryOrange, modifier = Modifier.size(16.dp))
-                        }
-                    }
-                    Icon(
-                        Icons.Default.AddCircle,
-                        contentDescription = null,
-                        tint = ChipUnselectedBorderColor.copy(alpha = 0.5f),
-                        modifier = Modifier.size(80.dp).align(Alignment.TopEnd).offset(x = 16.dp, y = (-16).dp)
-                    )
-                }
+                ) { Text("New Course", fontWeight = FontWeight.Bold) }
             }
         }
 
@@ -182,96 +154,66 @@ fun DashboardTabContent(
                 DashboardStatCard(
                     modifier = Modifier.weight(1f),
                     title = "Total Students",
-                    value = String.format("%,d", dashboardData.totalStudents),
-                    badgeText = dashboardData.studentGrowth,
+                    value = String.format("%,d", stats.totalStudents),
                     icon = Icons.Default.People
                 )
                 DashboardStatCard(
                     modifier = Modifier.weight(1f),
-                    title = "Earnings",
-                    value = "$${dashboardData.earnings / 1000}k",
-                    badgeText = "Record",
-                    icon = Icons.Default.Payments
+                    title = "Active Courses",
+                    value = stats.activeCourses.toString(),
+                    icon = Icons.Default.School
                 )
             }
         }
 
         item {
-            Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = SurfaceColor)) {
-                Column(modifier = Modifier.padding(24.dp)) {
-                    Surface(shape = CircleShape, color = BackgroundColor, modifier = Modifier.size(40.dp)) {
-                        Icon(Icons.Default.School, contentDescription = null, tint = PrimaryOrange, modifier = Modifier.padding(8.dp))
-                    }
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text("Active Courses", color = TextSecondaryColor, fontSize = 12.sp)
-                    Text(dashboardData.activeCourses.toString(), fontSize = 28.sp, fontWeight = FontWeight.Bold, color = TextPrimaryColor)
-                }
-            }
+            DashboardStatCard(
+                modifier = Modifier.fillMaxWidth(),
+                title = "Total Earnings",
+                value = "$${String.format("%,.2f", stats.totalEarnings)}",
+                icon = Icons.Default.Payments
+            )
         }
 
         item {
-            Row(modifier = Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                Text("Recent Activity", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = TextPrimaryColor)
-                Text("View History", color = PrimaryOrange, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-            }
-        }
+            Text("Enrollments", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = TextPrimaryColor, modifier = Modifier.padding(top = 16.dp))
 
-        items(dashboardData.activities) { activity ->
-            val icon = when(activity.iconType) {
-                "comment" -> Icons.Default.ChatBubbleOutline
-                "submission" -> Icons.Default.AssignmentTurnedIn
-                else -> Icons.Default.StarBorder
-            }
-            val iconBg = when(activity.iconType) {
-                "comment" -> Color(0xFFFBE9E7)
-                "submission" -> Color(0xFFE3F2FD)
-                else -> Color(0xFFFFEBEE)
-            }
-            val iconTint = when(activity.iconType) {
-                "comment" -> PrimaryOrange
-                "submission" -> Color(0xFF1976D2)
-                else -> Color(0xFFD32F2F)
-            }
+            Card(
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = SurfaceColor)
+            ) {
+                Box(modifier = Modifier.padding(24.dp).fillMaxWidth().height(200.dp)) {
+                    if (chartData.isEmpty()) {
+                        Text("No data available", modifier = Modifier.align(Alignment.Center))
+                    } else {
+                        val maxCount = chartData.maxOfOrNull { it.count }?.toFloat()?.coerceAtLeast(1f) ?: 1f
 
-            Row(modifier = Modifier.fillMaxWidth().background(SurfaceColor, RoundedCornerShape(16.dp)).padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                Surface(shape = CircleShape, color = iconBg, modifier = Modifier.size(48.dp)) {
-                    Icon(icon, contentDescription = null, tint = iconTint, modifier = Modifier.padding(12.dp))
-                }
-                Spacer(modifier = Modifier.width(16.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(activity.title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = TextPrimaryColor)
-                    Text(activity.description, style = MaterialTheme.typography.bodySmall, color = TextSecondaryColor, lineHeight = 16.sp)
-                }
-                Text(activity.timeAgo, fontSize = 10.sp, color = TextSecondaryColor)
-            }
-        }
+                        Row(
+                            modifier = Modifier.fillMaxSize(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.Bottom
+                        ) {
+                            chartData.forEach { dataPoint ->
+                                val heightFraction = (dataPoint.count.toFloat() / maxCount)
 
-        item {
-            Text("Performance", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = TextPrimaryColor, modifier = Modifier.padding(top = 8.dp))
-            Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = SurfaceColor)) {
-                Column(modifier = Modifier.padding(24.dp)) {
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("Course Completion", color = TextPrimaryColor, fontSize = 12.sp)
-                        Text("${(dashboardData.courseCompletionRate * 100).toInt()}%", color = Color(0xFF1976D2), fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    LinearProgressIndicator(progress = { dashboardData.courseCompletionRate }, modifier = Modifier.fillMaxWidth().height(6.dp), color = Color(0xFF1976D2), trackColor = ChipUnselectedBorderColor, strokeCap = StrokeCap.Round)
-
-                    Spacer(modifier = Modifier.height(20.dp))
-
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("Student Retention", color = TextPrimaryColor, fontSize = 12.sp)
-                        Text("${(dashboardData.studentRetentionRate * 100).toInt()}%", color = Color(0xFFD32F2F), fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    LinearProgressIndicator(progress = { dashboardData.studentRetentionRate }, modifier = Modifier.fillMaxWidth().height(6.dp), color = Color(0xFFD32F2F), trackColor = ChipUnselectedBorderColor, strokeCap = StrokeCap.Round)
-
-                    Spacer(modifier = Modifier.height(24.dp))
-                    Text("You're in the top 5% of instructors this month. Keep up the high engagement!", color = TextSecondaryColor, fontSize = 12.sp, lineHeight = 16.sp)
-
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Box(modifier = Modifier.fillMaxWidth().height(200.dp).background(Color(0xFF264653), RoundedCornerShape(8.dp)), contentAlignment = Alignment.Center) {
-                        Text("Chart Area", color = Color.White)
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Text(text = dataPoint.count.toString(), fontSize = 10.sp, color = TextSecondaryColor)
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth(0.6f)
+                                            .fillMaxHeight(heightFraction.coerceAtLeast(0.05f))
+                                            .background(PrimaryOrange, RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text(text = dataPoint.month, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextPrimaryColor)
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -279,21 +221,17 @@ fun DashboardTabContent(
     }
 }
 
+// Updated Stat Card (Removed hardcoded badges for simplicity)
 @Composable
-fun DashboardStatCard(modifier: Modifier = Modifier, title: String, value: String, badgeText: String, icon: ImageVector) {
-    Card(modifier = modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = SurfaceColor)) {
+fun DashboardStatCard(modifier: Modifier = Modifier, title: String, value: String, icon: ImageVector) {
+    Card(modifier = modifier, shape = RoundedCornerShape(20.dp), colors = CardDefaults.cardColors(containerColor = SurfaceColor)) {
         Column(modifier = Modifier.padding(20.dp)) {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
-                Surface(shape = CircleShape, color = BackgroundColor, modifier = Modifier.size(40.dp)) {
-                    Icon(icon, contentDescription = null, tint = PrimaryOrange, modifier = Modifier.padding(8.dp))
-                }
-                Surface(shape = RoundedCornerShape(12.dp), color = Color(0xFFE3F2FD)) {
-                    Text(badgeText, color = Color(0xFF1976D2), fontSize = 10.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
-                }
+            Surface(shape = CircleShape, color = BackgroundColor, modifier = Modifier.size(40.dp)) {
+                Icon(icon, contentDescription = null, tint = PrimaryOrange, modifier = Modifier.padding(8.dp))
             }
             Spacer(modifier = Modifier.height(16.dp))
             Text(title, color = TextSecondaryColor, fontSize = 12.sp)
-            Text(value, fontSize = 28.sp, fontWeight = FontWeight.Bold, color = TextPrimaryColor)
+            Text(value, fontSize = 24.sp, fontWeight = FontWeight.Bold, color = TextPrimaryColor)
         }
     }
 }
