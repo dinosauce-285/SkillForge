@@ -14,6 +14,7 @@ import { DiscussionsModule } from './modules/discussions/discussions.module';
 import { QuizModule } from './modules/quiz/quiz.module';
 import { QuestionModule } from './modules/question/question.module';
 import { AnswerChoicesModule } from './modules/answer_choices/answer_choices.module';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { AnswerChoicesModule } from './modules/answer_choices/answer_choices.mod
     QuizModule,
     QuestionModule,
     AnswerChoicesModule,
+    DashboardModule,
   ],
   controllers: [],
   providers: [],

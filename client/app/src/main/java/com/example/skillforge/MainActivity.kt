@@ -59,6 +59,8 @@ import com.example.skillforge.feature.transaction.ui.TransactionScreenRoute
 import com.example.skillforge.feature.transaction.viewmodel.TransactionViewModel
 import com.example.skillforge.feature.transaction.viewmodel.TransactionViewModelFactory
 import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -265,23 +267,25 @@ class MainActivity : ComponentActivity() {
 
                                         is AppRoute.InstructorPortal -> {
                                             val portalViewModel: InstructorPortalViewModel = viewModel(
-                                                factory = InstructorPortalViewModelFactory(appContainer.courseRepository)
+                                                factory = InstructorPortalViewModelFactory(
+                                                    appContainer.courseRepository,
+                                                    appContainer.dashboardRepository
+                                                )
                                             )
 
                                             val courses by portalViewModel.courses.collectAsState()
                                             val isLoading by portalViewModel.isLoading.collectAsState()
                                             val dashboardData by portalViewModel.dashboardData.collectAsState()
-                                            val analyticsData by portalViewModel.analyticsData.collectAsState()
 
                                             LaunchedEffect(Unit) {
                                                 portalViewModel.fetchMyCourses(route.session.accessToken)
+                                                portalViewModel.fetchDashboardData(route.session.accessToken)
                                             }
 
                                             SkillforgeInstructorDashboardScreen(
                                                 courses = courses,
                                                 isLoading = isLoading,
                                                 dashboardData = dashboardData,
-                                                analyticsData = analyticsData,
                                                 onNavigateToCreateCourse = {
                                                     mainViewModel.navigateTo(AppRoute.CourseForm(route.session))
                                                 },
