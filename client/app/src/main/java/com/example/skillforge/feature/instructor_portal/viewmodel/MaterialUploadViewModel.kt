@@ -31,7 +31,6 @@ class MaterialUploadViewModel(
             _uploadState.value = UploadState.Loading
 
             try {
-                // Ép việc đọc file sang luồng nền (IO), tránh đơ app khi file quá nặng
                 val file = withContext(Dispatchers.IO) {
                     FileUtil.uriToFile(context, uri)
                 }
@@ -41,20 +40,15 @@ class MaterialUploadViewModel(
                     return@launch
                 }
 
-                println("=== BẮT ĐẦU UPLOAD ===")
-                println("Tên file: ${file.name}, Kích thước: ${file.length() / 1024} KB")
-
                 val result = withContext(Dispatchers.IO) {
                     materialRepository.uploadMaterial(token, lessonId, "", type, file)
                 }
 
                 result.onSuccess {
-                    println("=== UPLOAD THÀNH CÔNG ===")
                     _uploadState.value = UploadState.Success
                 }
                     .onFailure {
-                        println("=== UPLOAD THẤT BẠI ===")
-                        it.printStackTrace() // Lệnh này sẽ in ra NGUYÊN NHÂN LỖI THẬT SỰ
+                        it.printStackTrace()
                         _uploadState.value = UploadState.Error(it.message ?: "Upload error!")
                     }
             } catch (e: Exception) {

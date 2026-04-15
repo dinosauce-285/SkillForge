@@ -225,14 +225,13 @@ fun SkillforgeCourseManagerScreen(
                                                     onDeleteMaterial = { materialId ->
                                                         viewModel.deleteMaterial(token, courseId, materialId)
                                                     },
-                                                    // --- THÊM KHỐI LỆNH NÀY ---
+
                                                     onViewMaterial = { material ->
                                                         try {
-                                                            // Tạo một Intent để mở URL trực tiếp
+
                                                             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(material.fileUrl))
                                                             context.startActivity(intent)
                                                         } catch (e: Exception) {
-                                                            // Đề phòng trường hợp URL bị lỗi định dạng
                                                             Toast.makeText(context, "Cannot open this file", Toast.LENGTH_SHORT).show()
                                                         }
                                                     }
@@ -330,7 +329,7 @@ fun LessonItemRow(
                     MaterialItemRow(
                         material = material,
                         onDelete = { onDeleteMaterial(material.id) },
-                        onClick = { onViewMaterial(material) } // <-- THÊM DÒNG NÀY
+                        onClick = { onViewMaterial(material) }
                     )
                     if (index < lesson.materials.size - 1) {
                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
