@@ -17,5 +17,5 @@ interface MaterialApi {
         @Path("lessonId") lessonId: String,
         @Part("type") type: RequestBody,
         @Part file: MultipartBody.Part
-    ): Response<Unit> // ĐỔI 'Any' THÀNH 'Unit'
+    ): Response<Unit>
 }
