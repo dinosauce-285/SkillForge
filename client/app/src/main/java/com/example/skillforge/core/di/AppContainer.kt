@@ -44,6 +44,7 @@ import io.github.jan.supabase.auth.Auth
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.util.concurrent.TimeUnit
 
 class AppContainer(private val applicationContext: Context) {
     
@@ -68,6 +69,7 @@ class AppContainer(private val applicationContext: Context) {
 
     // Build the HTTP Client integrating both mechanisms
     private val okHttpClient = OkHttpClient.Builder()
+        .connectTimeout(60, TimeUnit.SECONDS)
         .addInterceptor(authInterceptor)
         .authenticator(tokenAuthenticator)
         .build()

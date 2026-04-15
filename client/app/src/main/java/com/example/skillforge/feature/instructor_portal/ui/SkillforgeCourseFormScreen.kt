@@ -1,5 +1,9 @@
 package com.example.skillforge.feature.instructor_portal.ui
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -18,14 +22,17 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage // Ensure Coil is imported
+import com.example.skillforge.core.utils.FileUtil // Import your FileUtil
 
-import com.example.skillforge.data.remote.CategoryDto
 import com.example.skillforge.domain.model.Category
 import com.example.skillforge.feature.instructor_portal.viewmodel.CourseFormState
+import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,14 +43,26 @@ fun SkillforgeCourseFormScreen(
     errorMessage: String? = null,
     uiState: CourseFormState = CourseFormState.Idle,
     onNavigateBack: () -> Unit = {},
-    onSaveClick: (title: String, summary: String, price: String, categoryId: String) -> Unit = { _, _, _, _ -> }
+    onSaveClick: (String, String, String, String, File?) -> Unit
 ) {
+    val context = LocalContext.current
     var courseTitle by remember { mutableStateOf("") }
     var courseSummary by remember { mutableStateOf("") }
     var coursePrice by remember { mutableStateOf("") }
     var selectedCategoryId by remember { mutableStateOf("") }
+    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
 
     var showSuccessDialog by remember { mutableStateOf(false) }
+
+    // --- PHOTO PICKER LAUNCHER ---
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia(),
+        onResult = { uri ->
+            if (uri != null) {
+                selectedImageUri = uri
+            }
+        }
+    )
 
     LaunchedEffect(uiState) {
         if (uiState is CourseFormState.Success) {
@@ -62,7 +81,6 @@ fun SkillforgeCourseFormScreen(
                         showSuccessDialog = false
                         onNavigateBack()
                     },
-                    // translated comment
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary,
                         contentColor = MaterialTheme.colorScheme.onPrimary
@@ -109,10 +127,15 @@ fun SkillforgeCourseFormScreen(
                             Text("Cancel")
                         }
                         Button(
-                            onClick = { onSaveClick(courseTitle, courseSummary, coursePrice, selectedCategoryId) },
+                            onClick = {
+                                // --- CONVERT URI TO FILE BEFORE SAVING ---
+                                val imageFile = selectedImageUri?.let { uri ->
+                                    FileUtil.uriToFile(context, uri)
+                                }
+                                onSaveClick(courseTitle, courseSummary, coursePrice, selectedCategoryId, imageFile)
+                            },
                             modifier = Modifier.weight(1f),
                             enabled = !isLoading && courseTitle.isNotBlank() && coursePrice.isNotBlank() && selectedCategoryId.isNotBlank(),
-                            // translated comment
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.primary,
                                 contentColor = MaterialTheme.colorScheme.onPrimary
@@ -141,7 +164,8 @@ fun SkillforgeCourseFormScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            // translated comment
+
+            // --- IMAGE PICKER UI ---
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -149,22 +173,37 @@ fun SkillforgeCourseFormScreen(
                     .clip(RoundedCornerShape(12.dp))
                     .background(MaterialTheme.colorScheme.surfaceVariant)
                     .border(2.dp, MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(12.dp))
-                    .clickable(enabled = !isLoading) { /* Handle image selection later */ },
+                    .clickable(enabled = !isLoading) {
+                        // LAUNCH THE PICKER
+                        photoPickerLauncher.launch(
+                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                        )
+                    },
                 contentAlignment = Alignment.Center
             ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(
-                        Icons.Default.Add,
-                        contentDescription = "Upload cover",
-                        modifier = Modifier.size(48.dp),
-                        tint = MaterialTheme.colorScheme.primary // translated comment
+                if (selectedImageUri != null) {
+                    // PREVIEW SELECTED IMAGE
+                    AsyncImage(
+                        model = selectedImageUri,
+                        contentDescription = "Selected Cover",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        "Upload Course Cover",
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Medium
-                    )
+                } else {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(
+                            Icons.Default.Add,
+                            contentDescription = "Upload cover",
+                            modifier = Modifier.size(48.dp),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            "Upload Course Cover",
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
             }
 
@@ -188,7 +227,6 @@ fun SkillforgeCourseFormScreen(
                 modifier = Modifier.fillMaxWidth(), singleLine = true, shape = RoundedCornerShape(12.dp)
             )
 
-            // translated comment
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("Category", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
 
@@ -205,7 +243,6 @@ fun SkillforgeCourseFormScreen(
                                 enabled = !isLoading,
                                 onClick = { selectedCategoryId = category.id },
                                 label = { Text(category.name) },
-                                // translated comment
                                 colors = FilterChipDefaults.filterChipColors(
                                     selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                                     selectedLabelColor = MaterialTheme.colorScheme.primary

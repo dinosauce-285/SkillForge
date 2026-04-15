@@ -319,13 +319,31 @@ fun InstructorCourseItemCard(course: CourseSummaryDto, onClick: () -> Unit) {
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize()
                 )
+
+                // --- DYNAMIC STATUS BADGE LOGIC ---
+                val statusText = course.status.uppercase()
+                val statusColor = when (statusText) {
+                    "PUBLISHED" -> Color(0xFF4CAF50) // Green
+                    "DRAFT" -> Color(0xFFFF9800)     // Orange
+                    "ARCHIVED" -> Color(0xFF9E9E9E)  // Grey
+                    else -> PrimaryOrange
+                }
+
                 Surface(
                     modifier = Modifier.align(Alignment.BottomStart).padding(12.dp),
                     shape = RoundedCornerShape(8.dp),
-                    color = PrimaryOrange
+                    color = statusColor
                 ) {
-                    Text(text = "PUBLISHED", color = SurfaceColor, fontSize = 10.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
+                    Text(
+                        text = statusText,
+                        color = SurfaceColor,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
                 }
+                // ---------------------------------
+
                 Surface(
                     modifier = Modifier.align(Alignment.TopEnd).padding(12.dp),
                     shape = RoundedCornerShape(8.dp),

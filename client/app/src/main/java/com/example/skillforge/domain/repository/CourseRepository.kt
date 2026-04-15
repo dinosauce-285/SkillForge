@@ -4,6 +4,7 @@ import com.example.skillforge.data.remote.CourseManagerDto
 import com.example.skillforge.data.remote.CourseSummaryDto
 import com.example.skillforge.domain.model.CourseDetails
 import com.example.skillforge.domain.model.CourseSummary
+import java.io.File
 
 interface CourseRepository {
     suspend fun getCourses(
@@ -19,8 +20,10 @@ interface CourseRepository {
         title: String,
         summary: String,
         price: Double,
-        categoryId: String
-    ): Result<Unit>
+        categoryId: String,
+        status: String,
+        thumbnailFile: File?
+    ): Result<CourseSummaryDto>
 
     suspend fun getCourseForManager(token: String, courseId: String): Result<CourseManagerDto>
     suspend fun getMyCourses(token: String): Result<List<CourseSummaryDto>>

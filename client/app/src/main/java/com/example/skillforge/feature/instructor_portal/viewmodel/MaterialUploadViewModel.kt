@@ -6,9 +6,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.skillforge.core.utils.FileUtil
 import com.example.skillforge.domain.repository.MaterialRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 sealed class UploadState {
     object Idle : UploadState()
@@ -28,19 +30,37 @@ class MaterialUploadViewModel(
         viewModelScope.launch {
             _uploadState.value = UploadState.Loading
 
-            val file = FileUtil.uriToFile(context, uri)
-            if (file == null) {
-                _uploadState.value = UploadState.Error("Cannot read file. Please try again.")
-                return@launch
-            }
+            try {
+                // Ép việc đọc file sang luồng nền (IO), tránh đơ app khi file quá nặng
+                val file = withContext(Dispatchers.IO) {
+                    FileUtil.uriToFile(context, uri)
+                }
 
-            materialRepository.uploadMaterial(token, lessonId, "", type, file)
-                .onSuccess {
+                if (file == null) {
+                    _uploadState.value = UploadState.Error("Cannot read file from device.")
+                    return@launch
+                }
+
+                println("=== BẮT ĐẦU UPLOAD ===")
+                println("Tên file: ${file.name}, Kích thước: ${file.length() / 1024} KB")
+
+                val result = withContext(Dispatchers.IO) {
+                    materialRepository.uploadMaterial(token, lessonId, "", type, file)
+                }
+
+                result.onSuccess {
+                    println("=== UPLOAD THÀNH CÔNG ===")
                     _uploadState.value = UploadState.Success
                 }
-                .onFailure {
-                    _uploadState.value = UploadState.Error(it.message ?: "Upload error!")
-                }
+                    .onFailure {
+                        println("=== UPLOAD THẤT BẠI ===")
+                        it.printStackTrace() // Lệnh này sẽ in ra NGUYÊN NHÂN LỖI THẬT SỰ
+                        _uploadState.value = UploadState.Error(it.message ?: "Upload error!")
+                    }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                _uploadState.value = UploadState.Error("System error: ${e.message}")
+            }
         }
     }
 
