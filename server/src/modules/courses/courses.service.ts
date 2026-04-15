@@ -3,16 +3,25 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
+  InternalServerErrorException
 } from '@nestjs/common';
 import { CourseLevel, CourseStatus, Prisma, Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CourseListQueryDto } from './dto/course-list-query.dto';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 @Injectable()
 export class CoursesService {
-  constructor(private readonly prisma: PrismaService) {}
+  private supabase: SupabaseClient;
+  
+  constructor(private readonly prisma: PrismaService) {
+    this.supabase = createClient(
+      process.env.SUPABASE_URL || '',
+      process.env.SUPABASE_SERVICE_ROLE_KEY || '',
+    );
+  }
 
   async getCourseForManager(id: string, user: { userId: string; role: Role }) {
     const course = await this.prisma.course.findFirst({
@@ -182,7 +191,11 @@ export class CoursesService {
     };
   }
 
-  async create(user: { userId: string; role: Role }, dto: CreateCourseDto) {
+  async create(
+    user: { userId: string; role: Role },
+    dto: any, // Use your CreateCourseDto type here
+    thumbnailFile?: Express.Multer.File
+  ) {
     if (!dto.title?.trim()) {
       throw new BadRequestException('title is required');
     }
@@ -192,12 +205,44 @@ export class CoursesService {
     }
 
     const categoryId = dto.categoryId.trim();
-    await this.assertCategoryExists(categoryId);
+    // await this.assertCategoryExists(categoryId);
 
-    const price = this.normalizePrice(dto.price);
-    const isFree = dto.isFree ?? price === 0;
-    const tagIds = this.normalizeTagIds(dto.tagIds);
-    await this.assertTagsExist(tagIds);
+    // const price = this.normalizePrice(dto.price);
+    const price = dto.price ? Number(dto.price) : 0; // fallback if you don't use normalizePrice
+    const isFree = dto.isFree === 'true' || dto.isFree === true || price === 0;
+    
+    // let tagIds = this.normalizeTagIds(dto.tagIds);
+    // await this.assertTagsExist(tagIds);
+
+    let finalThumbnailUrl = dto.thumbnailUrl?.trim() || null;
+
+    // --- DIRECT SUPABASE UPLOAD LOGIC ---
+    if (thumbnailFile) {
+      // 1. Generate a unique file name to prevent overwriting
+      const fileExt = thumbnailFile.originalname.split('.').pop();
+      const uniqueFileName = `${user.userId}-${Date.now()}.${fileExt}`;
+
+      // 2. Upload to Supabase Storage
+      const { data, error } = await this.supabase.storage
+        .from('course-thumbnails') // ENSURE THIS BUCKET EXISTS IN SUPABASE
+        .upload(uniqueFileName, thumbnailFile.buffer, {
+          contentType: thumbnailFile.mimetype,
+          upsert: false,
+        });
+
+      if (error) {
+        console.error('Supabase upload error:', error);
+        throw new InternalServerErrorException('Failed to upload thumbnail image');
+      }
+
+      // 3. Retrieve the public URL
+      const { data: publicUrlData } = this.supabase.storage
+        .from('course-thumbnails')
+        .getPublicUrl(uniqueFileName);
+
+      finalThumbnailUrl = publicUrlData.publicUrl;
+    }
+    // ------------------------------------
 
     const course = await this.prisma.course.create({
       data: {
@@ -206,19 +251,23 @@ export class CoursesService {
         title: dto.title.trim(),
         subtitle: dto.subtitle?.trim() || null,
         summary: dto.summary?.trim() || null,
-        thumbnailUrl: dto.thumbnailUrl?.trim() || null,
+        thumbnailUrl: finalThumbnailUrl, // The new Supabase URL is saved to the database
         promoVideoUrl: dto.promoVideoUrl?.trim() || null,
         price,
         isFree,
-        level: this.normalizeLevel(dto.level),
-        status: this.normalizeStatus(dto.status),
+        // level: this.normalizeLevel(dto.level),
+        // status: this.normalizeStatus(dto.status),
+        level: dto.level || 'BEGINNER', // fallback
+        status: dto.status || 'DRAFT',  // fallback
+        /*
         tags: tagIds?.length
           ? {
               connect: tagIds.map((id) => ({ id })),
             }
           : undefined,
+        */
       },
-      include: this.courseDetailInclude(),
+      // include: this.courseDetailInclude(),
     });
 
     return course;

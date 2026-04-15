@@ -6,9 +6,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.skillforge.core.utils.FileUtil
 import com.example.skillforge.domain.repository.MaterialRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 sealed class UploadState {
     object Idle : UploadState()
@@ -28,19 +30,31 @@ class MaterialUploadViewModel(
         viewModelScope.launch {
             _uploadState.value = UploadState.Loading
 
-            val file = FileUtil.uriToFile(context, uri)
-            if (file == null) {
-                _uploadState.value = UploadState.Error("Cannot read file. Please try again.")
-                return@launch
-            }
+            try {
+                val file = withContext(Dispatchers.IO) {
+                    FileUtil.uriToFile(context, uri)
+                }
 
-            materialRepository.uploadMaterial(token, lessonId, "", type, file)
-                .onSuccess {
+                if (file == null) {
+                    _uploadState.value = UploadState.Error("Cannot read file from device.")
+                    return@launch
+                }
+
+                val result = withContext(Dispatchers.IO) {
+                    materialRepository.uploadMaterial(token, lessonId, "", type, file)
+                }
+
+                result.onSuccess {
                     _uploadState.value = UploadState.Success
                 }
-                .onFailure {
-                    _uploadState.value = UploadState.Error(it.message ?: "Upload error!")
-                }
+                    .onFailure {
+                        it.printStackTrace()
+                        _uploadState.value = UploadState.Error(it.message ?: "Upload error!")
+                    }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                _uploadState.value = UploadState.Error("System error: ${e.message}")
+            }
         }
     }
 

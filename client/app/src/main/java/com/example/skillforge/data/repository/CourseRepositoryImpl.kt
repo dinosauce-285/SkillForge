@@ -9,6 +9,11 @@ import com.example.skillforge.domain.model.CourseSummary
 import com.example.skillforge.domain.repository.CourseRepository
 import com.example.skillforge.data.remote.CourseManagerDto
 import com.example.skillforge.data.remote.CourseSummaryDto
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
+import java.io.File
 
 class CourseRepositoryImpl(
     private val api: CourseApi,
@@ -97,21 +102,39 @@ class CourseRepositoryImpl(
     }
 
     override suspend fun createCourse(
-        token: String, title: String, summary: String, price: Double, categoryId: String
-    ): Result<Unit> {
+        token: String,
+        title: String,
+        summary: String,
+        price: Double,
+        categoryId: String,
+        status: String,
+        thumbnailFile: File?
+    ): Result<CourseSummaryDto> {
         return try {
-            val request = CreateCourseRequest(title, summary, price, categoryId)
-            val bearerToken = if (token.startsWith("Bearer ")) token else "Bearer $token"
-            val response = api.createCourse(bearerToken, request)
+            val textFields = mutableMapOf<String, okhttp3.RequestBody>()
+            val textMediaType = "text/plain".toMediaTypeOrNull()
 
-            if (response.isSuccessful) {
-                Result.success(Unit)
+            textFields["title"] = title.toRequestBody(textMediaType)
+            textFields["summary"] = summary.toRequestBody(textMediaType)
+            textFields["price"] = price.toString().toRequestBody(textMediaType)
+            textFields["categoryId"] = categoryId.toRequestBody(textMediaType)
+            textFields["status"] = status.toRequestBody(textMediaType)
+
+            var thumbnailPart: okhttp3.MultipartBody.Part? = null
+            if (thumbnailFile != null && thumbnailFile.exists()) {
+                val requestFile = thumbnailFile.asRequestBody("image/*".toMediaTypeOrNull())
+                thumbnailPart = okhttp3.MultipartBody.Part.createFormData("thumbnail", thumbnailFile.name, requestFile)
+            }
+
+            val response = api.createCourse("Bearer $token", textFields, thumbnailPart)
+
+            if (response.isSuccessful && response.body() != null) {
+                Result.success(response.body()!!)
             } else {
-                val errorBody = response.errorBody()?.string()
-                Result.failure(Exception("Server error: ${response.code()} - $errorBody"))
+                Result.failure(Exception("Upload failed: ${response.code()}"))
             }
         } catch (e: Exception) {
-            Result.failure(Exception("Network error: ${e.message}"))
+            Result.failure(e)
         }
     }
 

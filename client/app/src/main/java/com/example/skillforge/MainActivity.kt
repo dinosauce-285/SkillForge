@@ -324,9 +324,17 @@ class MainActivity : ComponentActivity() {
                                                     courseFormViewModel.resetState()
                                                     mainViewModel.navigateTo(AppRoute.InstructorPortal(route.session))
                                                 },
-                                                onSaveClick = { title, summary, price, categoryId ->
+                                                onSaveClick = { title, summary, price, categoryId, thumbnailFile -> // ADD thumbnailFile HERE
                                                     val myToken = route.session.accessToken
-                                                    courseFormViewModel.createCourse(myToken, title, summary, price, categoryId)
+                                                    courseFormViewModel.createCourse(
+                                                        token = myToken,
+                                                        title = title,
+                                                        summary = summary,
+                                                        price = price,
+                                                        categoryId = categoryId,
+                                                        status = "DRAFT",
+                                                        thumbnailFile = thumbnailFile // PASS IT TO THE VIEWMODEL
+                                                    )
                                                 }
                                             )
                                         }
