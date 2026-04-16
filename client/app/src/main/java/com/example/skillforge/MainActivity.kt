@@ -66,6 +66,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.collectAsState
 import com.example.skillforge.feature.instructor_portal.viewmodel.AccountViewModel
 import com.example.skillforge.feature.instructor_portal.viewmodel.AccountViewModelFactory
+import com.example.skillforge.feature.student_courses.viewmodel.ReviewViewModel
+import com.example.skillforge.feature.student_courses.viewmodel.ReviewViewModelFactory
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -437,6 +439,9 @@ class MainActivity : ComponentActivity() {
                                                 factory = HomeViewModelFactory(appContainer.progressRepository)
                                             )
                                             val courses by homeViewModel.uiState.collectAsState()
+                                            val reviewViewModel: ReviewViewModel = viewModel(
+                                                factory = ReviewViewModelFactory(appContainer.reviewRepository)
+                                            )
 
                                             LaunchedEffect(route.session.accessToken) {
                                                 homeViewModel.fetchDashboard(route.session.accessToken)
@@ -450,7 +455,7 @@ class MainActivity : ComponentActivity() {
                                                 onCourseClick = { courseId ->
                                                     mainViewModel.navigateTo(AppRoute.CourseCurriculum(route.session, courseId))
                                                 },
-
+                                                reviewViewModel = reviewViewModel
                                             )
                                         }
 

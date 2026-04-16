@@ -1,22 +1,30 @@
 package com.example.skillforge.feature.student_courses.ui
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.PlayCircleOutline
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -33,6 +41,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.skillforge.feature.home.viewmodel.HomeViewModel
 import com.example.skillforge.feature.home.viewmodel.HomeViewModelFactory
 import androidx.compose.ui.platform.LocalContext
+import com.example.skillforge.feature.student_courses.viewmodel.ReviewState
+import com.example.skillforge.feature.student_courses.viewmodel.ReviewViewModel
 
 sealed interface MyCoursesState {
     data object Loading : MyCoursesState
@@ -44,6 +54,7 @@ sealed interface MyCoursesState {
 @Composable
 fun MyCoursesScreen(
     token: String = "",
+    reviewViewModel: ReviewViewModel,
     onNavigateBack: () -> Unit,
     onCourseClick: (String) -> Unit,
 ) {
@@ -63,10 +74,29 @@ fun MyCoursesScreen(
     )
     val homeUiState by homeViewModel.uiState.collectAsState()
 
-    LaunchedEffect(token) {
-        if (token.isNotEmpty()) {
-            homeViewModel.fetchDashboard(token)
+    val reviewState by reviewViewModel.uiState.collectAsState()
+    var courseToReview by remember { mutableStateOf<ActiveCourse?>(null) }
+
+    LaunchedEffect(reviewState) {
+        if (reviewState is ReviewState.Success) {
+            Toast.makeText(context, "Review submitted successfully!", Toast.LENGTH_SHORT).show()
+            courseToReview = null
+            reviewViewModel.resetState()
+        } else if (reviewState is ReviewState.Error) {
+            val msg = (reviewState as ReviewState.Error).message
+            Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
+            reviewViewModel.resetState()
         }
+    }
+
+    if (courseToReview != null) {
+        CourseReviewDialog(
+            courseTitle = courseToReview!!.title,
+            onDismiss = { courseToReview = null },
+            onSubmit = { rating, review ->
+                reviewViewModel.submitReview(token, courseToReview!!.courseId, rating, review)
+            }
+        )
     }
 
     Scaffold(
@@ -142,7 +172,8 @@ fun MyCoursesScreen(
                         items(myCourses, key = { it.courseId }) { course ->
                             MyCourseCard(
                                 course = course,
-                                onClick = { onCourseClick(course.courseId) }
+                                onClick = { onCourseClick(course.courseId) },
+                                onRateClick = { courseToReview = course }
                             )
                         }
                     }
@@ -156,6 +187,7 @@ fun MyCoursesScreen(
 fun MyCourseCard(
     course: ActiveCourse,
     onClick: () -> Unit,
+    onRateClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     ElevatedCard(
@@ -174,7 +206,7 @@ fun MyCourseCard(
                 .padding(SkillforgeSpacing.medium),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Thumbnail
+            // --- Thumbnail ---
             AsyncImage(
                 model = course.thumbnailUrl,
                 placeholder = androidx.compose.ui.res.painterResource(id = com.example.skillforge.R.drawable.mock_course_thumbnail),
@@ -188,7 +220,7 @@ fun MyCourseCard(
 
             Spacer(modifier = Modifier.width(SkillforgeSpacing.medium))
 
-            // Info & Progress
+            // --- Info & Progress ---
             Column(
                 modifier = Modifier.weight(1f)
             ) {
@@ -230,6 +262,12 @@ fun MyCourseCard(
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                    } else {
+                        Text(
+                            text = "All lessons completed",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color(0xFF4CAF50)
+                        )
                     }
                 }
 
@@ -240,20 +278,36 @@ fun MyCourseCard(
 
             Spacer(modifier = Modifier.width(SkillforgeSpacing.small))
 
-            // Action button
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
-                contentAlignment = Alignment.Center
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Default.PlayCircleOutline,
-                    contentDescription = "Resume",
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(24.dp)
-                )
+                IconButton(
+                    onClick = onRateClick,
+                    modifier = Modifier.size(36.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Star,
+                        contentDescription = "Rate Course",
+                        tint = Color(0xFFFFC107),
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.PlayCircleOutline,
+                        contentDescription = "Resume",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
             }
         }
     }
@@ -278,13 +332,73 @@ fun EmptyMyCoursesState(modifier: Modifier = Modifier) {
     }
 }
 
-@Preview(name = "My Courses Screen", showBackground = true, showSystemUi = true, device = "id:pixel_6")
+//@Preview(name = "My Courses Screen", showBackground = true, showSystemUi = true, device = "id:pixel_6")
+//@Composable
+//fun MyCoursesScreenPreview() {
+//    SkillforgeTheme {
+//        MyCoursesScreen(
+//            onNavigateBack = {},
+//            onCourseClick = {},
+//        )
+//    }
+//}
+
 @Composable
-fun MyCoursesScreenPreview() {
-    SkillforgeTheme {
-        MyCoursesScreen(
-            onNavigateBack = {},
-            onCourseClick = {},
-        )
-    }
+fun CourseReviewDialog(
+    courseTitle: String,
+    onDismiss: () -> Unit,
+    onSubmit: (rating: Int, review: String) -> Unit
+) {
+    var rating by remember { mutableStateOf(0) }
+    var reviewText by remember { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Rate Course", fontWeight = FontWeight.Bold) },
+        text = {
+            Column {
+                Text(courseTitle, style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Interactive Star Rating
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    for (i in 1..5) {
+                        Icon(
+                            imageVector = if (i <= rating) Icons.Filled.Star else Icons.Outlined.StarBorder,
+                            contentDescription = "Star $i",
+                            tint = Color(0xFFFFC107), // Golden yellow
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clickable { rating = i }
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                OutlinedTextField(
+                    value = reviewText,
+                    onValueChange = { reviewText = it },
+                    label = { Text("Write your review (optional)") },
+                    modifier = Modifier.fillMaxWidth().height(100.dp),
+                    shape = RoundedCornerShape(12.dp)
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = { onSubmit(rating, reviewText) },
+                enabled = rating > 0, // Must select at least 1 star
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+            ) {
+                Text("Submit")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancel") }
+        }
+    )
 }
