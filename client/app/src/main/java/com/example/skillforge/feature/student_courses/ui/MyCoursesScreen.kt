@@ -80,8 +80,8 @@ fun MyCoursesScreen(
     LaunchedEffect(reviewState) {
         if (reviewState is ReviewState.Success) {
             Toast.makeText(context, "Review submitted successfully!", Toast.LENGTH_SHORT).show()
-            courseToReview = null // Đóng Dialog
-            reviewViewModel.resetState() // Reset để lần sau rate tiếp
+            courseToReview = null
+            reviewViewModel.resetState()
         } else if (reviewState is ReviewState.Error) {
             val msg = (reviewState as ReviewState.Error).message
             Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
@@ -244,7 +244,6 @@ fun MyCourseCard(
 
                 Spacer(modifier = Modifier.height(SkillforgeSpacing.small))
 
-                // --- TEXT TRẠNG THÁI ---
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -267,7 +266,7 @@ fun MyCourseCard(
                         Text(
                             text = "All lessons completed",
                             style = MaterialTheme.typography.labelSmall,
-                            color = Color(0xFF4CAF50) // Xanh lá cây báo hoàn thành
+                            color = Color(0xFF4CAF50)
                         )
                     }
                 }
@@ -279,12 +278,10 @@ fun MyCourseCard(
 
             Spacer(modifier = Modifier.width(SkillforgeSpacing.small))
 
-            // --- ACTION BUTTONS (Đưa nút Đánh giá lên đây) ---
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                // Nút Đánh giá (Ngôi sao vàng) - Luôn hiển thị
                 IconButton(
                     onClick = onRateClick,
                     modifier = Modifier.size(36.dp)
@@ -292,12 +289,11 @@ fun MyCourseCard(
                     Icon(
                         imageVector = Icons.Default.Star,
                         contentDescription = "Rate Course",
-                        tint = Color(0xFFFFC107), // Màu vàng Gold
+                        tint = Color(0xFFFFC107),
                         modifier = Modifier.size(28.dp)
                     )
                 }
 
-                // Nút Tiếp tục học (Play)
                 Box(
                     modifier = Modifier
                         .size(36.dp)
