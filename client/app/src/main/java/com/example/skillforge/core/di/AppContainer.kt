@@ -68,7 +68,7 @@ class AppContainer(private val applicationContext: Context) {
     }
 
     // --- Repositories ---
-    private val authRepository: AuthRepository = AuthRepositoryImpl(authApi, authPreferences, supabase)
+    val authRepository: AuthRepository = AuthRepositoryImpl(authApi, authPreferences, supabase)
     val userRepository: UserRepository = UserRepositoryImpl(userApi)
     val courseRepository: CourseRepository = CourseRepositoryImpl(courseApi)
     val categoryRepository: CategoryRepository = CategoryRepositoryImpl(categoryApi)
