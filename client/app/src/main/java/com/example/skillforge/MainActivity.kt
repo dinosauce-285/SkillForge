@@ -59,6 +59,9 @@ import com.example.skillforge.feature.transaction.ui.TransactionScreenRoute
 import com.example.skillforge.feature.transaction.viewmodel.TransactionViewModel
 import com.example.skillforge.feature.transaction.viewmodel.TransactionViewModelFactory
 import androidx.compose.foundation.layout.padding
+import com.example.skillforge.feature.profile.ui.ProfileScreen
+import com.example.skillforge.feature.profile.viewmodel.ProfileViewModel
+import com.example.skillforge.feature.profile.viewmodel.ProfileViewModelFactory
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.collectAsState
 import com.example.skillforge.feature.instructor_portal.viewmodel.AccountViewModel
@@ -102,6 +105,10 @@ class MainActivity : ComponentActivity() {
                 )
                 val mainViewModel: MainViewModel = viewModel(
                     factory = MainViewModelFactory(appContainer.checkSessionUseCase)
+                )
+
+                val profileViewModel: ProfileViewModel = viewModel(
+                    factory = ProfileViewModelFactory(appContainer)
                 )
 
                 val currentRoute by mainViewModel.uiState.collectAsState()
@@ -447,12 +454,18 @@ class MainActivity : ComponentActivity() {
                                             )
                                         }
 
-                                        is AppRoute.Profile -> StudentProfileScreen(
-                                            session = route.session,
-                                            onLogout = {
-                                                mainViewModel.navigateTo(AppRoute.Login)
-                                            }
-                                        )
+                                        is AppRoute.Profile -> {
+                                            ProfileScreen(
+                                                token = route.session.accessToken,
+                                                viewModel = profileViewModel,
+                                                onBackClick = {
+                                                    mainViewModel.navigateTo(AppRoute.Home(route.session))
+                                                },
+                                                onLogoutClick = {
+                                                    mainViewModel.navigateTo(AppRoute.Login)
+                                                }
+                                            )
+                                        }
 
                                         else -> {}
                                     }
