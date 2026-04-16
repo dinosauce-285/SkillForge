@@ -64,6 +64,8 @@ import com.example.skillforge.feature.profile.viewmodel.ProfileViewModel
 import com.example.skillforge.feature.profile.viewmodel.ProfileViewModelFactory
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.collectAsState
+import com.example.skillforge.feature.instructor_portal.viewmodel.AccountViewModel
+import com.example.skillforge.feature.instructor_portal.viewmodel.AccountViewModelFactory
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -280,6 +282,10 @@ class MainActivity : ComponentActivity() {
                                                 )
                                             )
 
+                                            val accountViewModel: AccountViewModel = viewModel(
+                                                factory = AccountViewModelFactory(appContainer.authRepository)
+                                            )
+
                                             val courses by portalViewModel.courses.collectAsState()
                                             val isLoading by portalViewModel.isLoading.collectAsState()
                                             val dashboardData by portalViewModel.dashboardData.collectAsState()
@@ -300,6 +306,7 @@ class MainActivity : ComponentActivity() {
                                                     mainViewModel.navigateTo(AppRoute.CourseManager(route.session, clickedCourseId))
                                                 },
                                                 onNavigateToUploadMaterial = { },
+                                                accountViewModel = accountViewModel,
                                                 onLogout = {
                                                     mainViewModel.navigateTo(AppRoute.Login)
                                                 }

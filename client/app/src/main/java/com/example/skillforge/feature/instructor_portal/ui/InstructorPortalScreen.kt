@@ -3,6 +3,7 @@ package com.example.skillforge.feature.instructor_portal.ui
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -16,13 +17,23 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.AssignmentTurnedIn
 import androidx.compose.material.icons.filled.ChatBubbleOutline
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Help
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material3.*
@@ -42,6 +53,9 @@ import com.example.skillforge.core.designsystem.*
 import com.example.skillforge.data.remote.CourseSummaryDto
 import com.example.skillforge.data.remote.InstructorDashboardDto
 import com.example.skillforge.data.remote.InstructorAnalyticsDto
+import com.example.skillforge.data.remote.UserInfo
+import com.example.skillforge.feature.instructor_portal.viewmodel.AccountState
+import com.example.skillforge.feature.instructor_portal.viewmodel.AccountViewModel
 
 enum class SkillforgeInstructorRoute(val title: String, val icon: ImageVector) {
     Dashboard("Dashboard", Icons.Default.Home),
@@ -55,6 +69,7 @@ enum class SkillforgeInstructorRoute(val title: String, val icon: ImageVector) {
 fun SkillforgeInstructorDashboardScreen(
     courses: List<CourseSummaryDto> = emptyList(),
     analyticsData: InstructorAnalyticsDto? = null,
+    accountViewModel: AccountViewModel,
     dashboardData: InstructorDashboardDto? = null,
     isLoading: Boolean = false,
     onNavigateToCreateCourse: () -> Unit = {},
@@ -63,6 +78,17 @@ fun SkillforgeInstructorDashboardScreen(
     onLogout: () -> Unit = {}
 ) {
     var selectedRoute by remember { mutableStateOf(SkillforgeInstructorRoute.Dashboard) }
+
+    val accountState by accountViewModel.uiState.collectAsState()
+
+    LaunchedEffect(selectedRoute) {
+        if (selectedRoute == SkillforgeInstructorRoute.Account && accountState is AccountState.Loading) {
+            accountViewModel.loadAccountInfo()
+        }
+    }
+
+    val accountInfo = (accountState as? AccountState.Success)?.userInfo
+    val isAccountLoading = accountState is AccountState.Loading
 
     Scaffold(
         topBar = { SkillforgeInstructorTopBar() },
@@ -98,12 +124,14 @@ fun SkillforgeInstructorDashboardScreen(
                     CourseListTabContent(courses, isLoading, onCourseClick)
                 }
                 SkillforgeInstructorRoute.Analytics -> {
-                    AnalyticsTabContent(analyticsData, isLoading)
+                    AnalyticsTabContent(dashboardData = dashboardData, isLoading = isLoading)
                 }
                 SkillforgeInstructorRoute.Account -> {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("Account Tab (Coming Soon)", color = TextSecondaryColor)
-                    }
+                    AccountTabContent(
+                        userInfo = accountInfo,
+                        isLoading = isAccountLoading,
+                        onLogout = onLogout
+                    )
                 }
             }
         }
@@ -374,11 +402,16 @@ fun InstructorCourseItemCard(course: CourseSummaryDto, onClick: () -> Unit) {
 }
 
 @Composable
-fun AnalyticsTabContent(analyticsData: InstructorAnalyticsDto?, isLoading: Boolean) {
-    if (isLoading || analyticsData == null) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator(color = PrimaryOrange) }
+fun AnalyticsTabContent(dashboardData: InstructorDashboardDto?, isLoading: Boolean) {
+    if (isLoading || dashboardData == null) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator(color = PrimaryOrange)
+        }
         return
     }
+
+    val stats = dashboardData.stats
+    val chartData = dashboardData.chartData
 
     LazyColumn(
         modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
@@ -388,57 +421,86 @@ fun AnalyticsTabContent(analyticsData: InstructorAnalyticsDto?, isLoading: Boole
         item {
             Spacer(modifier = Modifier.height(16.dp))
             Text("PERFORMANCE OVERSIGHT", fontSize = 12.sp, color = PrimaryOrange, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
-            Text("Institutional\nIntelligence Insight", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, color = TextPrimaryColor, lineHeight = 36.sp)
+            Text("Institutional\nIntelligence", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, color = TextPrimaryColor, lineHeight = 36.sp)
             Spacer(modifier = Modifier.height(16.dp))
         }
 
         item {
             AnalyticsMetricCard(
-                title = "Total Revenue (Monthly)",
-                value = "$${String.format("%,.0f", analyticsData.totalRevenue)}",
-                growth = "+${analyticsData.revenueGrowth}%",
+                title = "Total Revenue",
+                value = "$${String.format("%,.2f", stats.totalEarnings)}",
+                growth = "Lifetime Earnings",
                 progressColor = Color(0xFFD32F2F),
-                progress = 0.7f
-            )
-        }
-
-        item {
-            AnalyticsMetricCard(
-                title = "New Enrollments",
-                value = "${String.format("%,d", analyticsData.newEnrollments)}",
-                growth = "+${analyticsData.enrollmentsGrowth}%",
-                progressColor = Color(0xFF1976D2),
-                progress = 0.5f
-            )
-        }
-
-        item {
-            AnalyticsMetricCard(
-                title = "Student Satisfaction",
-                value = "${analyticsData.studentSatisfaction}",
-                growth = analyticsData.satisfactionRank,
-                progressColor = PrimaryOrange,
-                progress = 0.9f,
+                progress = 1.0f,
                 isGrowthPositive = true
             )
         }
 
         item {
-            Card(colors = CardDefaults.cardColors(containerColor = SurfaceColor), shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth()) {
+            AnalyticsMetricCard(
+                title = "Total Students",
+                value = "${String.format("%,d", stats.totalStudents)}",
+                growth = "Across ${stats.activeCourses} active courses",
+                progressColor = Color(0xFF1976D2),
+                progress = 0.8f,
+                isGrowthPositive = true
+            )
+        }
+
+        item {
+            Card(
+                colors = CardDefaults.cardColors(containerColor = SurfaceColor),
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+            ) {
                 Column(modifier = Modifier.padding(20.dp)) {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                         Column {
-                            Text("Revenue Dynamics", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = TextPrimaryColor)
-                            Text("Monthly fiscal progression", fontSize = 12.sp, color = TextSecondaryColor)
+                            Text("Enrollment Dynamics", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = TextPrimaryColor)
+                            Text("Monthly student acquisition", fontSize = 12.sp, color = TextSecondaryColor)
                         }
                         Surface(color = SearchBarBackgroundColor, shape = RoundedCornerShape(8.dp)) {
                             Text("Last 6 Months", fontSize = 10.sp, modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp), color = TextPrimaryColor)
                         }
                     }
-                    Spacer(modifier = Modifier.height(24.dp))
-                    Box(modifier = Modifier.fillMaxWidth().height(150.dp).background(SearchBarBackgroundColor, RoundedCornerShape(8.dp)), contentAlignment = Alignment.Center) {
-                        Text("Bar Chart Placeholder", color = TextSecondaryColor)
+
+                    Spacer(modifier = Modifier.height(32.dp))
+
+                    // --- REAL BAR CHART IMPL ---
+                    Box(modifier = Modifier.fillMaxWidth().height(180.dp)) {
+                        if (chartData.isEmpty()) {
+                            Text("No data available yet.", color = TextSecondaryColor, modifier = Modifier.align(Alignment.Center))
+                        } else {
+                            val maxCount = chartData.maxOfOrNull { it.count }?.toFloat()?.coerceAtLeast(1f) ?: 1f
+
+                            Row(
+                                modifier = Modifier.fillMaxSize(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.Bottom
+                            ) {
+                                chartData.forEach { dataPoint ->
+                                    val heightFraction = (dataPoint.count.toFloat() / maxCount)
+
+                                    Column(
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Text(text = dataPoint.count.toString(), fontSize = 10.sp, color = TextSecondaryColor, fontWeight = FontWeight.Bold)
+                                        Spacer(modifier = Modifier.height(6.dp))
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth(0.5f)
+                                                .fillMaxHeight(heightFraction.coerceAtLeast(0.05f))
+                                                .background(PrimaryOrange, RoundedCornerShape(topStart = 6.dp, topEnd = 6.dp))
+                                        )
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Text(text = dataPoint.month, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextPrimaryColor)
+                                    }
+                                }
+                            }
+                        }
                     }
+                    // ---------------------------
                 }
             }
         }
@@ -516,5 +578,121 @@ fun SkillforgeInstructorBottomBar(selectedRoute: SkillforgeInstructorRoute, onRo
                 )
             )
         }
+    }
+}
+
+@Composable
+fun AccountTabContent(
+    userInfo: UserInfo?,
+    isLoading: Boolean,
+    onLogout: () -> Unit
+) {
+    if (isLoading || userInfo == null) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator(color = PrimaryOrange)
+        }
+        return
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Spacer(modifier = Modifier.height(48.dp))
+
+        // --- AVATAR & INFO ---
+        Surface(
+            shape = CircleShape,
+            color = PrimaryOrange.copy(alpha = 0.1f),
+            modifier = Modifier.size(120.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.AccountCircle,
+                contentDescription = "Avatar",
+                tint = PrimaryOrange,
+                modifier = Modifier.fillMaxSize().padding(8.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = userInfo.fullName,
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.ExtraBold,
+            color = TextPrimaryColor
+        )
+
+        Text(
+            text = userInfo.email,
+            style = MaterialTheme.typography.bodyLarge,
+            color = TextSecondaryColor
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // ROLE BADGE
+        Surface(
+            shape = RoundedCornerShape(20.dp),
+            color = PrimaryOrange
+        ) {
+            Text(
+                text = userInfo.role.uppercase(),
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                fontSize = 12.sp,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(48.dp))
+
+        // --- MENU ACTIONS ---
+        Card(
+            colors = CardDefaults.cardColors(containerColor = SurfaceColor),
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column {
+                AccountMenuRow(icon = Icons.Default.Settings, title = "Account Settings")
+                HorizontalDivider(color = BackgroundColor)
+                AccountMenuRow(icon = Icons.Default.Lock, title = "Privacy & Security")
+                HorizontalDivider(color = BackgroundColor)
+                AccountMenuRow(icon = Icons.Default.Help, title = "Help & Support")
+            }
+        }
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        // --- LOGOUT BUTTON ---
+        Button(
+            onClick = onLogout,
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 90.dp)
+                .height(56.dp),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Text("Log Out", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+        }
+    }
+}
+
+@Composable
+fun AccountMenuRow(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { /* TODO: Navigate */ }
+            .padding(horizontal = 20.dp, vertical = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(icon, contentDescription = null, tint = TextSecondaryColor)
+        Spacer(modifier = Modifier.width(16.dp))
+        Text(text = title, fontWeight = FontWeight.SemiBold, color = TextPrimaryColor, modifier = Modifier.weight(1f))
+        Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = TextSecondaryColor, modifier = Modifier.size(16.dp))
     }
 }
