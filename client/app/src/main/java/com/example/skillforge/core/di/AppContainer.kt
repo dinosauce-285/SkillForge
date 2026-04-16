@@ -101,7 +101,7 @@ class AppContainer(private val applicationContext: Context) {
 
     // --- Repositories ---
     // Make sure to pass authPreferences into AuthRepositoryImpl
-    private val authRepository: AuthRepository = AuthRepositoryImpl(authApi, authPreferences, supabase)
+    val authRepository: AuthRepository = AuthRepositoryImpl(authApi, authPreferences, supabase)
     
     val courseRepository: CourseRepository = CourseRepositoryImpl(courseApi)
     val categoryRepository: CategoryRepository = CategoryRepositoryImpl(categoryApi)
