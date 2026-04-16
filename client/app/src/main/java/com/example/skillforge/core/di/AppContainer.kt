@@ -16,6 +16,7 @@ import com.example.skillforge.data.remote.MaterialApi
 import com.example.skillforge.data.remote.OrderApi
 import com.example.skillforge.data.remote.ProgressApi
 import com.example.skillforge.data.remote.DashboardApi
+import com.example.skillforge.data.remote.ReviewApi
 import com.example.skillforge.data.repository.AuthRepositoryImpl
 import com.example.skillforge.data.repository.CategoryRepositoryImpl
 import com.example.skillforge.data.repository.CourseRepositoryImpl
@@ -26,6 +27,7 @@ import com.example.skillforge.data.repository.LessonRepositoryImpl
 import com.example.skillforge.data.repository.MaterialRepositoryImpl
 import com.example.skillforge.data.repository.OrderRepositoryImpl
 import com.example.skillforge.data.repository.ProgressRepositoryImpl
+import com.example.skillforge.data.repository.ReviewRepositoryImpl
 import com.example.skillforge.domain.repository.AuthRepository
 import com.example.skillforge.domain.repository.CategoryRepository
 import com.example.skillforge.domain.repository.CourseRepository
@@ -36,6 +38,7 @@ import com.example.skillforge.domain.repository.LessonRepository
 import com.example.skillforge.domain.repository.MaterialRepository
 import com.example.skillforge.domain.repository.OrderRepository
 import com.example.skillforge.domain.repository.ProgressRepository
+import com.example.skillforge.domain.repository.ReviewRepository
 import com.example.skillforge.domain.usecase.CheckSessionUseCase
 import com.example.skillforge.domain.usecase.LoginUseCase
 import com.example.skillforge.domain.usecase.RegisterUseCase
@@ -99,6 +102,10 @@ class AppContainer(private val applicationContext: Context) {
         retrofit.create(MaterialApi::class.java)
     }
 
+    private val reviewApi: ReviewApi by lazy {
+        retrofit.create(ReviewApi::class.java)
+    }
+
     // --- Repositories ---
     // Make sure to pass authPreferences into AuthRepositoryImpl
     val authRepository: AuthRepository = AuthRepositoryImpl(authApi, authPreferences, supabase)
@@ -110,6 +117,7 @@ class AppContainer(private val applicationContext: Context) {
     val lessonRepository: LessonRepository = LessonRepositoryImpl(lessonApi, discussionApi)
     val orderRepository: OrderRepository = OrderRepositoryImpl(orderApi)
     val progressRepository: ProgressRepository = ProgressRepositoryImpl(progressApi)
+    val reviewRepository: ReviewRepository = ReviewRepositoryImpl(reviewApi)
     
     val materialRepository: MaterialRepository by lazy {
         MaterialRepositoryImpl(materialApi)
