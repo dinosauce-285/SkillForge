@@ -1,5 +1,17 @@
-import { Body, Controller, Post, Get, UseGuards, Request } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Post,
+  Get,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
@@ -13,7 +25,7 @@ import { Request as ExpressRequest } from 'express';
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) { }
+  constructor(private readonly authService: AuthService) {}
 
   /**
    * Public endpoint - No authentication required
@@ -58,12 +70,20 @@ export class AuthController {
    * Protected by JWT Auth Strategy
    */
   @ApiOperation({ summary: 'Get current user details' })
-  @ApiResponse({ status: 200, description: 'User details fetched successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'User details fetched successfully',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @Get('me')
-  getMe(@Request() req: ExpressRequest & { user: { userId: string, email: string, role: string } }) {
+  getMe(
+    @Request()
+    req: ExpressRequest & {
+      user: { userId: string; email: string; role: string };
+    },
+  ) {
     return this.authService.getMe(req.user.userId);
   }
 }

@@ -4,7 +4,7 @@ export const IS_PUBLIC_KEY = 'isPublic';
 
 /**
  * @Public Decorator
- * 
+ *
  * Bypasses the Global AuthGuard for specific endpoints
  * (e.g., login, register)
  */

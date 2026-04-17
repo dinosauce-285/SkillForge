@@ -4,10 +4,10 @@ export const ROLES_KEY = 'roles';
 
 /**
  * @Roles()
- * 
+ *
  * Custom decorator to define allowed roles for a specific endpoint.
  * Must be used in conjunction with RolesGuard.
- * 
+ *
  * Usage:
  * @Roles('INSTRUCTOR', 'ADMIN')
  * @UseGuards(JwtAuthGuard, RolesGuard)

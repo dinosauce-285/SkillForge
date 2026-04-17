@@ -3,14 +3,13 @@ import {
   ConflictException,
   NotFoundException,
 } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service'; 
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class FavoriteService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async addFavorite(userId: string, courseId: string) {
-    // translated comment
     const course = await this.prisma.course.findUnique({
       where: { id: courseId },
     });
@@ -18,7 +17,6 @@ export class FavoriteService {
       throw new NotFoundException('Course not found');
     }
 
-    // translated comment
     const existing = await this.prisma.favorite.findUnique({
       where: {
         userId_courseId: {

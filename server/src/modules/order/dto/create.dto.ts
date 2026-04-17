@@ -6,5 +6,5 @@ export class CreateOrderDto {
 
   @IsNumber()
   @IsPositive()
-  amount! : number;
+  amount!: number;
 }

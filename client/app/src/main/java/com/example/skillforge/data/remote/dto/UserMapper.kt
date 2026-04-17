@@ -9,6 +9,7 @@ fun ProfileResponseDTO.toDomain(): User {
         id = this.id.orEmpty(),
         email = this.email.orEmpty(),
         fullName = this.fullName.orEmpty(),
+        role = this.role.orEmpty(),
         profile = this.profile?.let { profileDto ->
             UserProfile(
                 avatarUrl = profileDto.avatarUrl,
