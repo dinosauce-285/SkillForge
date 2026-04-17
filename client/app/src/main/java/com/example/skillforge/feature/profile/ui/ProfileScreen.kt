@@ -1,5 +1,9 @@
 package com.example.skillforge.feature.profile.ui
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -16,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.skillforge.core.designsystem.BackgroundColor
@@ -27,11 +32,8 @@ import com.example.skillforge.feature.profile.ui.components.ProfileAvatarHeader
 import com.example.skillforge.feature.profile.ui.components.ProfileBasicInfoCard
 import com.example.skillforge.feature.profile.ui.components.ProfileGoalsCard
 import com.example.skillforge.feature.profile.ui.components.ProfileSkillsCard
+import com.example.skillforge.feature.profile.viewmodel.ProfileUiState
 import com.example.skillforge.feature.profile.viewmodel.ProfileViewModel
-import androidx.compose.material3.rememberTopAppBarState
-
-
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,9 +50,25 @@ fun ProfileScreen(
     var newSkillText by remember { mutableStateOf("") }
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
 
+    val context = LocalContext.current
+    val contentResolver = context.contentResolver
+
+    // Photo Picker Launcher
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia(),
+        onResult = { uri ->
+            if (uri != null) {
+                viewModel.uploadAvatar(
+                    uri = uri,
+                    contentResolver = contentResolver
+                )
+            }
+        }
+    )
+
     // Initial load trigger
     LaunchedEffect(token) {
-        viewModel.loadProfile(token)
+        viewModel.loadProfile()
     }
 
     Scaffold(
@@ -119,7 +137,7 @@ fun ProfileScreen(
                             SkillforgePrimaryButton(
                                 text = "Save Changes",
                                 onClick = {
-                                    viewModel.saveProfile(token)
+                                    viewModel.updateProfile()
                                     isEditMode = false
                                 }
                             )
@@ -129,63 +147,83 @@ fun ProfileScreen(
             }
         }
     ) { paddingValues ->
-        if (uiState.isLoading) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-            }
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(bottom = paddingValues.calculateBottomPadding()),
-                verticalArrangement = Arrangement.spacedBy(SkillforgeLayout.sectionGap),
-                contentPadding = PaddingValues(bottom = SkillforgeSpacing.xxLarge)
-            ) {
-                item {
-                    ProfileAvatarHeader(
-                        fullName = uiState.fullName,
-                        headline = "Student", // Or from state
-                        avatarUrl = uiState.avatarUrl,
-                        isEditMode = isEditMode,
-                        onEditAvatarClick = { /* Handle image pick */ }
-                    )
+        when (uiState) {
+            is ProfileUiState.Loading -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                 }
-
-                item {
-                    Column(
-                        modifier = Modifier
-                            .padding(horizontal = SkillforgeLayout.screenHorizontalPadding),
-                        verticalArrangement = Arrangement.spacedBy(SkillforgeLayout.listItemGap)
-                    ) {
-                        ProfileBasicInfoCard(
-                            fullName = uiState.fullName,
-                            onFullNameChange = { viewModel.updateFullName(it) },
-                            isEditMode = isEditMode
+            }
+            is ProfileUiState.Success -> {
+                val successState = uiState as ProfileUiState.Success
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(bottom = paddingValues.calculateBottomPadding()),
+                    verticalArrangement = Arrangement.spacedBy(SkillforgeLayout.sectionGap),
+                    contentPadding = PaddingValues(bottom = SkillforgeSpacing.xxLarge)
+                ) {
+                    item {
+                        ProfileAvatarHeader(
+                            fullName = successState.fullName,
+                            headline = successState.headline,
+                            avatarUrl = successState.avatarUrl,
+                            isEditMode = isEditMode,
+                            onEditAvatarClick = {
+                                photoPickerLauncher.launch(
+                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                )
+                            }
                         )
+                    }
 
-                        ProfileSkillsCard(
-                            skills = uiState.skills,
-                            newSkillText = newSkillText,
-                            onNewSkillChange = { newSkillText = it },
-                            onAddSkillClick = {
-                                viewModel.addSkill(newSkillText)
-                                newSkillText = ""
-                            },
-                            onRemoveSkillClick = { viewModel.removeSkill(it) },
-                            isEditMode = isEditMode
-                        )
+                    item {
+                        Column(
+                            modifier = Modifier
+                                .padding(horizontal = SkillforgeLayout.screenHorizontalPadding),
+                            verticalArrangement = Arrangement.spacedBy(SkillforgeLayout.listItemGap)
+                        ) {
+                            ProfileBasicInfoCard(
+                                fullName = successState.fullName,
+                                onFullNameChange = { viewModel.onFullNameChange(it) },
+                                isEditMode = isEditMode
+                            )
 
-                        ProfileGoalsCard(
-                            learningGoals = uiState.learningGoals,
-                            onLearningGoalsChange = { viewModel.updateLearningGoals(it) },
-                            isEditMode = isEditMode
-                        )
+                            ProfileSkillsCard(
+                                skills = successState.skills,
+                                newSkillText = newSkillText,
+                                onNewSkillChange = { newSkillText = it },
+                                onAddSkillClick = {
+                                    viewModel.addSkill(newSkillText)
+                                    newSkillText = ""
+                                },
+                                onRemoveSkillClick = { viewModel.removeSkill(it) },
+                                isEditMode = isEditMode
+                            )
+
+                            ProfileGoalsCard(
+                                learningGoals = successState.learningGoals,
+                                onLearningGoalsChange = { viewModel.onLearningGoalsChange(it) },
+                                isEditMode = isEditMode
+                            )
+                        }
                     }
                 }
             }
+            is ProfileUiState.Error -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = (uiState as ProfileUiState.Error).message,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            }
+            else -> {}
         }
     }
 }

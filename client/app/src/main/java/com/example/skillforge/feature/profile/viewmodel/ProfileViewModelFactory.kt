@@ -15,7 +15,8 @@ class ProfileViewModelFactory(
             @Suppress("UNCHECKED_CAST")
             return ProfileViewModel(
                 getProfileUseCase = appContainer.getProfileUseCase,
-                updateProfileUseCase = appContainer.updateProfileUseCase
+                updateProfileUseCase = appContainer.updateProfileUseCase,
+                updateAvatarUseCase = appContainer.updateAvatarUseCase
             ) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
