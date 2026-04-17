@@ -3,7 +3,7 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
-  InternalServerErrorException
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { CourseLevel, CourseStatus, Prisma, Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
@@ -15,7 +15,7 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 @Injectable()
 export class CoursesService {
   private supabase: SupabaseClient;
-  
+
   constructor(private readonly prisma: PrismaService) {
     this.supabase = createClient(
       process.env.SUPABASE_URL || '',
@@ -194,7 +194,7 @@ export class CoursesService {
   async create(
     user: { userId: string; role: Role },
     dto: any, // Use your CreateCourseDto type here
-    thumbnailFile?: Express.Multer.File
+    thumbnailFile?: Express.Multer.File,
   ) {
     if (!dto.title?.trim()) {
       throw new BadRequestException('title is required');
@@ -210,7 +210,7 @@ export class CoursesService {
     // const price = this.normalizePrice(dto.price);
     const price = dto.price ? Number(dto.price) : 0; // fallback if you don't use normalizePrice
     const isFree = dto.isFree === 'true' || dto.isFree === true || price === 0;
-    
+
     // let tagIds = this.normalizeTagIds(dto.tagIds);
     // await this.assertTagsExist(tagIds);
 
@@ -232,7 +232,9 @@ export class CoursesService {
 
       if (error) {
         console.error('Supabase upload error:', error);
-        throw new InternalServerErrorException('Failed to upload thumbnail image');
+        throw new InternalServerErrorException(
+          'Failed to upload thumbnail image',
+        );
       }
 
       // 3. Retrieve the public URL
@@ -258,7 +260,7 @@ export class CoursesService {
         // level: this.normalizeLevel(dto.level),
         // status: this.normalizeStatus(dto.status),
         level: dto.level || 'BEGINNER', // fallback
-        status: dto.status || 'DRAFT',  // fallback
+        status: dto.status || 'DRAFT', // fallback
         /*
         tags: tagIds?.length
           ? {

@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service'; 
+import { PrismaService } from '../prisma/prisma.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 
@@ -19,7 +19,9 @@ export class CategoriesService {
     });
 
     if (existingCategory) {
-      throw new ConflictException(`Category with name "${dto.name}" already exists`);
+      throw new ConflictException(
+        `Category with name "${dto.name}" already exists`,
+      );
     }
 
     return this.prisma.category.create({
@@ -63,14 +65,16 @@ export class CategoriesService {
 
     if (dto.name) {
       const existingCategory = await this.prisma.category.findFirst({
-        where: { 
+        where: {
           name: dto.name.trim(),
           NOT: { id }, // translated comment
         },
       });
 
       if (existingCategory) {
-        throw new ConflictException(`Category with name "${dto.name}" already exists`);
+        throw new ConflictException(
+          `Category with name "${dto.name}" already exists`,
+        );
       }
     }
 
@@ -88,7 +92,7 @@ export class CategoriesService {
     // translated comment
     if (category._count.courses > 0) {
       throw new BadRequestException(
-        `Cannot delete category "${category.name}" because it contains ${category._count.courses} course(s).`
+        `Cannot delete category "${category.name}" because it contains ${category._count.courses} course(s).`,
       );
     }
 
@@ -97,4 +101,3 @@ export class CategoriesService {
     });
   }
 }
-
