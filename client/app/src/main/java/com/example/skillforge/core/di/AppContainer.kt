@@ -92,4 +92,5 @@ class AppContainer(private val applicationContext: Context) {
     // Profile Use Cases
     val getProfileUseCase = GetProfileUseCase(userRepository)
     val updateProfileUseCase = UpdateProfileUseCase(userRepository)
+    val updateAvatarUseCase = UpdateAvatarUseCase(userRepository)
 }

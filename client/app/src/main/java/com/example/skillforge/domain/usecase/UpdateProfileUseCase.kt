@@ -8,11 +8,9 @@ class UpdateProfileUseCase(
     private val repository: UserRepository
 ) {
     suspend operator fun invoke(
-        token: String,
         request: UpdateProfileRequestDTO
     ): Result<User> {
         return repository.updateProfile(
-            token = token,
             fullName = request.fullName,
             avatarUrl = request.avatarUrl,
             skills = request.skills,

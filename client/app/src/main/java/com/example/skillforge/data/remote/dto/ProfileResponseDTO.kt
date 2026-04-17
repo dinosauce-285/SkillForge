@@ -12,6 +12,9 @@ data class ProfileResponseDTO(
     @SerializedName("fullName")
     val fullName: String?,
 
+    @SerializedName("role")
+    val role: String?,
+
     @SerializedName("profile")
     val profile: ProfileDetailDTO?
 )

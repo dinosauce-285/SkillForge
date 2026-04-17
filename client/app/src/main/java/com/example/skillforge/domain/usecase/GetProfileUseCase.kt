@@ -6,7 +6,7 @@ import com.example.skillforge.domain.repository.UserRepository
 class GetProfileUseCase(
     private val repository: UserRepository
 ) {
-    suspend operator fun invoke(token: String): Result<User> {
-        return repository.getProfile(token)
+    suspend operator fun invoke(): Result<User> {
+        return repository.getProfile()
     }
 }
