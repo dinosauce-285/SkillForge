@@ -56,7 +56,7 @@ export class CoursesController {
     @UploadedFile() thumbnail?: Express.Multer.File,
   ) {
     return this.coursesService.create(
-      { userId: user.userId, role: user.role },
+      { userId: user.id, role: user.role },
       dto,
       thumbnail,
     );
