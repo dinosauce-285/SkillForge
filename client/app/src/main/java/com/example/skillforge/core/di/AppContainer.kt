@@ -64,7 +64,6 @@ class AppContainer(private val context: Context) {
         }
     }
 
-<<<<<<< feat/quizbuilder-api
     // Network logging interceptor for debugging
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY
@@ -89,19 +88,6 @@ class AppContainer(private val context: Context) {
         .build()
 
     // Retrofit instance configured for the custom backend
-=======
-    // --- OkHttpClient Configuration ---
-    private val authInterceptor = AuthInterceptor(authPreferences)
-    private val tokenAuthenticator = TokenAuthenticator(authPreferences)
-
-    private val okHttpClient = OkHttpClient.Builder()
-        .connectTimeout(60, TimeUnit.SECONDS)
-        .addInterceptor(authInterceptor)
-        .authenticator(tokenAuthenticator)
-        .build()
-
-    // --- Retrofit Configuration ---
->>>>>>> dev
     private val retrofit = Retrofit.Builder()
         .baseUrl("http://10.0.2.2:3000/")
         .client(okHttpClient)
