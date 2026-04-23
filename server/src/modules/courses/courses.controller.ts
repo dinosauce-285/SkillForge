@@ -91,6 +91,6 @@ export class CoursesController {
   @Roles('INSTRUCTOR', 'ADMIN')
   @Get('instructor/my-courses')
   findMyCourses(@CurrentUser() user: any) {
-    return this.coursesService.findMyCourses(user.userId);
+    return this.coursesService.findMyCourses(user.id);
   }
 }
