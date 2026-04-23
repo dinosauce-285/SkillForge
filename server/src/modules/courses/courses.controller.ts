@@ -41,7 +41,7 @@ export class CoursesController {
   @UseGuards(JwtAuthGuard)
   checkEnrollmentStatus(
     @Param('id', new ParseUUIDPipe()) id: string,
-    @CurrentUser('userId') userId: string,
+    @CurrentUser('id') userId: string,
   ) {
     return this.coursesService.checkEnrollmentStatus(id, userId);
   }
@@ -56,7 +56,7 @@ export class CoursesController {
     @UploadedFile() thumbnail?: Express.Multer.File,
   ) {
     return this.coursesService.create(
-      { userId: user.userId, role: user.role },
+      { id: user.id, role: user.role },
       dto,
       thumbnail,
     );
@@ -91,6 +91,6 @@ export class CoursesController {
   @Roles('INSTRUCTOR', 'ADMIN')
   @Get('instructor/my-courses')
   findMyCourses(@CurrentUser() user: any) {
-    return this.coursesService.findMyCourses(user.userId);
+    return this.coursesService.findMyCourses(user.id);
   }
 }

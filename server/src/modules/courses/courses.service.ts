@@ -23,7 +23,7 @@ export class CoursesService {
     );
   }
 
-  async getCourseForManager(id: string, user: { userId: string; role: Role }) {
+  async getCourseForManager(id: string, user: { id: string; role: Role }) {
     const course = await this.prisma.course.findFirst({
       where: {
         id,
@@ -191,11 +191,9 @@ export class CoursesService {
     };
   }
 
-  async create(
-    user: { userId: string; role: Role },
-    dto: any, // Use your CreateCourseDto type here
-    thumbnailFile?: Express.Multer.File,
-  ) {
+
+  async create(user: { id: string; role: Role }, dto: any, thumbnailFile?: Express.Multer.File,) {
+
     if (!dto.title?.trim()) {
       throw new BadRequestException('title is required');
     }
@@ -220,7 +218,7 @@ export class CoursesService {
     if (thumbnailFile) {
       // 1. Generate a unique file name to prevent overwriting
       const fileExt = thumbnailFile.originalname.split('.').pop();
-      const uniqueFileName = `${user.userId}-${Date.now()}.${fileExt}`;
+      const uniqueFileName = `${user.id}-${Date.now()}.${fileExt}`;
 
       // 2. Upload to Supabase Storage
       const { data, error } = await this.supabase.storage
@@ -248,7 +246,7 @@ export class CoursesService {
 
     const course = await this.prisma.course.create({
       data: {
-        instructorId: user.userId,
+        instructorId: user.id,
         categoryId,
         title: dto.title.trim(),
         subtitle: dto.subtitle?.trim() || null,
@@ -277,7 +275,7 @@ export class CoursesService {
 
   async update(
     id: string,
-    user: { userId: string; role: Role },
+    user: { id: string; role: Role },
     dto: UpdateCourseDto,
   ) {
     const course = await this.prisma.course.findFirst({
@@ -354,7 +352,7 @@ export class CoursesService {
     return updatedCourse;
   }
 
-  async remove(id: string, user: { userId: string; role: Role }) {
+  async remove(id: string, user: { id: string; role: Role }) {
     const course = await this.prisma.course.findFirst({
       where: {
         id,
@@ -472,13 +470,13 @@ export class CoursesService {
 
   private assertCanManageCourse(
     courseInstructorId: string,
-    user: { userId: string; role: Role },
+    user: { id: string; role: Role },
   ) {
     if (user.role === Role.ADMIN) {
       return;
     }
 
-    if (user.role !== Role.INSTRUCTOR || courseInstructorId !== user.userId) {
+    if (user.role !== Role.INSTRUCTOR || courseInstructorId !== user.id) {
       throw new ForbiddenException('You are not allowed to manage this course');
     }
   }

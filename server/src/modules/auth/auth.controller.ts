@@ -78,12 +78,7 @@ export class AuthController {
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @Get('me')
-  getMe(
-    @Request()
-    req: ExpressRequest & {
-      user: { userId: string; email: string; role: string };
-    },
-  ) {
-    return this.authService.getMe(req.user.userId);
+  getMe(@Request() req: any) {
+    return this.authService.getMe(req.user.id);
   }
 }

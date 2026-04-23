@@ -13,14 +13,27 @@ class MainViewModel(private val checkSessionUseCase: CheckSessionUseCase) : View
     private val _uiState = MutableStateFlow<AppRoute?>(null)
     val uiState: StateFlow<AppRoute?> = _uiState
 
+    /**
+     * Verifies the current session and navigates to the appropriate screen based on verified role.
+     */
     fun checkSession() {
         viewModelScope.launch {
             val result = checkSessionUseCase()
             result.onSuccess { session ->
-                _uiState.value = if (session.user.role.equals("STUDENT", ignoreCase = true)) {
-                    AppRoute.Home(session)
-                } else {
-                    AppRoute.InstructorPortal(session)
+                val role = session.user.role.uppercase()
+                
+                when {
+                    role == "STUDENT" -> {
+                        _uiState.value = AppRoute.Home(session)
+                    }
+                    role == "INSTRUCTOR" -> {
+                        _uiState.value = AppRoute.InstructorPortal(session)
+                    }
+                    else -> {
+                        // If role is still UNKNOWN or unexpected (like "authenticated"), 
+                        // stay on Login or show an error.
+                        _uiState.value = AppRoute.Login
+                    }
                 }
             }.onFailure {
                 _uiState.value = AppRoute.Login

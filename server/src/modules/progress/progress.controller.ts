@@ -18,7 +18,7 @@ export class ProgressController {
 
   @Post('lessons/:lessonId/mark')
   markLesson(
-    @CurrentUser('userId') userId: string,
+    @CurrentUser('id') userId: string,
     @Param('lessonId', new ParseUUIDPipe()) lessonId: string,
     @Body('isCompleted') isCompleted?: boolean,
   ) {
@@ -27,13 +27,13 @@ export class ProgressController {
   }
 
   @Get('dashboard')
-  getDashboard(@CurrentUser('userId') userId: string) {
+  getDashboard(@CurrentUser('id') userId: string) {
     return this.progressService.getDashboardData(userId);
   }
 
   @Get('courses/:courseId')
   getCourseProgress(
-    @CurrentUser('userId') userId: string,
+    @CurrentUser('id') userId: string,
     @Param('courseId', new ParseUUIDPipe()) courseId: string,
   ) {
     return this.progressService.getCourseProgress(userId, courseId);

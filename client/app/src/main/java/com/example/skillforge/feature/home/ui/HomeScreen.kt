@@ -3,25 +3,17 @@ package com.example.skillforge.feature.home.ui
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.School
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.skillforge.core.designsystem.SkillforgeSpacing
 import com.example.skillforge.core.designsystem.SkillforgeTheme
-import com.example.skillforge.domain.model.ActiveCourse
 import com.example.skillforge.domain.model.HomeDashboard
 import com.example.skillforge.feature.home.ui.components.ActiveCourseList
 import com.example.skillforge.feature.home.ui.components.ContinueLearningCard
@@ -33,14 +25,14 @@ import com.example.skillforge.feature.home.viewmodel.HomeViewModel
 
 @Composable
 fun HomeScreen(
-    token: String,
+    token: String, // Kept for repository compatibility if needed
     viewModel: HomeViewModel,
     onNavigateToMyCourses: () -> Unit = {},
     onNavigateToDiscovery: () -> Unit = {}
-
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
+    // Fetch dashboard data whenever the token changes or on initial composition
     LaunchedEffect(token) {
         viewModel.fetchDashboard(token)
     }
@@ -48,7 +40,8 @@ fun HomeScreen(
     HomeScreenContent(
         uiState = uiState,
         onNavigateToMyCourses = onNavigateToMyCourses,
-        onNavigateToDiscovery = onNavigateToDiscovery
+        onNavigateToDiscovery = onNavigateToDiscovery,
+        onRetry = { viewModel.fetchDashboard(token) }
     )
 }
 
@@ -57,6 +50,7 @@ fun HomeScreenContent(
     uiState: HomeUiState,
     onNavigateToMyCourses: () -> Unit = {},
     onNavigateToDiscovery: () -> Unit = {},
+    onRetry: () -> Unit = {}
 ) {
     Scaffold(
         contentWindowInsets = WindowInsets(0.dp)
@@ -74,11 +68,20 @@ fun HomeScreenContent(
                 }
 
                 is HomeUiState.Error -> {
-                    Text(
-                        text = uiState.message,
-                        color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.align(Alignment.Center)
-                    )
+                    Column(
+                        modifier = Modifier.align(Alignment.Center).padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "Error: ${uiState.message}",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Button(onClick = onRetry) {
+                            Text("Retry")
+                        }
+                    }
                 }
 
                 is HomeUiState.Success -> {
@@ -107,7 +110,6 @@ fun HomeScreenContent(
                                 ContinueLearningCard(
                                     course = course
                                 )
-//                                Spacer(modifier = Modifier.height(SkillforgeSpacing.large))
                             }
 
                             StudentStatsRow(
@@ -133,20 +135,20 @@ fun HomeScreenContent(
 }
 
 @Preview(
-    name = "Student Dashboard - Empty",
+    name = "Student Dashboard - Success",
     showBackground = true,
     showSystemUi = true,
     device = "id:pixel_6"
 )
 @Composable
-fun HomeScreenEmptyPreview() {
+fun HomeScreenPreview() {
     SkillforgeTheme {
         HomeScreenContent(
             uiState = HomeUiState.Success(
                 dashboard = HomeDashboard(
                     studentName = "Alex",
-                    hoursSpent = 0.0,
-                    badgesEarned = 0,
+                    hoursSpent = 12.5,
+                    badgesEarned = 3,
                     courses = emptyList()
                 )
             )

@@ -61,7 +61,7 @@ fun AddQuestionScreen(
                 selectedTab = 0, // Default to Builder tab when adding a question
                 onTabSelected = {
                     if (it == 1) {
-                        // Navigate directly to Quiz Builder Settings screen
+                        // Directly navigate to Quiz Builder Settings screen
                         onNavigateToSettings()
                     }
                 }
