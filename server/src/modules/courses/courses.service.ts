@@ -218,7 +218,7 @@ export class CoursesService {
     if (thumbnailFile) {
       // 1. Generate a unique file name to prevent overwriting
       const fileExt = thumbnailFile.originalname.split('.').pop();
-      const uniqueFileName = `${user.userId}-${Date.now()}.${fileExt}`;
+      const uniqueFileName = `${user.id}-${Date.now()}.${fileExt}`;
 
       // 2. Upload to Supabase Storage
       const { data, error } = await this.supabase.storage
