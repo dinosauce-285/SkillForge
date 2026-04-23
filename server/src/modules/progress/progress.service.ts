@@ -89,10 +89,6 @@ export class ProgressService {
   }
 
   async getDashboardData(userId: string) {
-<<<<<<< feat/quizbuilder-api
-    console.log(userId);
-=======
->>>>>>> dev
     const [user, enrollments] = await Promise.all([
       this.prisma.user.findUnique({
         where: { id: userId },
