@@ -27,7 +27,7 @@ export class DiscussionsController {
   ) {
     return this.discussionsService.createDiscussion(
       lessonId,
-      user.userId,
+      user.id,
       createDiscussionDto.content,
       createDiscussionDto.parentId,
     );

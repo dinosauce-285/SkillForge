@@ -14,7 +14,7 @@ import { UpdateCourseDto } from './dto/update-course.dto';
 export class CoursesService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async getCourseForManager(id: string, user: { userId: string; role: Role }) {
+  async getCourseForManager(id: string, user: { id: string; role: Role }) {
     const course = await this.prisma.course.findFirst({
       where: {
         id,
@@ -182,7 +182,7 @@ export class CoursesService {
     };
   }
 
-  async create(user: { userId: string; role: Role }, dto: CreateCourseDto) {
+  async create(user: { id: string; role: Role }, dto: CreateCourseDto) {
     if (!dto.title?.trim()) {
       throw new BadRequestException('title is required');
     }
@@ -201,7 +201,7 @@ export class CoursesService {
 
     const course = await this.prisma.course.create({
       data: {
-        instructorId: user.userId,
+        instructorId: user.id,
         categoryId,
         title: dto.title.trim(),
         subtitle: dto.subtitle?.trim() || null,
@@ -226,7 +226,7 @@ export class CoursesService {
 
   async update(
     id: string,
-    user: { userId: string; role: Role },
+    user: { id: string; role: Role },
     dto: UpdateCourseDto,
   ) {
     const course = await this.prisma.course.findFirst({
@@ -303,7 +303,7 @@ export class CoursesService {
     return updatedCourse;
   }
 
-  async remove(id: string, user: { userId: string; role: Role }) {
+  async remove(id: string, user: { id: string; role: Role }) {
     const course = await this.prisma.course.findFirst({
       where: {
         id,
@@ -421,13 +421,13 @@ export class CoursesService {
 
   private assertCanManageCourse(
     courseInstructorId: string,
-    user: { userId: string; role: Role },
+    user: { id: string; role: Role },
   ) {
     if (user.role === Role.ADMIN) {
       return;
     }
 
-    if (user.role !== Role.INSTRUCTOR || courseInstructorId !== user.userId) {
+    if (user.role !== Role.INSTRUCTOR || courseInstructorId !== user.id) {
       throw new ForbiddenException('You are not allowed to manage this course');
     }
   }

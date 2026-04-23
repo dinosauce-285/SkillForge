@@ -1,5 +1,6 @@
 package com.example.skillforge.data.repository
 
+import android.util.Log
 import com.example.skillforge.data.remote.AuthApi
 import com.example.skillforge.data.remote.LoginRequest
 import com.example.skillforge.data.remote.RegisterRequest
@@ -13,13 +14,10 @@ import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.Google
 import io.github.jan.supabase.auth.status.SessionStatus
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
-import com.example.skillforge.data.local.AuthPreferences
 
 class AuthRepositoryImpl(
     private val api: AuthApi,
-    private val authPreferences: AuthPreferences,
     private val supabase: SupabaseClient
 ) : AuthRepository {
 
@@ -27,13 +25,14 @@ class AuthRepositoryImpl(
         when (status) {
             is SessionStatus.Authenticated -> {
                 val session = status.session
+                val userMetadata = session.user?.userMetadata
                 AuthSession(
                     accessToken = session.accessToken,
                     user = AuthUser(
                         id = session.user?.id ?: "",
                         email = session.user?.email ?: "",
-                        fullName = session.user?.userMetadata?.get("full_name")?.toString() ?: "User",
-                        role = "STUDENT" // translated comment
+                        fullName = userMetadata?.get("full_name")?.toString() ?: "User",
+                        role = "UNKNOWN" 
                     )
                 )
             }
@@ -43,32 +42,45 @@ class AuthRepositoryImpl(
 
     override suspend fun verifySession(): Result<AuthSession> {
         return try {
-            val token = authPreferences.accessToken.firstOrNull()
-            if (token.isNullOrEmpty()) {
-                return Result.failure(Exception("No token found"))
-            }
+            val session = supabase.auth.currentSessionOrNull()
+            if (session != null) {
+                val response = api.getMe()
+                if (response.isSuccessful && response.body() != null) {
+                    val userInfo = response.body()!!
+                    
+                    // DEBUG LOG: Verify full info received from Backend
+                    Log.d("AuthRepository", "--- Backend Data Received ---")
+                    Log.d("AuthRepository", "ID: ${userInfo.id}")
+                    Log.d("AuthRepository", "Email: ${userInfo.email}")
+                    Log.d("AuthRepository", "Full Name: ${userInfo.fullName}")
+                    Log.d("AuthRepository", "Role: ${userInfo.role}")
+                    Log.d("AuthRepository", "-----------------------------")
 
-            val response = api.getMe()
-            if (response.isSuccessful && response.body() != null) {
-                val userInfo = response.body()!!
-                Result.success(
-                    AuthSession(
-                        accessToken = token,
-                        user = AuthUser(
-                            id = userInfo.id,
-                            email = userInfo.email,
-                            fullName = userInfo.fullName,
-                            role = userInfo.role
+                    Result.success(
+                        AuthSession(
+                            accessToken = session.accessToken,
+                            user = AuthUser(
+                                id = userInfo.id,
+                                email = userInfo.email,
+                                fullName = userInfo.fullName,
+                                role = userInfo.role
+                            )
                         )
                     )
-                )
+                } else {
+                    Log.e("AuthRepository", "Verify session failed with code: ${response.code()}")
+                    if (response.code() == 401) {
+                        Result.failure(Exception("Unauthorized: Token rejected by backend"))
+                    } else {
+                        Result.failure(Exception("Backend verification failed"))
+                    }
+                }
             } else {
-                authPreferences.clearSession()
-                Result.failure(Exception("Session expired or unauthorized"))
+                Result.failure(Exception("No active session"))
             }
         } catch (e: Exception) {
-            authPreferences.clearSession()
-            Result.failure(Exception(e.message ?: "Network error during session verification"))
+            Log.e("AuthRepository", "Network error in verifySession: ${e.message}")
+            Result.failure(e)
         }
     }
 
@@ -77,7 +89,6 @@ class AuthRepositoryImpl(
             val response = api.login(LoginRequest(email, password))
             if (response.isSuccessful && response.body() != null) {
                 val data = response.body()!!
-                authPreferences.saveTokens(data.accessToken, data.refreshToken)
                 Result.success(
                     AuthSession(
                         accessToken = data.accessToken,
@@ -108,7 +119,7 @@ class AuthRepositoryImpl(
                 return Result.failure(Exception("Server rejected request: Code ${response.code()} - $errorBody"))
             }
         } catch (e: Exception) {
-            return Result.failure(Exception("Network/Crash error: ${e.message}"))
+            return Result.failure(Exception("Network error: ${e.message}"))
         }
     }
 

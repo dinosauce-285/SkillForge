@@ -38,7 +38,7 @@ export class CoursesController {
   @UseGuards(JwtAuthGuard)
   checkEnrollmentStatus(
     @Param('id', new ParseUUIDPipe()) id: string,
-    @CurrentUser('userId') userId: string,
+    @CurrentUser('id') userId: string,
   ) {
     return this.coursesService.checkEnrollmentStatus(id, userId);
   }

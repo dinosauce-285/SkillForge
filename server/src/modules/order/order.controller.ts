@@ -18,14 +18,14 @@ export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
   @Get()
-  async getAllByUser(@CurrentUser('userId') userId: string) {
+  async getAllByUser(@CurrentUser('id') userId: string) {
     return this.orderService.getAllByUser(userId);
   }
 
   @Get(':id')
   async getDetail(
     @Param('id') orderId: string,
-    @CurrentUser('userId') userId: string,
+    @CurrentUser('id') userId: string,
   ) {
     return this.orderService.getByOrderId(userId, orderId);
   }
@@ -33,7 +33,7 @@ export class OrderController {
   @Post()
   async create(
     @Body() createOrderDto: CreateOrderDto,
-    @CurrentUser('userId') userId: string,
+    @CurrentUser('id') userId: string,
   ) {
     return this.orderService.createOrder(userId, createOrderDto);
   }

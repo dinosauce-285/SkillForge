@@ -2,11 +2,12 @@ package com.example.skillforge.data.remote
 
 import com.example.skillforge.domain.model.HomeDashboard
 import retrofit2.http.GET
-import retrofit2.http.Header
 
 interface ProgressApi {
+    /**
+     * Fetches dashboard data. 
+     * Authorization header is automatically handled by OkHttp Interceptor.
+     */
     @GET("progress/dashboard")
-    suspend fun getDashboardProgress(
-        @Header("Authorization") token: String
-    ): HomeDashboard
+    suspend fun getDashboardProgress(): HomeDashboard
 }

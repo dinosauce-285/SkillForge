@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable, UnauthorizedException, ForbiddenException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
@@ -42,10 +47,14 @@ export class AuthService {
    * @param payload User data payload
    * @returns Tokens Object
    */
-  private async generateTokens(payload: { sub: string, email: string, role: string }) {
+  private async generateTokens(payload: {
+    sub: string;
+    email: string;
+    role: string;
+  }) {
     // Access token valid for 1d (based on default module config)
     const accessToken = await this.jwtService.signAsync(payload);
-    
+
     // Refresh token valid for 7d overriding the basic config
     const refreshToken = await this.jwtService.signAsync(payload, {
       secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
@@ -73,19 +82,24 @@ export class AuthService {
     const newUser = await this.prisma.user.create({
       data: {
         email: dto.email,
-        fullName: dto.fullName,     
+        fullName: dto.fullName,
         password: hashedPassword,
-        provider: 'LOCAL',          
-        role: 'STUDENT',            
+        provider: 'LOCAL',
+        role: 'STUDENT',
         isActive: true, // Requires email verification / admin activation normally, kept true for flow
       },
     });
 
-    const payload = { sub: newUser.id, email: newUser.email, role: newUser.role };
+    const payload = {
+      sub: newUser.id,
+      email: newUser.email,
+      role: newUser.role,
+    };
     const { accessToken, refreshToken } = await this.generateTokens(payload);
 
     return {
-      message: 'Registration successful. Please activate your account to get started.',
+      message:
+        'Registration successful. Please activate your account to get started.',
       accessToken,
       refreshToken,
       user: {
@@ -111,32 +125,39 @@ export class AuthService {
     }
 
     if (user.lockedUntil && user.lockedUntil > new Date()) {
-      const remainingTime = Math.ceil((user.lockedUntil.getTime() - Date.now()) / 1000 / 60);
+      const remainingTime = Math.ceil(
+        (user.lockedUntil.getTime() - Date.now()) / 1000 / 60,
+      );
       throw new ForbiddenException(
-        `Your account is locked due to too many failed password attempts. Please try again in ${remainingTime} minutes.`
+        `Your account is locked due to too many failed password attempts. Please try again in ${remainingTime} minutes.`,
       );
     }
 
     if (!user.isActive) {
       throw new ForbiddenException(
-        'Your account is not activated or has been locked by an administrator. Please contact support.'
+        'Your account is not activated or has been locked by an administrator. Please contact support.',
       );
     }
 
     if (!user.password && user.provider !== 'LOCAL') {
       throw new BadRequestException(
-        `This account was registered with ${user.provider}. Please sign in using ${user.provider}.`
+        `This account was registered with ${user.provider}. Please sign in using ${user.provider}.`,
       );
     }
 
-    const isPasswordValid = await bcrypt.compare(dto.password, user.password || '');
+    const isPasswordValid = await bcrypt.compare(
+      dto.password,
+      user.password || '',
+    );
 
     if (!isPasswordValid) {
       const failedAttempts = user.failedLoginAttempts + 1;
       const updateData: any = { failedLoginAttempts: failedAttempts };
 
       if (failedAttempts >= MAX_LOGIN_ATTEMPTS) {
-        updateData.lockedUntil = new Date(Date.now() + ACCOUNT_LOCK_DURATION_MS);
+        updateData.lockedUntil = new Date(
+          Date.now() + ACCOUNT_LOCK_DURATION_MS,
+        );
       }
 
       await this.prisma.user.update({
@@ -147,11 +168,11 @@ export class AuthService {
       const remainingAttempts = MAX_LOGIN_ATTEMPTS - failedAttempts;
       if (remainingAttempts > 0) {
         throw new UnauthorizedException(
-          `Incorrect email or password. ${remainingAttempts} attempts remaining before the account is locked.`
+          `Incorrect email or password. ${remainingAttempts} attempts remaining before the account is locked.`,
         );
       } else {
         throw new ForbiddenException(
-          'Your account has been locked due to too many failed password attempts. Please try again after 15 minutes.'
+          'Your account has been locked due to too many failed password attempts. Please try again after 15 minutes.',
         );
       }
     }
@@ -159,9 +180,9 @@ export class AuthService {
     if (user.failedLoginAttempts > 0) {
       await this.prisma.user.update({
         where: { id: user.id },
-        data: { 
-          failedLoginAttempts: 0, 
-          lockedUntil: null 
+        data: {
+          failedLoginAttempts: 0,
+          lockedUntil: null,
         },
       });
     }
@@ -187,7 +208,9 @@ export class AuthService {
    * @param userPayload The decoded refresh token payload
    * @returns A fresh token pair
    */
-  async refreshTokens(userPayload: JwtRefreshPayload): Promise<AuthTokensResponse> {
+  async refreshTokens(
+    userPayload: JwtRefreshPayload,
+  ): Promise<AuthTokensResponse> {
     const user = await this.prisma.user.findUnique({
       where: { id: userPayload.sub },
     });

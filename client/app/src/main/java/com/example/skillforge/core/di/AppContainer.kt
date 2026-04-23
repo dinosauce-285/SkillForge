@@ -1,10 +1,6 @@
 package com.example.skillforge.core.di
 
 import android.content.Context
-import com.example.skillforge.BuildConfig
-import com.example.skillforge.core.network.AuthInterceptor
-import com.example.skillforge.core.network.TokenAuthenticator
-import com.example.skillforge.data.local.AuthPreferences
 import com.example.skillforge.data.remote.AuthApi
 import com.example.skillforge.data.remote.CategoryApi
 import com.example.skillforge.data.remote.ChapterApi
@@ -38,16 +34,15 @@ import com.example.skillforge.domain.usecase.LoginUseCase
 import com.example.skillforge.domain.usecase.RegisterUseCase
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.auth.Auth
+import io.github.jan.supabase.auth.auth
 import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
-class AppContainer(private val applicationContext: Context) {
+class AppContainer(private val context: Context) {
     
-    // --- Local Storage ---
-    private val authPreferences = AuthPreferences(applicationContext)
-
-    // --- Supabase Client ---
+    // Supabase Client initialization
     val supabase = createSupabaseClient(
         supabaseUrl = "https://awenevlehjlpiyfxlpky.supabase.co",
         supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3ZW5ldmxlaGpscGl5ZnhscGt5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNjQ5NTksImV4cCI6MjA4OTg0MDk1OX0.XifMoJE8q8Gf_rDS1mbSGRM5E8MxnEH_M8IFbGvzauI"
@@ -58,55 +53,63 @@ class AppContainer(private val applicationContext: Context) {
         }
     }
 
-    // --- OkHttpClient Configuration ---
-    // Inject AuthPreferences into Interceptor and Authenticator
-    private val authInterceptor = AuthInterceptor(authPreferences)
-    private val tokenAuthenticator = TokenAuthenticator(authPreferences)
+    // Network logging interceptor for debugging
+    private val loggingInterceptor = HttpLoggingInterceptor().apply {
+        level = HttpLoggingInterceptor.Level.BODY
+    }
 
-    // Build the HTTP Client integrating both mechanisms
+    // OkHttpClient with automatic Authorization header injection
     private val okHttpClient = OkHttpClient.Builder()
-        .addInterceptor(authInterceptor)
-        .authenticator(tokenAuthenticator)
+        .addInterceptor(loggingInterceptor)
+        .addInterceptor { chain ->
+            val originalRequest = chain.request()
+            // Get current Supabase session
+            val session = supabase.auth.currentSessionOrNull()
+            
+            val requestBuilder = originalRequest.newBuilder()
+            // If user is logged in, attach the access token to the request
+            if (session != null) {
+                requestBuilder.header("Authorization", "Bearer ${session.accessToken}")
+            }
+            
+            chain.proceed(requestBuilder.build())
+        }
         .build()
 
-    // --- Retrofit Configuration ---
-    // Attach the custom OkHttpClient to Retrofit
+    // Retrofit instance configured for the custom backend
     private val retrofit = Retrofit.Builder()
-        .baseUrl(BuildConfig.API_BASE_URL)
+        .baseUrl("http://10.0.2.2:3000/")
         .client(okHttpClient)
         .addConverterFactory(GsonConverterFactory.create())
         .build()
 
-    // --- APIs ---
+    // --- API Definitions ---
     private val authApi = retrofit.create(AuthApi::class.java)
     private val courseApi = retrofit.create(CourseApi::class.java)
     private val categoryApi = retrofit.create(CategoryApi::class.java)
     private val chapterApi = retrofit.create(ChapterApi::class.java)
     private val favoriteApi = retrofit.create(FavoriteApi::class.java)
     private val lessonApi = retrofit.create(LessonApi::class.java)
-    private val discussionApi = retrofit.create(DiscussionApi::class.java)
-    private val orderApi = retrofit.create(OrderApi::class.java)
-    private val progressApi = retrofit.create(ProgressApi::class.java)
-    
+
     private val materialApi: MaterialApi by lazy {
         retrofit.create(MaterialApi::class.java)
     }
 
-    // --- Repositories ---
-    // Make sure to pass authPreferences into AuthRepositoryImpl
-    private val authRepository: AuthRepository = AuthRepositoryImpl(authApi, authPreferences, supabase)
-    
+    private val discussionApi = retrofit.create(DiscussionApi::class.java)
+    private val orderApi = retrofit.create(OrderApi::class.java)
+    private val progressApi = retrofit.create(ProgressApi::class.java)
+
+    // --- Repository Implementations ---
+    val authRepository: AuthRepository = AuthRepositoryImpl(authApi, supabase)
     val courseRepository: CourseRepository = CourseRepositoryImpl(courseApi)
     val categoryRepository: CategoryRepository = CategoryRepositoryImpl(categoryApi)
     val chapterRepository: ChapterRepository = ChapterRepositoryImpl(chapterApi)
     val favoriteRepository: FavoriteRepository = FavoriteRepositoryImpl(favoriteApi)
     val lessonRepository: LessonRepository = LessonRepositoryImpl(lessonApi, discussionApi)
+    val materialRepository: MaterialRepository = MaterialRepositoryImpl(materialApi)
+
     val orderRepository: OrderRepository = OrderRepositoryImpl(orderApi)
     val progressRepository: ProgressRepository = ProgressRepositoryImpl(progressApi)
-    
-    val materialRepository: MaterialRepository by lazy {
-        MaterialRepositoryImpl(materialApi)
-    }
 
     // --- Use Cases ---
     val loginUseCase = LoginUseCase(authRepository)

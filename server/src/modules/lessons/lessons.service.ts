@@ -22,7 +22,7 @@ export class LessonsService {
     );
   }
 
-  async findOne(id: string, user: { userId: string; role: Role }) {
+  async findOne(id: string, user: { id: string; role: Role }) {
     const lesson = await this.prisma.lesson.findUnique({
       where: { id },
       include: {
@@ -52,7 +52,7 @@ export class LessonsService {
       const isEnrolled = await this.prisma.enrollment.findUnique({
         where: {
           userId_courseId: {
-            userId: user.userId,
+            userId: user.id,
             courseId: lesson.chapter.courseId,
           },
         },
@@ -66,7 +66,7 @@ export class LessonsService {
         }
       }
     } else if (user.role === Role.INSTRUCTOR) {
-      if (lesson.chapter.course.instructorId !== user.userId) {
+      if (lesson.chapter.course.instructorId !== user.id) {
         throw new ForbiddenException(
           'You are not the instructor for this course',
         );
@@ -103,7 +103,7 @@ export class LessonsService {
     };
   }
 
-  async create(user: { userId: string; role: Role }, dto: CreateLessonDto) {
+  async create(user: { id: string; role: Role }, dto: CreateLessonDto) {
     await this.assertChapterOwnership(dto.chapterId, user);
 
     let orderIndex = dto.orderIndex;
@@ -126,7 +126,7 @@ export class LessonsService {
 
   async update(
     id: string,
-    user: { userId: string; role: Role },
+    user: { id: string; role: Role },
     dto: UpdateLessonDto,
   ) {
     const lesson = await this.prisma.lesson.findUnique({
@@ -149,7 +149,7 @@ export class LessonsService {
     });
   }
 
-  async remove(id: string, user: { userId: string; role: Role }) {
+  async remove(id: string, user: { id: string; role: Role }) {
     const lesson = await this.prisma.lesson.findUnique({
       where: { id },
       include: { chapter: { include: { course: true } } },
@@ -169,7 +169,7 @@ export class LessonsService {
 
   private async assertChapterOwnership(
     chapterId: string,
-    user: { userId: string; role: Role },
+    user: { id: string; role: Role },
   ) {
     const chapter = await this.prisma.chapter.findUnique({
       where: { id: chapterId },
@@ -182,10 +182,10 @@ export class LessonsService {
 
   private assertCanManage(
     instructorId: string,
-    user: { userId: string; role: Role },
+    user: { id: string; role: Role },
   ) {
     if (user.role === Role.ADMIN) return;
-    if (user.role !== Role.INSTRUCTOR || instructorId !== user.userId) {
+    if (user.role !== Role.INSTRUCTOR || instructorId !== user.id) {
       throw new ForbiddenException(
         'You are not allowed to manage this content',
       );
@@ -225,7 +225,7 @@ export class LessonsService {
     lessonId: string,
     type: string,
     file: Express.Multer.File,
-    user: { userId: string; role: Role },
+    user: { id: string; role: Role },
   ) {
     if (!file) {
       throw new BadRequestException('No file attached!');
@@ -249,7 +249,7 @@ export class LessonsService {
       }
 
       // Verify user is the course instructor
-      if (lesson.chapter.course.instructorId !== user.userId) {
+      if (lesson.chapter.course.instructorId !== user.id) {
         throw new ForbiddenException(
           'You are not the instructor for this course',
         );

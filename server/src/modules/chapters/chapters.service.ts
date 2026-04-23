@@ -12,7 +12,7 @@ import { UpdateChapterDto } from './dto/update-chapter.dto';
 export class ChaptersService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(user: { userId: string; role: Role }, dto: CreateChapterDto) {
+  async create(user: { id: string; role: Role }, dto: CreateChapterDto) {
     await this.assertCourseOwnership(dto.courseId, user);
 
     let orderIndex = dto.orderIndex;
@@ -36,7 +36,7 @@ export class ChaptersService {
 
   async update(
     id: string,
-    user: { userId: string; role: Role },
+    user: { id: string; role: Role },
     dto: UpdateChapterDto,
   ) {
     const chapter = await this.prisma.chapter.findUnique({
@@ -59,7 +59,7 @@ export class ChaptersService {
     });
   }
 
-  async remove(id: string, user: { userId: string; role: Role }) {
+  async remove(id: string, user: { id: string; role: Role }) {
     const chapter = await this.prisma.chapter.findUnique({
       where: { id },
       include: { course: true },
@@ -80,7 +80,7 @@ export class ChaptersService {
 
   private async assertCourseOwnership(
     courseId: string,
-    user: { userId: string; role: Role },
+    user: { id: string; role: Role },
   ) {
     const course = await this.prisma.course.findUnique({
       where: { id: courseId },
@@ -93,10 +93,10 @@ export class ChaptersService {
 
   private assertCanManage(
     instructorId: string,
-    user: { userId: string; role: Role },
+    user: { id: string; role: Role },
   ) {
     if (user.role === Role.ADMIN) return;
-    if (user.role !== Role.INSTRUCTOR || instructorId !== user.userId) {
+    if (user.role !== Role.INSTRUCTOR || instructorId !== user.id) {
       throw new ForbiddenException(
         'You are not allowed to manage this content',
       );

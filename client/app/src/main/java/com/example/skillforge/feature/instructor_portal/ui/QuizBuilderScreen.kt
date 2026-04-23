@@ -43,7 +43,7 @@ fun QuizBuilderScreen(
     // Manage selected tab using initialTab
     var selectedTab by remember { mutableStateOf(initialTab) }
 
-    // Synchronize tab state if initialTab changes from outside
+    // Synchronize tab state if initialTab changes from outside navigation
     LaunchedEffect(initialTab) {
         selectedTab = initialTab
     }
@@ -57,6 +57,7 @@ fun QuizBuilderScreen(
 
     val lazyListState = rememberLazyListState()
     val reorderableLazyListState = rememberReorderableLazyListState(lazyListState) { from, to ->
+        // The questions section starts after 4 header items
         val headerOffset = 4
         val fromIndex = from.index - headerOffset
         val toIndex = to.index - headerOffset
@@ -108,7 +109,7 @@ fun QuizBuilderScreen(
                 contentPadding = PaddingValues(24.dp),
                 verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
-                // Creation Suite Items
+                // Index 0: Creation Suite Header
                 item {
                     Column {
                         Text(text = "CREATION SUITE", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = PrimaryOrange, letterSpacing = 2.sp)
@@ -117,6 +118,7 @@ fun QuizBuilderScreen(
                     }
                 }
 
+                // Index 1: Inputs
                 item {
                     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                         QuizInput(label = "Title of Assessment", value = quizTitle, onValueChange = { quizTitle = it }, placeholder = "e.g. Advanced Macroeconomics Final")
@@ -124,6 +126,7 @@ fun QuizBuilderScreen(
                     }
                 }
 
+                // Index 2: List Header
                 item {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Bottom) {
                         Text("Curated Questions", fontWeight = FontWeight.Bold, fontSize = 20.sp)
@@ -131,6 +134,7 @@ fun QuizBuilderScreen(
                     }
                 }
 
+                // Index 3: Append Button
                 item {
                     OutlinedButton(
                         onClick = onAddQuestionClick,
@@ -148,11 +152,12 @@ fun QuizBuilderScreen(
                     }
                 }
 
+                // Index 4 and onwards: Questions
                 itemsIndexed(questions, key = { _, item -> item.id }) { index, question ->
                     ReorderableItem(reorderableLazyListState, key = question.id) { isDragging ->
                         val elevation by animateDpAsState(if (isDragging) 8.dp else 0.dp)
                         Surface(
-                            modifier = Modifier.fillMaxWidth().longPressDraggableHandle(),
+                            modifier = Modifier.fillMaxWidth().longPressDraggableHandle(), // Long press to start dragging
                             shadowElevation = elevation,
                             shape = RoundedCornerShape(16.dp),
                             color = Color.Transparent
@@ -244,7 +249,7 @@ fun QuestionCard(number: Int, data: QuestionData) {
 
 @Composable
 fun Badge(text: String) {
-    Surface(color = Color(0xFFF3F3F4), shape = RoundedCornerShape(100.dp)) {
+    Surface(color = Color(0xFFF3F3F4), shape = RoundedCornerShape(100.dp) ) {
         Text(text = text, modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp), fontSize = 9.sp, fontWeight = FontWeight.Bold, color = Color.Gray)
     }
 }
