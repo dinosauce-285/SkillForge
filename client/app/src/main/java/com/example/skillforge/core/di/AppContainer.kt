@@ -102,28 +102,19 @@ class AppContainer(private val context: Context) {
     private val chapterApi = retrofit.create(ChapterApi::class.java)
     private val favoriteApi = retrofit.create(FavoriteApi::class.java)
     private val lessonApi = retrofit.create(LessonApi::class.java)
-<<<<<<< feat/quizbuilder-api
 
-=======
     private val discussionApi = retrofit.create(DiscussionApi::class.java)
     private val orderApi = retrofit.create(OrderApi::class.java)
     private val progressApi = retrofit.create(ProgressApi::class.java)
 
     private val dashboardApi= retrofit.create(DashboardApi::class.java)
     
->>>>>>> dev
+
     private val materialApi: MaterialApi by lazy {
         retrofit.create(MaterialApi::class.java)
     }
 
-<<<<<<< feat/quizbuilder-api
-    private val discussionApi = retrofit.create(DiscussionApi::class.java)
-    private val orderApi = retrofit.create(OrderApi::class.java)
-    private val progressApi = retrofit.create(ProgressApi::class.java)
 
-    // --- Repository Implementations ---
-    val authRepository: AuthRepository = AuthRepositoryImpl(authApi, supabase)
-=======
     private val reviewApi: ReviewApi by lazy {
         retrofit.create(ReviewApi::class.java)
     }
@@ -131,7 +122,6 @@ class AppContainer(private val context: Context) {
     // --- Repositories ---
     val authRepository: AuthRepository = AuthRepositoryImpl(authApi, authPreferences, supabase)
     val userRepository: UserRepository = UserRepositoryImpl(userApi)
->>>>>>> dev
     val courseRepository: CourseRepository = CourseRepositoryImpl(courseApi)
     val categoryRepository: CategoryRepository = CategoryRepositoryImpl(categoryApi)
     val chapterRepository: ChapterRepository = ChapterRepositoryImpl(chapterApi)
@@ -141,14 +131,12 @@ class AppContainer(private val context: Context) {
 
     val orderRepository: OrderRepository = OrderRepositoryImpl(orderApi)
     val progressRepository: ProgressRepository = ProgressRepositoryImpl(progressApi)
-<<<<<<< feat/quizbuilder-api
-=======
     val reviewRepository: ReviewRepository = ReviewRepositoryImpl(reviewApi)
     
     val materialRepository: MaterialRepository by lazy {
         MaterialRepositoryImpl(materialApi)
     }
->>>>>>> dev
+
 
     val dashboardRepository: DashboardRepository = DashboardRepositoryImpl(dashboardApi)
 
@@ -156,12 +144,11 @@ class AppContainer(private val context: Context) {
     val loginUseCase = LoginUseCase(authRepository)
     val registerUseCase = RegisterUseCase(authRepository)
     val checkSessionUseCase = CheckSessionUseCase(authRepository)
-<<<<<<< feat/quizbuilder-api
-=======
+
     
     // Profile Use Cases
     val getProfileUseCase = GetProfileUseCase(userRepository)
     val updateProfileUseCase = UpdateProfileUseCase(userRepository)
     val updateAvatarUseCase = UpdateAvatarUseCase(userRepository)
->>>>>>> dev
+
 }
