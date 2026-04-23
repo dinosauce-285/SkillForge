@@ -62,9 +62,7 @@ import com.example.skillforge.feature.transaction.ui.TransactionScreenRoute
 import com.example.skillforge.feature.transaction.viewmodel.TransactionViewModel
 import com.example.skillforge.feature.transaction.viewmodel.TransactionViewModelFactory
 import androidx.compose.foundation.layout.padding
-<<<<<<< feat/quizbuilder-api
 import io.github.jan.supabase.auth.handleDeeplinks
-=======
 import com.example.skillforge.feature.profile.ui.ProfileScreen
 import com.example.skillforge.feature.profile.viewmodel.ProfileViewModel
 import com.example.skillforge.feature.profile.viewmodel.ProfileViewModelFactory
@@ -74,7 +72,6 @@ import com.example.skillforge.feature.instructor_portal.viewmodel.AccountViewMod
 import com.example.skillforge.feature.instructor_portal.viewmodel.AccountViewModelFactory
 import com.example.skillforge.feature.student_courses.viewmodel.ReviewViewModel
 import com.example.skillforge.feature.student_courses.viewmodel.ReviewViewModelFactory
->>>>>>> dev
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -339,11 +336,9 @@ class MainActivity : ComponentActivity() {
                                     is AppRoute.MyCourses -> {
                                         MyCoursesScreen(
                                             token = route.session.accessToken,
-<<<<<<< feat/quizbuilder-api
                                             onNavigateBack = { mainViewModel.navigateTo(AppRoute.StudentCourseListing(route.session)) },
                                             onCourseClick = { cId -> mainViewModel.navigateTo(AppRoute.CourseCurriculum(route.session, cId)) },
                                         )
-=======
                                             viewModel = transactionViewModel,
                                             onBackClick = {
                                                 mainViewModel.navigateTo(AppRoute.StudentCourseDetails(route.session, route.courseId))
@@ -564,7 +559,6 @@ class MainActivity : ComponentActivity() {
                                         }
 
                                         else -> {}
->>>>>>> dev
                                     }
                                     is AppRoute.Profile -> StudentProfileScreen(
                                         session = route.session,
