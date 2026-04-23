@@ -1,11 +1,16 @@
 package com.example.skillforge.data.remote
 
 import com.google.gson.annotations.SerializedName
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
+import retrofit2.http.Multipart
 import retrofit2.http.POST
+import retrofit2.http.Part
+import retrofit2.http.PartMap
 import retrofit2.http.Path
 import retrofit2.http.Query // translated comment
 
@@ -27,6 +32,7 @@ data class CourseSummaryDto(
     val category: CourseCategoryDto,
     val instructor: CourseInstructorDto,
     val tags: List<CourseTagDto>,
+    val status: String,
     @SerializedName("_count") val counts: CourseCountDto,
 )
 
@@ -79,6 +85,13 @@ data class CourseChapterDto(
     val lessons: List<CourseLessonDto>,
 )
 
+data class MaterialDto(
+    val id: String,
+    val title: String,
+    val type: String, // e.g., "VIDEO", "PDF", "DOCUMENT"
+    val url: String? = null
+)
+
 data class CourseLessonDto(
     val id: String,
     val title: String,
@@ -118,11 +131,13 @@ interface CourseApi {
         @Header("Authorization") token: String
     ): Response<EnrollmentStatusDto>
 
+    @Multipart
     @POST("courses")
     suspend fun createCourse(
         @Header("Authorization") token: String,
-        @Body request: CreateCourseRequest
-    ): Response<CreateCourseResponse>
+        @PartMap textFields: Map<String, @JvmSuppressWildcards RequestBody>,
+        @Part thumbnail: MultipartBody.Part?
+    ): Response<CourseSummaryDto>
 
     @GET("courses/{id}/manager")
     suspend fun getCourseForManager(

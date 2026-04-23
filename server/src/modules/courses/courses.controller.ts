@@ -10,6 +10,8 @@ import {
   Query,
   Request,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import { CoursesService } from './courses.service';
 import { CourseListQueryDto } from './dto/course-list-query.dto';
@@ -19,6 +21,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('courses')
 export class CoursesController {
@@ -43,11 +46,20 @@ export class CoursesController {
     return this.coursesService.checkEnrollmentStatus(id, userId);
   }
 
-  @Roles('INSTRUCTOR', 'ADMIN')
-  @UseGuards(JwtAuthGuard, RolesGuard)
   @Post()
-  create(@Request() req, @Body() dto: CreateCourseDto) {
-    return this.coursesService.create(req.user, dto);
+  @Roles('INSTRUCTOR', 'ADMIN') // Ensure only instructors and admins can create courses
+  @UseGuards(JwtAuthGuard, RolesGuard) // Add the authentication guards here
+  @UseInterceptors(FileInterceptor('thumbnail'))
+  async createCourse(
+    @CurrentUser() user: any,
+    @Body() dto: CreateCourseDto,
+    @UploadedFile() thumbnail?: Express.Multer.File,
+  ) {
+    return this.coursesService.create(
+      { userId: user.userId, role: user.role },
+      dto,
+      thumbnail,
+    );
   }
 
   @Roles('INSTRUCTOR', 'ADMIN')

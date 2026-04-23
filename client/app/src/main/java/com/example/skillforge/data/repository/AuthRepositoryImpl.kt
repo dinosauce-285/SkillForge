@@ -15,6 +15,8 @@ import io.github.jan.supabase.auth.providers.Google
 import io.github.jan.supabase.auth.status.SessionStatus
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import com.example.skillforge.data.local.AuthPreferences
+import com.example.skillforge.data.remote.UserInfo
 
 class AuthRepositoryImpl(
     private val api: AuthApi,
@@ -133,5 +135,18 @@ class AuthRepositoryImpl(
             val json = Gson().fromJson(rawError, JsonObject::class.java)
             json.get("message")?.asString ?: "Login failed"
         }.getOrElse { "Login failed" }
+    }
+
+    override suspend fun getMe(): Result<UserInfo> {
+        return try {
+            val response = api.getMe()
+            if (response.isSuccessful && response.body() != null) {
+                Result.success(response.body()!!)
+            } else {
+                Result.failure(Exception("Failed to load account details: ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 }

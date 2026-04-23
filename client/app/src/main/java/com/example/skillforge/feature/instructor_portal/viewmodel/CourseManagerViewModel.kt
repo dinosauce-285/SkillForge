@@ -67,4 +67,14 @@ class CourseManagerViewModel(
                 .onFailure { /* Optional: add error logging */ }
         }
     }
+
+    fun deleteMaterial(token: String, courseId: String, materialId: String) {
+        viewModelScope.launch {
+            // Assuming you have a deleteMaterial endpoint in your repository
+            // repository.deleteMaterial(token, materialId).onSuccess { ... }
+
+            // After successful deletion, reload the structure so the UI updates
+            loadCourseStructure(token, courseId)
+        }
+    }
 }

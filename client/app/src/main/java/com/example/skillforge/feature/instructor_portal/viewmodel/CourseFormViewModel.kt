@@ -8,6 +8,7 @@ import com.example.skillforge.domain.repository.CourseRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import java.io.File
 
 // translated comment
 sealed class CourseFormState {
@@ -43,12 +44,30 @@ class CourseFormViewModel(
         }
     }
 
-    fun createCourse(token: String, title: String, summary: String, price: String, categoryId: String) {
+    fun createCourse(
+        token: String,
+        title: String,
+        summary: String,
+        price: String,
+        categoryId: String,
+        status: String = "DRAFT", // Added with a default value
+        thumbnailFile: File? = null // Added with a default value
+    ) {
         viewModelScope.launch {
             _uiState.value = CourseFormState.Loading
             try {
                 val priceValue = price.toDoubleOrNull() ?: 0.0
-                val result = repository.createCourse(token, title, summary, priceValue, categoryId)
+
+                // Call repository with explicit parameter mapping to prevent mismatch
+                val result = repository.createCourse(
+                    token = token,
+                    title = title,
+                    summary = summary,
+                    price = priceValue,
+                    categoryId = categoryId,
+                    status = status,
+                    thumbnailFile = thumbnailFile
+                )
 
                 result.fold(
                     onSuccess = { _uiState.value = CourseFormState.Success },

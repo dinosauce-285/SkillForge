@@ -11,27 +11,37 @@ import com.example.skillforge.data.remote.LessonApi
 import com.example.skillforge.data.remote.MaterialApi
 import com.example.skillforge.data.remote.OrderApi
 import com.example.skillforge.data.remote.ProgressApi
+import com.example.skillforge.data.remote.DashboardApi
+import com.example.skillforge.data.remote.ReviewApi
 import com.example.skillforge.data.repository.AuthRepositoryImpl
 import com.example.skillforge.data.repository.CategoryRepositoryImpl
 import com.example.skillforge.data.repository.CourseRepositoryImpl
 import com.example.skillforge.data.repository.ChapterRepositoryImpl
+import com.example.skillforge.data.repository.DashboardRepositoryImpl
 import com.example.skillforge.data.repository.FavoriteRepositoryImpl
 import com.example.skillforge.data.repository.LessonRepositoryImpl
 import com.example.skillforge.data.repository.MaterialRepositoryImpl
 import com.example.skillforge.data.repository.OrderRepositoryImpl
 import com.example.skillforge.data.repository.ProgressRepositoryImpl
+import com.example.skillforge.data.repository.ReviewRepositoryImpl
 import com.example.skillforge.domain.repository.AuthRepository
 import com.example.skillforge.domain.repository.CategoryRepository
 import com.example.skillforge.domain.repository.CourseRepository
 import com.example.skillforge.domain.repository.ChapterRepository
+import com.example.skillforge.domain.repository.DashboardRepository
 import com.example.skillforge.domain.repository.FavoriteRepository
 import com.example.skillforge.domain.repository.LessonRepository
 import com.example.skillforge.domain.repository.MaterialRepository
 import com.example.skillforge.domain.repository.OrderRepository
 import com.example.skillforge.domain.repository.ProgressRepository
+import com.example.skillforge.domain.repository.ReviewRepository
 import com.example.skillforge.domain.usecase.CheckSessionUseCase
 import com.example.skillforge.domain.usecase.LoginUseCase
 import com.example.skillforge.domain.usecase.RegisterUseCase
+import com.example.skillforge.data.remote.*
+import com.example.skillforge.data.repository.*
+import com.example.skillforge.domain.repository.*
+import com.example.skillforge.domain.usecase.*
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.auth.auth
@@ -39,6 +49,7 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.util.concurrent.TimeUnit
 
 class AppContainer(private val context: Context) {
     
@@ -53,6 +64,7 @@ class AppContainer(private val context: Context) {
         }
     }
 
+<<<<<<< feat/quizbuilder-api
     // Network logging interceptor for debugging
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY
@@ -77,6 +89,19 @@ class AppContainer(private val context: Context) {
         .build()
 
     // Retrofit instance configured for the custom backend
+=======
+    // --- OkHttpClient Configuration ---
+    private val authInterceptor = AuthInterceptor(authPreferences)
+    private val tokenAuthenticator = TokenAuthenticator(authPreferences)
+
+    private val okHttpClient = OkHttpClient.Builder()
+        .connectTimeout(60, TimeUnit.SECONDS)
+        .addInterceptor(authInterceptor)
+        .authenticator(tokenAuthenticator)
+        .build()
+
+    // --- Retrofit Configuration ---
+>>>>>>> dev
     private val retrofit = Retrofit.Builder()
         .baseUrl("http://10.0.2.2:3000/")
         .client(okHttpClient)
@@ -85,22 +110,42 @@ class AppContainer(private val context: Context) {
 
     // --- API Definitions ---
     private val authApi = retrofit.create(AuthApi::class.java)
+    private val userApi = retrofit.create(UserApi::class.java)
     private val courseApi = retrofit.create(CourseApi::class.java)
     private val categoryApi = retrofit.create(CategoryApi::class.java)
     private val chapterApi = retrofit.create(ChapterApi::class.java)
     private val favoriteApi = retrofit.create(FavoriteApi::class.java)
     private val lessonApi = retrofit.create(LessonApi::class.java)
+<<<<<<< feat/quizbuilder-api
 
+=======
+    private val discussionApi = retrofit.create(DiscussionApi::class.java)
+    private val orderApi = retrofit.create(OrderApi::class.java)
+    private val progressApi = retrofit.create(ProgressApi::class.java)
+
+    private val dashboardApi= retrofit.create(DashboardApi::class.java)
+    
+>>>>>>> dev
     private val materialApi: MaterialApi by lazy {
         retrofit.create(MaterialApi::class.java)
     }
 
+<<<<<<< feat/quizbuilder-api
     private val discussionApi = retrofit.create(DiscussionApi::class.java)
     private val orderApi = retrofit.create(OrderApi::class.java)
     private val progressApi = retrofit.create(ProgressApi::class.java)
 
     // --- Repository Implementations ---
     val authRepository: AuthRepository = AuthRepositoryImpl(authApi, supabase)
+=======
+    private val reviewApi: ReviewApi by lazy {
+        retrofit.create(ReviewApi::class.java)
+    }
+
+    // --- Repositories ---
+    val authRepository: AuthRepository = AuthRepositoryImpl(authApi, authPreferences, supabase)
+    val userRepository: UserRepository = UserRepositoryImpl(userApi)
+>>>>>>> dev
     val courseRepository: CourseRepository = CourseRepositoryImpl(courseApi)
     val categoryRepository: CategoryRepository = CategoryRepositoryImpl(categoryApi)
     val chapterRepository: ChapterRepository = ChapterRepositoryImpl(chapterApi)
@@ -110,9 +155,27 @@ class AppContainer(private val context: Context) {
 
     val orderRepository: OrderRepository = OrderRepositoryImpl(orderApi)
     val progressRepository: ProgressRepository = ProgressRepositoryImpl(progressApi)
+<<<<<<< feat/quizbuilder-api
+=======
+    val reviewRepository: ReviewRepository = ReviewRepositoryImpl(reviewApi)
+    
+    val materialRepository: MaterialRepository by lazy {
+        MaterialRepositoryImpl(materialApi)
+    }
+>>>>>>> dev
+
+    val dashboardRepository: DashboardRepository = DashboardRepositoryImpl(dashboardApi)
 
     // --- Use Cases ---
     val loginUseCase = LoginUseCase(authRepository)
     val registerUseCase = RegisterUseCase(authRepository)
     val checkSessionUseCase = CheckSessionUseCase(authRepository)
+<<<<<<< feat/quizbuilder-api
+=======
+    
+    // Profile Use Cases
+    val getProfileUseCase = GetProfileUseCase(userRepository)
+    val updateProfileUseCase = UpdateProfileUseCase(userRepository)
+    val updateAvatarUseCase = UpdateAvatarUseCase(userRepository)
+>>>>>>> dev
 }

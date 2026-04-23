@@ -18,7 +18,7 @@ class MaterialRepositoryImpl(
         title: String,
         type: String,
         file: File
-    ): Result<Any> {
+    ): Result<Unit> { // <-- Updated to Result<Unit>
         return try {
             val typeBody = type.toRequestBody("text/plain".toMediaTypeOrNull())
 
@@ -37,7 +37,7 @@ class MaterialRepositoryImpl(
             val response = api.uploadMaterial("Bearer $token", lessonId, typeBody, fileBody)
 
             if (response.isSuccessful) {
-                Result.success(response.body() ?: Any())
+                Result.success(Unit) // <-- Updated to Unit
             } else {
                 Result.failure(Exception("Upload failed: Error ${response.code()}"))
             }

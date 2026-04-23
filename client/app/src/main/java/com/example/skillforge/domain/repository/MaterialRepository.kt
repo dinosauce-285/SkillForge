@@ -9,5 +9,5 @@ interface MaterialRepository {
         title: String,
         type: String,
         file: File
-    ): Result<Any>
+    ): Result<Unit>
 }
