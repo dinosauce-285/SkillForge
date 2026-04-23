@@ -430,7 +430,7 @@ class MainActivity : ComponentActivity() {
                                         
                                         MyCoursesScreen(
                                             token = route.session.accessToken,
-                                            viewModel = reviewViewModel,
+                                            reviewViewModel = reviewViewModel, 
                                             onNavigateBack = { mainViewModel.navigateTo(AppRoute.StudentCourseListing(route.session)) },
                                             onCourseClick = { cId -> mainViewModel.navigateTo(AppRoute.CourseCurriculum(route.session, cId)) },
                                         )
