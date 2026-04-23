@@ -191,15 +191,9 @@ export class CoursesService {
     };
   }
 
-<<<<<<< feat/quizbuilder-api
-  async create(user: { id: string; role: Role }, dto: CreateCourseDto) {
-=======
-  async create(
-    user: { userId: string; role: Role },
-    dto: any, // Use your CreateCourseDto type here
-    thumbnailFile?: Express.Multer.File,
-  ) {
->>>>>>> dev
+
+  async create(user: { id: string; role: Role }, dto: any, thumbnailFile?: Express.Multer.File,) {
+
     if (!dto.title?.trim()) {
       throw new BadRequestException('title is required');
     }
