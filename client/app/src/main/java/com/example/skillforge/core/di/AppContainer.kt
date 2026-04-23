@@ -109,11 +109,9 @@ class AppContainer(private val context: Context) {
 
     private val dashboardApi= retrofit.create(DashboardApi::class.java)
     
-
     private val materialApi: MaterialApi by lazy {
         retrofit.create(MaterialApi::class.java)
     }
-
 
     private val reviewApi: ReviewApi by lazy {
         retrofit.create(ReviewApi::class.java)
@@ -127,24 +125,18 @@ class AppContainer(private val context: Context) {
     val chapterRepository: ChapterRepository = ChapterRepositoryImpl(chapterApi)
     val favoriteRepository: FavoriteRepository = FavoriteRepositoryImpl(favoriteApi)
     val lessonRepository: LessonRepository = LessonRepositoryImpl(lessonApi, discussionApi)
-    val materialRepository: MaterialRepository = MaterialRepositoryImpl(materialApi)
-
-    val orderRepository: OrderRepository = OrderRepositoryImpl(orderApi)
-    val progressRepository: ProgressRepository = ProgressRepositoryImpl(progressApi)
-    val reviewRepository: ReviewRepository = ReviewRepositoryImpl(reviewApi)
-    
     val materialRepository: MaterialRepository by lazy {
         MaterialRepositoryImpl(materialApi)
     }
-
-
+    val orderRepository: OrderRepository = OrderRepositoryImpl(orderApi)
+    val progressRepository: ProgressRepository = ProgressRepositoryImpl(progressApi)
+    val reviewRepository: ReviewRepository = ReviewRepositoryImpl(reviewApi)
     val dashboardRepository: DashboardRepository = DashboardRepositoryImpl(dashboardApi)
 
     // --- Use Cases ---
     val loginUseCase = LoginUseCase(authRepository)
     val registerUseCase = RegisterUseCase(authRepository)
     val checkSessionUseCase = CheckSessionUseCase(authRepository)
-
     
     // Profile Use Cases
     val getProfileUseCase = GetProfileUseCase(userRepository)
