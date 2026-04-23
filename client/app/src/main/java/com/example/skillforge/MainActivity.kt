@@ -424,8 +424,13 @@ class MainActivity : ComponentActivity() {
                                     )
 
                                     is AppRoute.MyCourses -> {
+                                        val reviewViewModel: ReviewViewModel = viewModel(
+                                            factory = ReviewViewModelFactory(appContainer.reviewRepository)
+                                        )
+                                        
                                         MyCoursesScreen(
                                             token = route.session.accessToken,
+                                            viewModel = reviewViewModel,
                                             onNavigateBack = { mainViewModel.navigateTo(AppRoute.StudentCourseListing(route.session)) },
                                             onCourseClick = { cId -> mainViewModel.navigateTo(AppRoute.CourseCurriculum(route.session, cId)) },
                                         )
