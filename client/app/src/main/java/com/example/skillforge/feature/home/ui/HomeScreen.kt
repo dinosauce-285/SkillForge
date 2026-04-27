@@ -8,6 +8,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -19,6 +22,7 @@ import com.example.skillforge.feature.home.ui.components.ActiveCourseList
 import com.example.skillforge.feature.home.ui.components.ContinueLearningCard
 import com.example.skillforge.feature.home.ui.components.EmptyDashboardState
 import com.example.skillforge.feature.home.ui.components.HomeWelcomeHeader
+import com.example.skillforge.feature.home.ui.components.NotificationBottomSheet
 import com.example.skillforge.feature.home.ui.components.StudentStatsRow
 import com.example.skillforge.feature.home.viewmodel.HomeUiState
 import com.example.skillforge.feature.home.viewmodel.HomeViewModel
@@ -31,25 +35,47 @@ fun HomeScreen(
     onNavigateToDiscovery: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val notificationState by viewModel.notificationState.collectAsState()
+    var showNotifications by remember { mutableStateOf(false) }
 
     // Fetch dashboard data whenever the token changes or on initial composition
     LaunchedEffect(token) {
         viewModel.fetchDashboard(token)
+        viewModel.fetchNotifications()
     }
 
     HomeScreenContent(
         uiState = uiState,
+        unreadCount = notificationState.unreadCount,
         onNavigateToMyCourses = onNavigateToMyCourses,
         onNavigateToDiscovery = onNavigateToDiscovery,
+        onNotificationClick = {
+            showNotifications = true
+            viewModel.fetchNotifications()
+        },
         onRetry = { viewModel.fetchDashboard(token) }
     )
+
+    if (showNotifications) {
+        NotificationBottomSheet(
+            notifications = notificationState.notifications,
+            unreadCount = notificationState.unreadCount,
+            isNotificationLoading = notificationState.isNotificationLoading,
+            errorMessage = notificationState.errorMessage,
+            onNotificationClick = { notification -> viewModel.markAsRead(notification.id) },
+            onMarkAllAsRead = { viewModel.markAllAsRead() },
+            onDismiss = { showNotifications = false },
+        ) 
+    }
 }
 
 @Composable
 fun HomeScreenContent(
     uiState: HomeUiState,
+    unreadCount: Int = 0,
     onNavigateToMyCourses: () -> Unit = {},
     onNavigateToDiscovery: () -> Unit = {},
+    onNotificationClick: () -> Unit = {},
     onRetry: () -> Unit = {}
 ) {
     Scaffold(
@@ -95,7 +121,8 @@ fun HomeScreenContent(
                     ) {
                         HomeWelcomeHeader(
                             studentName = dashboard.studentName,
-                            onNotificationClick = { },
+                            onNotificationClick = onNotificationClick,
+                            unreadCount = unreadCount,
                         )
 
                         Spacer(modifier = Modifier.height(SkillforgeSpacing.large))

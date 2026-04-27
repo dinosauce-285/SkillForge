@@ -195,7 +195,10 @@ class MainActivity : ComponentActivity() {
                                         val token = session.accessToken
 
                                         val homeViewModel: HomeViewModel = viewModel(
-                                            factory = HomeViewModelFactory(appContainer.progressRepository)
+                                            factory = HomeViewModelFactory(
+                                                appContainer.progressRepository,
+                                                appContainer.notificationRepository
+                                            )
                                         )
 
                                         HomeScreen(
