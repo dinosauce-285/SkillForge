@@ -6,14 +6,10 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { OrderStatus } from '@prisma/client';
-import { CouponsService } from '../coupons/coupons.service';
 
 @Injectable()
 export class OrderService {
-  constructor(
-    private prisma: PrismaService,
-    private couponsService: CouponsService
-  ) {}
+  constructor(private prisma: PrismaService) {}
 
   async getAllByUser(userId: string) {
     return this.prisma.order.findMany({

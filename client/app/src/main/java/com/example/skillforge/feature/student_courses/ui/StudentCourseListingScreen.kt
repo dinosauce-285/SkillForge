@@ -177,7 +177,7 @@ fun StudentCourseListingScreen(
                 if (uiState.suggestions.isNotEmpty() && uiState.searchQuery.isBlank() && uiState.selectedCategoryId == null && uiState.selectedLevel == null) {
                     item {
                         SectionHeader(
-                            title = "Gợi ý khóa học",
+                            title = "Recommended for You",
                             actionLabel = "",
                         )
                     }

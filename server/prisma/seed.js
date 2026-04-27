@@ -245,7 +245,7 @@ function flattenLessons(course) {
 // ─── CLEAR ────────────────────────────────────────────────────────────────────
 
 async function clearAll() {
-  console.log('🗑  Clearing all data...');
+  console.log('[seed] Clearing all data...');
   const models = [
     prisma.studentAnswer, prisma.quizAttempt, prisma.answerChoice, prisma.question, prisma.quiz,
     prisma.discussion, prisma.lessonProgress, prisma.lessonMaterial, prisma.review, prisma.favorite,
@@ -426,25 +426,25 @@ async function main() {
   const passwordHash = await bcrypt.hash(PASSWORD, 10);
 
   await clearAll();
-  console.log('✅ DB cleared');
+  console.log('[seed] DB cleared');
 
   const { categoryMap, tagMap } = await seedLookup();
-  console.log(`✅ ${allCategories.length} categories, ${allTags.length} tags`);
+  console.log(`[seed] ${allCategories.length} categories, ${allTags.length} tags`);
 
   const userMap = await seedUsers(passwordHash);
-  console.log(`✅ ${baseUsers.length} users`);
+  console.log(`[seed] ${baseUsers.length} users`);
 
   const courses = await seedCourses(categoryMap, tagMap, userMap);
-  console.log(`✅ ${courses.length} courses`);
+  console.log(`[seed] ${courses.length} courses`);
 
   await seedActivity(courses, userMap);
-  console.log('✅ Enrollments, progress, reviews, statistics');
+  console.log('[seed] Enrollments, progress, reviews, statistics');
 
   await seedCoupons(userMap);
-  console.log('✅ Coupons: WELCOME10 (10%), REACT20 (20%), SUMMER15 (15%), BACKEND30 (30%)');
+  console.log('[seed] Coupons: WELCOME10 (10%), REACT20 (20%), SUMMER15 (15%), BACKEND30 (30%)');
 
-  console.log(`\n${'─'.repeat(60)}`);
-  console.log('📋 SEEDED ACCOUNTS (password: ' + PASSWORD + ')');
+  console.log(`\n${'-'.repeat(60)}`);
+  console.log('SEEDED ACCOUNTS (password: ' + PASSWORD + ')');
   console.log('─'.repeat(60));
   console.log('INSTRUCTORS:');
   console.log('  khoa@skillforge.dev  →  Nguyen Minh Khoa  (INSTRUCTOR)');
@@ -462,7 +462,7 @@ async function main() {
   console.log('  REACT20    → 20% off  (khoa)');
   console.log('  SUMMER15   → 15% off  (han)');
   console.log('  BACKEND30  → 30% off  (han)');
-  console.log('─'.repeat(60));
+  console.log('-'.repeat(60));
 }
 
 main()
