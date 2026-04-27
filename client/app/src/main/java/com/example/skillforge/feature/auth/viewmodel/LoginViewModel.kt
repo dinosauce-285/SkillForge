@@ -38,10 +38,14 @@ class LoginViewModel(private val loginUseCase: LoginUseCase) : ViewModel() {
 
     fun loginWithGoogle() {
         viewModelScope.launch {
-            try {
-                loginUseCase.loginWithGoogle()
-            } catch (e: Exception) {
-                _loginState.value = LoginState.Error(e.message ?: "Google sign-in failed")
+            _loginState.value = LoginState.Loading
+
+            val result = loginUseCase.loginWithGoogle()
+            result.onSuccess { session ->
+                _loginState.value = LoginState.Success(session)
+            }
+            result.onFailure { exception ->
+                _loginState.value = LoginState.Error(exception.message ?: "Google sign-in failed")
             }
         }
     }
@@ -50,5 +54,9 @@ class LoginViewModel(private val loginUseCase: LoginUseCase) : ViewModel() {
         if (_loginState.value is LoginState.Error) {
             _loginState.value = LoginState.Idle
         }
+    }
+
+    fun logout() {
+        _loginState.value = LoginState.Idle
     }
 }

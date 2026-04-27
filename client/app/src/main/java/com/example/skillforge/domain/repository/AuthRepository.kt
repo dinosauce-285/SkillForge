@@ -9,7 +9,8 @@ interface AuthRepository {
     suspend fun verifySession(): Result<AuthSession>
     suspend fun login(email: String, password: String): Result<AuthSession>
     suspend fun register(fullName: String, email: String, password: String): Result<String>
-    suspend fun loginWithGoogle()
+    suspend fun loginWithGoogle(): Result<AuthSession>
 
     suspend fun getMe(): Result<UserInfo>
+    suspend fun logout()
 }

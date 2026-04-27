@@ -50,7 +50,7 @@ import com.example.skillforge.feature.student_courses.ui.LessonLearningScreen
 import com.example.skillforge.feature.student_courses.ui.MyCoursesScreen
 import com.example.skillforge.feature.student_courses.ui.StudentCourseDetailsRoute
 import com.example.skillforge.feature.student_courses.ui.StudentCourseListingRoute
-import com.example.skillforge.feature.student_courses.ui.StudentProfileScreen
+
 import com.example.skillforge.feature.student_courses.viewmodel.StudentCoursesViewModel
 import com.example.skillforge.feature.student_courses.viewmodel.StudentCoursesViewModelFactory
 import com.example.skillforge.feature.main.viewmodel.MainViewModel
@@ -62,14 +62,25 @@ import androidx.compose.foundation.layout.padding
 import com.example.skillforge.feature.profile.ui.ProfileScreen
 import com.example.skillforge.feature.profile.viewmodel.ProfileViewModel
 import com.example.skillforge.feature.profile.viewmodel.ProfileViewModelFactory
-import com.example.skillforge.feature.instructor_portal.viewmodel.AccountViewModel
-import com.example.skillforge.feature.instructor_portal.viewmodel.AccountViewModelFactory
+
 import com.example.skillforge.feature.student_courses.viewmodel.ReviewViewModel
 import com.example.skillforge.feature.student_courses.viewmodel.ReviewViewModelFactory
 
+import io.github.jan.supabase.auth.handleDeeplinks
+
 class MainActivity : ComponentActivity() {
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        val appContainer = (applicationContext as SkillforgeApplication).container
+        appContainer.supabase.handleDeeplinks(intent)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val appContainerForDeepLink = (applicationContext as SkillforgeApplication).container
+        appContainerForDeepLink.supabase.handleDeeplinks(intent)
+        
         setContent {
             SkillforgeTheme(dynamicColor = false) {
                 val appContainer = (LocalContext.current.applicationContext as SkillforgeApplication).container
@@ -104,7 +115,10 @@ class MainActivity : ComponentActivity() {
                     )
                 )
                 val mainViewModel: MainViewModel = viewModel(
-                    factory = MainViewModelFactory(appContainer.checkSessionUseCase)
+                    factory = MainViewModelFactory(
+                        appContainer.checkSessionUseCase,
+                        appContainer.logoutUseCase
+                    )
                 )
 
                 val currentRoute by mainViewModel.uiState.collectAsState()
@@ -209,7 +223,8 @@ class MainActivity : ComponentActivity() {
                                             mainViewModel.navigateTo(AppRoute.StudentCourseDetails(route.session, courseId))
                                         },
                                         onLogout = {
-                                            mainViewModel.navigateTo(AppRoute.Login)
+                                            mainViewModel.logout()
+                                            loginViewModel.logout()
                                         }
                                     )
 
@@ -274,8 +289,8 @@ class MainActivity : ComponentActivity() {
                                             )
                                         )
 
-                                        val accountViewModel: AccountViewModel = viewModel(
-                                            factory = AccountViewModelFactory(appContainer.authRepository)
+                                        val profileViewModel: ProfileViewModel = viewModel(
+                                            factory = ProfileViewModelFactory(appContainer)
                                         )
 
                                         val courses by portalViewModel.courses.collectAsState()
@@ -298,9 +313,11 @@ class MainActivity : ComponentActivity() {
                                                 mainViewModel.navigateTo(AppRoute.CourseManager(route.session, clickedCourseId))
                                             },
                                             onNavigateToUploadMaterial = { },
-                                            accountViewModel = accountViewModel,
+                                            token = route.session.accessToken,
+                                            profileViewModel = profileViewModel,
                                             onLogout = {
-                                                mainViewModel.navigateTo(AppRoute.Login)
+                                                mainViewModel.logout()
+                                                loginViewModel.logout()
                                             }
                                         )
                                     }
@@ -436,10 +453,19 @@ class MainActivity : ComponentActivity() {
                                         )
                                     }
 
-                                    is AppRoute.Profile -> StudentProfileScreen(
-                                        session = route.session,
-                                        onLogout = { mainViewModel.navigateTo(AppRoute.Login) }
-                                    )
+                                    is AppRoute.Profile -> {
+                                        val profileViewModel: ProfileViewModel = viewModel(
+                                            factory = ProfileViewModelFactory(appContainer)
+                                        )
+                                        ProfileScreen(
+                                            token = route.session.accessToken,
+                                            viewModel = profileViewModel,
+                                            onLogoutClick = { 
+                                                mainViewModel.logout()
+                                                loginViewModel.logout() 
+                                            }
+                                        )
+                                    }
 
                                     else -> {}
                                 }

@@ -53,9 +53,8 @@ import com.example.skillforge.core.designsystem.*
 import com.example.skillforge.data.remote.CourseSummaryDto
 import com.example.skillforge.data.remote.InstructorDashboardDto
 import com.example.skillforge.data.remote.InstructorAnalyticsDto
-import com.example.skillforge.data.remote.UserInfo
-import com.example.skillforge.feature.instructor_portal.viewmodel.AccountState
-import com.example.skillforge.feature.instructor_portal.viewmodel.AccountViewModel
+import com.example.skillforge.feature.profile.viewmodel.ProfileViewModel
+import com.example.skillforge.feature.profile.ui.ProfileScreen
 
 enum class SkillforgeInstructorRoute(val title: String, val icon: ImageVector) {
     Dashboard("Dashboard", Icons.Default.Home),
@@ -69,7 +68,8 @@ enum class SkillforgeInstructorRoute(val title: String, val icon: ImageVector) {
 fun SkillforgeInstructorDashboardScreen(
     courses: List<CourseSummaryDto> = emptyList(),
     analyticsData: InstructorAnalyticsDto? = null,
-    accountViewModel: AccountViewModel,
+    token: String,
+    profileViewModel: ProfileViewModel,
     dashboardData: InstructorDashboardDto? = null,
     isLoading: Boolean = false,
     onNavigateToCreateCourse: () -> Unit = {},
@@ -79,19 +79,12 @@ fun SkillforgeInstructorDashboardScreen(
 ) {
     var selectedRoute by remember { mutableStateOf(SkillforgeInstructorRoute.Dashboard) }
 
-    val accountState by accountViewModel.uiState.collectAsState()
-
-    LaunchedEffect(selectedRoute) {
-        if (selectedRoute == SkillforgeInstructorRoute.Account && accountState is AccountState.Loading) {
-            accountViewModel.loadAccountInfo()
-        }
-    }
-
-    val accountInfo = (accountState as? AccountState.Success)?.userInfo
-    val isAccountLoading = accountState is AccountState.Loading
-
     Scaffold(
-        topBar = { SkillforgeInstructorTopBar() },
+        topBar = { 
+            if (selectedRoute != SkillforgeInstructorRoute.Account) {
+                SkillforgeInstructorTopBar() 
+            }
+        },
         bottomBar = {
             SkillforgeInstructorBottomBar(
                 selectedRoute = selectedRoute,
@@ -127,10 +120,10 @@ fun SkillforgeInstructorDashboardScreen(
                     AnalyticsTabContent(dashboardData = dashboardData, isLoading = isLoading)
                 }
                 SkillforgeInstructorRoute.Account -> {
-                    AccountTabContent(
-                        userInfo = accountInfo,
-                        isLoading = isAccountLoading,
-                        onLogout = onLogout
+                    ProfileScreen(
+                        token = token,
+                        viewModel = profileViewModel,
+                        onLogoutClick = onLogout
                     )
                 }
             }
@@ -580,119 +573,4 @@ fun SkillforgeInstructorBottomBar(selectedRoute: SkillforgeInstructorRoute, onRo
         }
     }
 }
-
-@Composable
-fun AccountTabContent(
-    userInfo: UserInfo?,
-    isLoading: Boolean,
-    onLogout: () -> Unit
-) {
-    if (isLoading || userInfo == null) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator(color = PrimaryOrange)
-        }
-        return
-    }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Spacer(modifier = Modifier.height(48.dp))
-
-        // --- AVATAR & INFO ---
-        Surface(
-            shape = CircleShape,
-            color = PrimaryOrange.copy(alpha = 0.1f),
-            modifier = Modifier.size(120.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Default.AccountCircle,
-                contentDescription = "Avatar",
-                tint = PrimaryOrange,
-                modifier = Modifier.fillMaxSize().padding(8.dp)
-            )
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Text(
-            text = userInfo.fullName,
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.ExtraBold,
-            color = TextPrimaryColor
-        )
-
-        Text(
-            text = userInfo.email,
-            style = MaterialTheme.typography.bodyLarge,
-            color = TextSecondaryColor
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // ROLE BADGE
-        Surface(
-            shape = RoundedCornerShape(20.dp),
-            color = PrimaryOrange
-        ) {
-            Text(
-                text = userInfo.role.uppercase(),
-                color = Color.White,
-                fontWeight = FontWeight.Bold,
-                fontSize = 12.sp,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
-            )
-        }
-
-        Spacer(modifier = Modifier.height(48.dp))
-
-        // --- MENU ACTIONS ---
-        Card(
-            colors = CardDefaults.cardColors(containerColor = SurfaceColor),
-            shape = RoundedCornerShape(16.dp),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Column {
-                AccountMenuRow(icon = Icons.Default.Settings, title = "Account Settings")
-                HorizontalDivider(color = BackgroundColor)
-                AccountMenuRow(icon = Icons.Default.Lock, title = "Privacy & Security")
-                HorizontalDivider(color = BackgroundColor)
-                AccountMenuRow(icon = Icons.Default.Help, title = "Help & Support")
-            }
-        }
-
-        Spacer(modifier = Modifier.weight(1f))
-
-        // --- LOGOUT BUTTON ---
-        Button(
-            onClick = onLogout,
-            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 90.dp)
-                .height(56.dp),
-            shape = RoundedCornerShape(16.dp)
-        ) {
-            Text("Log Out", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
-        }
-    }
-}
-
-@Composable
-fun AccountMenuRow(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { /* TODO: Navigate */ }
-            .padding(horizontal = 20.dp, vertical = 16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(icon, contentDescription = null, tint = TextSecondaryColor)
-        Spacer(modifier = Modifier.width(16.dp))
-        Text(text = title, fontWeight = FontWeight.SemiBold, color = TextPrimaryColor, modifier = Modifier.weight(1f))
-        Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = TextSecondaryColor, modifier = Modifier.size(16.dp))
-    }
-}
+

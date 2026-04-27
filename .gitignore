@@ -1,5 +1,25 @@
-# Ignore build outputs and IDE/config files
-build/
-app/build/
-.gradle/
+# OS specific files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# IDEs and Editors
 .idea/
+.vscode/
+*.swp
+*.swo
+*~
+*.bak
+
+# Root build folders (if any)
+/build/
+/dist/
+
+# Project specific rules files (if needed)
+CLIENT_RULES.md
+SERVER_RULES.md
