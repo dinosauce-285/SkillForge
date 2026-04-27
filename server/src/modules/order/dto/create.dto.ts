@@ -7,4 +7,7 @@ export class CreateOrderDto {
   @IsNumber()
   @IsPositive()
   amount!: number;
+
+  @IsString()
+  couponCode?: string;
 }

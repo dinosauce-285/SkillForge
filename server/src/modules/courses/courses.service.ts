@@ -118,6 +118,40 @@ export class CoursesService {
     };
   }
 
+  async getSuggestions() {
+    return this.prisma.course.findMany({
+      where: {
+        status: CourseStatus.PUBLISHED,
+        deletedAt: null,
+      },
+      take: 5,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        category: true,
+        instructor: {
+          select: {
+            id: true,
+            fullName: true,
+            profile: {
+              select: {
+                avatarUrl: true,
+                skills: true,
+              },
+            },
+          },
+        },
+        tags: true,
+        _count: {
+          select: {
+            chapters: true,
+            enrollments: true,
+            reviews: true,
+          },
+        },
+      },
+    });
+  }
+
   async findOne(id: string) {
     const course = await this.prisma.course.findFirst({
       where: {

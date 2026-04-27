@@ -6,10 +6,14 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { OrderStatus } from '@prisma/client';
+import { CouponsService } from '../coupons/coupons.service';
 
 @Injectable()
 export class OrderService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private couponsService: CouponsService
+  ) {}
 
   async getAllByUser(userId: string) {
     return this.prisma.order.findMany({
@@ -35,14 +39,29 @@ export class OrderService {
   }
 
   async createOrder(userId: string, createOrderDto: CreateOrderDto) {
-    const { courseId, amount } = createOrderDto;
+    const { courseId, couponCode } = createOrderDto;
+
+    const course = await this.prisma.course.findUnique({ where: { id: courseId } });
+    if (!course) throw new NotFoundException('Course not found');
+
+    let finalAmount = Number(course.price);
+    let couponId: string | null = null;
+
+    if (couponCode) {
+      const coupon = await this.prisma.coupon.findUnique({ where: { code: couponCode.toUpperCase() } });
+      if (coupon && coupon.isActive) {
+        finalAmount = finalAmount * (1 - (coupon.discountPercent / 100));
+        couponId = coupon.id;
+      }
+    }
 
     const [order] = await this.prisma.$transaction([
       this.prisma.order.create({
         data: {
           userId,
           courseId,
-          amount,
+          amount: finalAmount,
+          couponId,
         },
         include: {
           user: true,
