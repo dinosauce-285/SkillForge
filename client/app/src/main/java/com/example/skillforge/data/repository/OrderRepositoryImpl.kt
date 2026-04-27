@@ -9,11 +9,11 @@ class OrderRepositoryImpl(
     private val api: OrderApi,
 ) : OrderRepository {
 
-    override suspend fun createOrder(token: String, courseId: String, amount: Double): Result<OrderSummary> {
+    override suspend fun createOrder(token: String, courseId: String, amount: Double, couponCode: String?): Result<OrderSummary> {
         return try {
             val response = api.createOrder(
                 token = bearer(token),
-                request = CreateOrderRequest(courseId = courseId, amount = amount),
+                request = CreateOrderRequest(courseId = courseId, amount = amount, couponCode = couponCode),
             )
 
             if (response.isSuccessful && response.body() != null) {

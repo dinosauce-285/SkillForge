@@ -141,14 +141,14 @@ fun TransactionDetailScreen(
                     PurchasedItemRow(
                         title = "Professional Communication Skills",
                         instructor = "Le Hong Nam",
-                        price = "950,000 VND",
+                        price = "$9.50",
                         imageRes = R.drawable.mock_course_thumbnail
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     PurchasedItemRow(
                         title = "UI/UX Design Masterclass 2024",
                         instructor = "Sarah Chen",
-                        price = "1,800,000 VND",
+                        price = "$18.00",
                         imageRes = R.drawable.mock_course_thumbnail
                     )
                 }
@@ -165,12 +165,12 @@ fun TransactionDetailScreen(
                     
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                         Text("Subtotal", color = Color.Gray, fontSize = 14.sp)
-                        Text("2,750,000 VND", fontWeight = FontWeight.Medium, fontSize = 14.sp)
+                        Text("$27.50", fontWeight = FontWeight.Medium, fontSize = 14.sp)
                     }
                     Spacer(modifier = Modifier.height(12.dp))
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                         Text("Discount (MAYPROMO)", color = Color(0xFF00796B), fontSize = 14.sp)
-                        Text("-300,000 VND", fontWeight = FontWeight.Medium, fontSize = 14.sp, color = Color(0xFF00796B))
+                        Text("-$3.00", fontWeight = FontWeight.Medium, fontSize = 14.sp, color = Color(0xFF00796B))
                     }
                     
                     Spacer(modifier = Modifier.height(24.dp))
@@ -187,7 +187,7 @@ fun TransactionDetailScreen(
                         ) {
                             Text("TOTAL PAYMENT", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.Gray, letterSpacing = 1.sp)
                             Text(
-                                text = "2,450,000 VND",
+                                text = "$24.50",
                                 fontSize = 32.sp,
                                 fontWeight = FontWeight.Black,
                                 color = PrimaryOrange
