@@ -1,0 +1,5 @@
+# Ignore build outputs and IDE/config files
+build/
+app/build/
+.gradle/
+.idea/
