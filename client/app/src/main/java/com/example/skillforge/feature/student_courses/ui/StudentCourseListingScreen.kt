@@ -20,6 +20,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
@@ -170,6 +172,31 @@ fun StudentCourseListingScreen(
                         onValueChange = onSearchQueryChange,
                         onFilterClick = { isFilterPanelOpen = true },
                     )
+                }
+
+                if (uiState.suggestions.isNotEmpty() && uiState.searchQuery.isBlank() && uiState.selectedCategoryId == null && uiState.selectedLevel == null) {
+                    item {
+                        SectionHeader(
+                            title = "Gợi ý khóa học",
+                            actionLabel = "",
+                        )
+                    }
+
+                    item {
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(SkillforgeSpacing.medium),
+                            contentPadding = PaddingValues(horizontal = SkillforgeSpacing.small)
+                        ) {
+                            items(uiState.suggestions) { course ->
+                                Box(modifier = Modifier.width(300.dp)) {
+                                    CourseDiscoveryCard(
+                                        course = course,
+                                        onClick = { onCourseSelected(course.id) }
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
 
                 item {
