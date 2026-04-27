@@ -314,7 +314,7 @@ private fun FavoriteCourseCard(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            text = if (course.price > 0) "${"%,.0f".format(course.price)} VND" else "Free",
+                            text = if (course.price > 0) String.format("$%.2f", course.price) else "Free",
                             style = MaterialTheme.typography.titleMedium.copy(
                                 fontWeight = FontWeight.Bold,
                                 color = PrimaryOrange,

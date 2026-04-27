@@ -103,6 +103,7 @@ class MainActivity : ComponentActivity() {
                     factory = TransactionViewModelFactory(
                         appContainer.courseRepository,
                         appContainer.orderRepository,
+                        appContainer.couponRepository,
                     )
                 )
                 val favoriteViewModel: FavoriteViewModel = viewModel(
@@ -347,7 +348,7 @@ class MainActivity : ComponentActivity() {
                                                 courseFormViewModel.resetState()
                                                 mainViewModel.navigateTo(AppRoute.InstructorPortal(route.session))
                                             },
-                                            onSaveClick = { title, summary, price, categoryId, thumbnailFile ->
+                                            onSaveClick = { title, summary, price, categoryId, status, thumbnailFile ->
                                                 val myToken = route.session.accessToken
                                                 courseFormViewModel.createCourse(
                                                     token = myToken,
@@ -355,7 +356,7 @@ class MainActivity : ComponentActivity() {
                                                     summary = summary,
                                                     price = price,
                                                     categoryId = categoryId,
-                                                    status = "DRAFT",
+                                                    status = status,
                                                     thumbnailFile = thumbnailFile
                                                 )
                                             }
