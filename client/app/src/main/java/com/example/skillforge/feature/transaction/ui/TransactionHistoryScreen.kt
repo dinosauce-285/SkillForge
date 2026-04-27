@@ -105,7 +105,7 @@ fun TransactionHistoryScreen(
                             TransactionItemData("Professional Communication Skills for Managers", "May 22, 2024", Icons.Default.School),
                             TransactionItemData("UI/UX Design Masterclass 2024", "May 22, 2024", Icons.Default.DesignServices)
                         ),
-                        totalPrice = "2,450,000 VND",
+                        totalPrice = "$24.50",
                         actionText = "Invoice",
                         isActionPrimary = false
                     )
@@ -121,7 +121,7 @@ fun TransactionHistoryScreen(
                         items = listOf(
                             TransactionItemData("Basic Zero-Cost Marketing Course", "Just now", Icons.Default.MenuBook)
                         ),
-                        totalPrice = "890,000 VND",
+                        totalPrice = "$8.90",
                         actionText = "Pay Now",
                         isActionPrimary = true
                     )
@@ -137,7 +137,7 @@ fun TransactionHistoryScreen(
                         items = listOf(
                             TransactionItemData("Systems Thinking for Individuals", "Apr 15, 2024", Icons.Default.Psychology)
                         ),
-                        totalPrice = "1,200,000 VND",
+                        totalPrice = "$12.00",
                         actionText = "Re-purchase",
                         isActionPrimary = false,
                         isCanceled = true

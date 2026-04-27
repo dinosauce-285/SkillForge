@@ -13,6 +13,8 @@ interface CourseRepository {
         level: String? = null,
     ): Result<List<CourseSummary>>
 
+    suspend fun getCourseSuggestions(): Result<List<CourseSummary>>
+
     suspend fun getCourseDetails(courseId: String): Result<CourseDetails>
 
     suspend fun createCourse(

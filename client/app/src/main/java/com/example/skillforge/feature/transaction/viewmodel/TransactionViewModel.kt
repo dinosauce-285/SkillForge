@@ -3,6 +3,7 @@ package com.example.skillforge.feature.transaction.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.skillforge.domain.model.CourseSummary
+import com.example.skillforge.domain.repository.CouponRepository
 import com.example.skillforge.domain.repository.CourseRepository
 import com.example.skillforge.domain.repository.OrderRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,18 +15,19 @@ import kotlinx.coroutines.launch
 data class TransactionUiState(
     val course: CourseSummary? = null,
     val promoCode: String = "",
-    val discountAmount: Long = 0,
+    val discountPercent: Int = 0,
     val isLoading: Boolean = false,
     val isProcessing: Boolean = false,
     val errorMessage: String? = null,
     val orderSuccessful: Boolean = false,
 ) {
-    val totalPrice: Long get() = (course?.price?.toLong() ?: 0L) - discountAmount
+    val totalPrice: Double get() = (course?.price ?: 0.0) * (1 - (discountPercent / 100.0))
 }
 
 class TransactionViewModel(
     private val courseRepository: CourseRepository,
     private val orderRepository: OrderRepository,
+    private val couponRepository: CouponRepository,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(TransactionUiState())
     val uiState: StateFlow<TransactionUiState> = _uiState.asStateFlow()
@@ -72,13 +74,32 @@ class TransactionViewModel(
     }
 
     fun applyPromoCode() {
-        // Logic to apply promo code (simplified for now)
         if (_uiState.value.promoCode.isEmpty()) {
-            _uiState.update { it.copy(discountAmount = 0) }
+            _uiState.update { it.copy(discountPercent = 0, errorMessage = null) }
         } else {
-            // Simple discount logic: 10% off
-            val discount = ((_uiState.value.course?.price ?: 0.0) * 0.1).toLong()
-            _uiState.update { it.copy(discountAmount = discount) }
+            viewModelScope.launch {
+                _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+                val result = couponRepository.validateCoupon(_uiState.value.promoCode)
+                if (result.isSuccess) {
+                    val validationResponse = result.getOrNull()
+                    if (validationResponse != null) {
+                        _uiState.update { 
+                            it.copy(
+                                discountPercent = validationResponse.discountPercent,
+                                isLoading = false
+                            ) 
+                        }
+                    }
+                } else {
+                    _uiState.update { 
+                        it.copy(
+                            discountPercent = 0,
+                            errorMessage = result.exceptionOrNull()?.message ?: "Invalid promo code",
+                            isLoading = false
+                        )
+                    }
+                }
+            }
         }
     }
 
@@ -86,7 +107,8 @@ class TransactionViewModel(
         val course = _uiState.value.course ?: return
         viewModelScope.launch {
             _uiState.update { it.copy(isProcessing = true, errorMessage = null) }
-            orderRepository.createOrder(token, course.id, course.price - (_uiState.value.discountAmount / 100.0)).fold(
+            val couponCode = if (_uiState.value.discountPercent > 0) _uiState.value.promoCode else null
+            orderRepository.createOrder(token, course.id, _uiState.value.totalPrice, couponCode).fold(
                 onSuccess = { order ->
                     _uiState.update {
                         it.copy(

@@ -9,6 +9,7 @@ import retrofit2.http.POST
 data class CreateOrderRequest(
     val courseId: String,
     val amount: Double,
+    val couponCode: String? = null,
 )
 
 data class OrderCourseDto(

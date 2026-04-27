@@ -43,13 +43,14 @@ fun SkillforgeCourseFormScreen(
     errorMessage: String? = null,
     uiState: CourseFormState = CourseFormState.Idle,
     onNavigateBack: () -> Unit = {},
-    onSaveClick: (String, String, String, String, File?) -> Unit
+    onSaveClick: (String, String, String, String, String, File?) -> Unit
 ) {
     val context = LocalContext.current
     var courseTitle by remember { mutableStateOf("") }
     var courseSummary by remember { mutableStateOf("") }
     var coursePrice by remember { mutableStateOf("") }
     var selectedCategoryId by remember { mutableStateOf("") }
+    var selectedStatus by remember { mutableStateOf("DRAFT") }
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
 
     var showSuccessDialog by remember { mutableStateOf(false) }
@@ -132,7 +133,7 @@ fun SkillforgeCourseFormScreen(
                                 val imageFile = selectedImageUri?.let { uri ->
                                     FileUtil.uriToFile(context, uri)
                                 }
-                                onSaveClick(courseTitle, courseSummary, coursePrice, selectedCategoryId, imageFile)
+                                onSaveClick(courseTitle, courseSummary, coursePrice, selectedCategoryId, selectedStatus, imageFile)
                             },
                             modifier = Modifier.weight(1f),
                             enabled = !isLoading && courseTitle.isNotBlank() && coursePrice.isNotBlank() && selectedCategoryId.isNotBlank(),
@@ -249,6 +250,28 @@ fun SkillforgeCourseFormScreen(
                                 )
                             )
                         }
+                    }
+                }
+            }
+
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Status", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    val statuses = listOf("DRAFT" to "Draft", "PUBLISHED" to "Publish immediately")
+                    statuses.forEach { (statusValue, label) ->
+                        FilterChip(
+                            selected = selectedStatus == statusValue,
+                            enabled = !isLoading,
+                            onClick = { selectedStatus = statusValue },
+                            label = { Text(label) },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                selectedLabelColor = MaterialTheme.colorScheme.primary
+                            )
+                        )
                     }
                 }
             }

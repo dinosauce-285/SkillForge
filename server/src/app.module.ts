@@ -16,6 +16,7 @@ import { QuestionModule } from './modules/question/question.module';
 import { AnswerChoicesModule } from './modules/answer_choices/answer_choices.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { ReviewModule } from './modules/review/reviews.module';
+import { CouponsModule } from './modules/coupons/coupons.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { ReviewModule } from './modules/review/reviews.module';
     AnswerChoicesModule,
     DashboardModule,
     ReviewModule,
+    CouponsModule,
   ],
   controllers: [],
   providers: [],
