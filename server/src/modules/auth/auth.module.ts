@@ -9,9 +9,11 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
+import { SupabaseModule } from 'src/supabase/supabase.module';
 
 @Module({
   imports: [
+    SupabaseModule,
     PassportModule,
     ThrottlerModule.forRoot([
       {

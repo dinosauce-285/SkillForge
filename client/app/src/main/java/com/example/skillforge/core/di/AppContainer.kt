@@ -44,12 +44,14 @@ import com.example.skillforge.domain.repository.*
 import com.example.skillforge.domain.usecase.*
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.auth.Auth
-import io.github.jan.supabase.auth.auth
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import java.util.concurrent.TimeUnit
+import com.example.skillforge.data.local.AuthPreferences
+import com.example.skillforge.core.network.TokenAuthenticator
 
 class AppContainer(private val context: Context) {
     
@@ -69,22 +71,23 @@ class AppContainer(private val context: Context) {
         level = HttpLoggingInterceptor.Level.BODY
     }
 
+    private val authPreferences = AuthPreferences(context)
+
     // OkHttpClient with automatic Authorization header injection
     private val okHttpClient = OkHttpClient.Builder()
         .addInterceptor(loggingInterceptor)
         .addInterceptor { chain ->
             val originalRequest = chain.request()
-            // Get current Supabase session
-            val session = supabase.auth.currentSessionOrNull()
+            val accessToken = runBlocking { authPreferences.accessToken.firstOrNull() }
             
             val requestBuilder = originalRequest.newBuilder()
-            // If user is logged in, attach the access token to the request
-            if (session != null) {
-                requestBuilder.header("Authorization", "Bearer ${session.accessToken}")
+            if (!accessToken.isNullOrBlank()) {
+                requestBuilder.header("Authorization", "Bearer $accessToken")
             }
             
             chain.proceed(requestBuilder.build())
         }
+        .authenticator(TokenAuthenticator(authPreferences))
         .build()
 
     // Retrofit instance configured for the custom backend
@@ -118,7 +121,7 @@ class AppContainer(private val context: Context) {
     }
 
     // --- Repositories ---
-    val authRepository: AuthRepository = AuthRepositoryImpl(authApi, supabase)
+    val authRepository: AuthRepository = AuthRepositoryImpl(authApi, supabase, authPreferences)
     val userRepository: UserRepository = UserRepositoryImpl(userApi)
     val courseRepository: CourseRepository = CourseRepositoryImpl(courseApi)
     val categoryRepository: CategoryRepository = CategoryRepositoryImpl(categoryApi)
@@ -137,6 +140,7 @@ class AppContainer(private val context: Context) {
     val loginUseCase = LoginUseCase(authRepository)
     val registerUseCase = RegisterUseCase(authRepository)
     val checkSessionUseCase = CheckSessionUseCase(authRepository)
+    val logoutUseCase = LogoutUseCase(authRepository)
     
     // Profile Use Cases
     val getProfileUseCase = GetProfileUseCase(userRepository)

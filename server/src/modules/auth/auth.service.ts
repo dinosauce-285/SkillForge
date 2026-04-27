@@ -11,6 +11,7 @@ import { LoginDto } from './dto/login.dto';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import { JwtRefreshPayload } from './strategies/jwt-refresh.strategy';
+import { SupabaseService } from 'src/supabase/supabase.service';
 
 /**
  * Security Configuration Constants
@@ -40,6 +41,7 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly supabaseService: SupabaseService,
   ) { }
 
   /**
@@ -193,6 +195,60 @@ export class AuthService {
     return {
       message: 'Login successful',
       accessToken,
+      refreshToken,
+      user: {
+        id: user.id,
+        email: user.email,
+        fullName: user.fullName,
+        role: user.role,
+      },
+    };
+  }
+
+  async loginWithGoogle(accessToken: string): Promise<AuthTokensResponse> {
+    const { data, error } = await this.supabaseService
+      .getClient()
+      .auth.getUser(accessToken);
+
+    const email = data.user?.email;
+
+    if (error || !email) {
+      throw new UnauthorizedException('Invalid Supabase OAuth session');
+    }
+
+    const oauthUser = data.user;
+    const fullName =
+      oauthUser.user_metadata?.full_name ||
+      oauthUser.user_metadata?.name ||
+      email.split('@')[0];
+
+    let user = await this.prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      user = await this.prisma.user.create({
+        data: {
+          email,
+          fullName,
+          provider: 'GOOGLE',
+          role: 'STUDENT',
+          isActive: true,
+        },
+      });
+    } else if (!user.isActive) {
+      throw new ForbiddenException(
+        'Your account is not activated or has been locked by an administrator. Please contact support.',
+      );
+    }
+
+    const payload = { sub: user.id, email: user.email, role: user.role };
+    const { accessToken: appAccessToken, refreshToken } =
+      await this.generateTokens(payload);
+
+    return {
+      message: 'Google login successful',
+      accessToken: appAccessToken,
       refreshToken,
       user: {
         id: user.id,

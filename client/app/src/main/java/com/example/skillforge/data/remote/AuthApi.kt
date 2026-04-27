@@ -21,6 +21,10 @@ data class LoginResponse(
     val user: UserInfo
 )
 
+data class OAuthLoginRequest(
+    val accessToken: String
+)
+
 data class RegisterRequest(
     val email: String,
     val password: String,
@@ -38,6 +42,9 @@ interface AuthApi {
 
     @POST("auth/login")
     suspend fun login(@Body request: LoginRequest): Response<LoginResponse>
+
+    @POST("auth/oauth/google")
+    suspend fun loginWithGoogle(@Body request: OAuthLoginRequest): Response<LoginResponse>
 
     @POST("auth/register")
     suspend fun register(@Body request: RegisterRequest): Response<RegisterResponse>

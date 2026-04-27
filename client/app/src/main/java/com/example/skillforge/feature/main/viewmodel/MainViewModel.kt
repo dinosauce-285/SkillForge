@@ -4,11 +4,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.skillforge.core.navigation.AppRoute
 import com.example.skillforge.domain.usecase.CheckSessionUseCase
+import com.example.skillforge.domain.usecase.LogoutUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class MainViewModel(private val checkSessionUseCase: CheckSessionUseCase) : ViewModel() {
+class MainViewModel(
+    private val checkSessionUseCase: CheckSessionUseCase,
+    private val logoutUseCase: LogoutUseCase
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow<AppRoute?>(null)
     val uiState: StateFlow<AppRoute?> = _uiState
@@ -43,5 +47,12 @@ class MainViewModel(private val checkSessionUseCase: CheckSessionUseCase) : View
 
     fun navigateTo(route: AppRoute) {
         _uiState.value = route
+    }
+
+    fun logout() {
+        viewModelScope.launch {
+            logoutUseCase()
+            _uiState.value = AppRoute.Login
+        }
     }
 }

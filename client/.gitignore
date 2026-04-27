@@ -1,19 +1,84 @@
+# Built application files
+*.apk
+*.ap_
+*.aab
+
+# Files for the ART/Dalvik VM
+*.dex
+
+# Java class files
+*.class
+
+# Generated files
+bin/
+gen/
+out/
+build/
+
+# Gradle files
+.gradle/
+build/
+app/build/
+local.properties
+
+# Log Files
+*.log
+
+# Android Studio Navigation editor temp files
+.navigation/
+
+# Android Studio captures folder
+captures/
+/captures
+
+# IntelliJ
 *.iml
-.gradle
-/local.properties
+.idea/
 /.idea/caches
 /.idea/libraries
 /.idea/modules.xml
 /.idea/workspace.xml
 /.idea/navEditor.xml
 /.idea/assetWizardSettings.xml
-.DS_Store
-/build
-/captures
+.idea/tasks.xml
+.idea/gradle.xml
+.idea/dictionaries
+
+# Keystore files
+# Uncomment the following lines if you do not want to check your keystore files in.
+#*.jks
+#*.keystore
+
+# External native build folder generated in Android Studio 2.2 and later
 .externalNativeBuild
-.cxx
-local.properties
-.idea/
+.cxx/
 
+# Google Services (e.g. APIs, Firebase, etc.)
+google-services.json
+
+# Freeline
+freeline.py
+freeline/
+freeline_project_description.json
+
+# fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots
+fastlane/test_output
+fastlane/readme.md
+
+# Version control
+vcs.xml
+
+# lint
+lint/intermediates/
+lint/generated/
+lint/outputs/
+lint/tmp/
+
+# OS specific files
+.DS_Store
+
+# Ignore rule files (Custom)
 CLIENT_RULES.md
-

@@ -3,6 +3,7 @@ package com.example.skillforge.data.repository
 import android.util.Log
 import com.example.skillforge.data.remote.AuthApi
 import com.example.skillforge.data.remote.LoginRequest
+import com.example.skillforge.data.remote.OAuthLoginRequest
 import com.example.skillforge.data.remote.RegisterRequest
 import com.example.skillforge.domain.model.AuthSession
 import com.example.skillforge.domain.model.AuthUser
@@ -14,13 +15,19 @@ import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.Google
 import io.github.jan.supabase.auth.status.SessionStatus
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlin.time.Duration.Companion.minutes
 import com.example.skillforge.data.local.AuthPreferences
 import com.example.skillforge.data.remote.UserInfo
 
 class AuthRepositoryImpl(
     private val api: AuthApi,
-    private val supabase: SupabaseClient
+    private val supabase: SupabaseClient,
+    private val authPreferences: AuthPreferences,
 ) : AuthRepository {
 
     override val sessionFlow: Flow<AuthSession?> = supabase.auth.sessionStatus.map { status ->
@@ -44,8 +51,8 @@ class AuthRepositoryImpl(
 
     override suspend fun verifySession(): Result<AuthSession> {
         return try {
-            val session = supabase.auth.currentSessionOrNull()
-            if (session != null) {
+            val accessToken = authPreferences.accessToken.firstOrNull()
+            if (!accessToken.isNullOrBlank()) {
                 val response = api.getMe()
                 if (response.isSuccessful && response.body() != null) {
                     val userInfo = response.body()!!
@@ -60,7 +67,7 @@ class AuthRepositoryImpl(
 
                     Result.success(
                         AuthSession(
-                            accessToken = session.accessToken,
+                            accessToken = accessToken,
                             user = AuthUser(
                                 id = userInfo.id,
                                 email = userInfo.email,
@@ -72,6 +79,7 @@ class AuthRepositoryImpl(
                 } else {
                     Log.e("AuthRepository", "Verify session failed with code: ${response.code()}")
                     if (response.code() == 401) {
+                        authPreferences.clearSession()
                         Result.failure(Exception("Unauthorized: Token rejected by backend"))
                     } else {
                         Result.failure(Exception("Backend verification failed"))
@@ -91,6 +99,7 @@ class AuthRepositoryImpl(
             val response = api.login(LoginRequest(email, password))
             if (response.isSuccessful && response.body() != null) {
                 val data = response.body()!!
+                authPreferences.saveTokens(data.accessToken, data.refreshToken)
                 Result.success(
                     AuthSession(
                         accessToken = data.accessToken,
@@ -125,8 +134,46 @@ class AuthRepositoryImpl(
         }
     }
 
-    override suspend fun loginWithGoogle() {
-        supabase.auth.signInWith(Google)
+    override suspend fun loginWithGoogle(): Result<AuthSession> {
+        return try {
+            supabase.auth.signInWith(Google)
+
+            val status = withTimeoutOrNull(5.minutes) {
+                supabase.auth.sessionStatus
+                    .filterIsInstance<SessionStatus.Authenticated>()
+                    .first()
+            }
+
+            if (status == null) {
+                return Result.failure(Exception("Google sign-in timed out or was cancelled"))
+            }
+
+            val supabaseSession = status.session
+
+            val response = api.loginWithGoogle(
+                OAuthLoginRequest(accessToken = supabaseSession.accessToken),
+            )
+
+            if (response.isSuccessful && response.body() != null) {
+                val data = response.body()!!
+                authPreferences.saveTokens(data.accessToken, data.refreshToken)
+                Result.success(
+                    AuthSession(
+                        accessToken = data.accessToken,
+                        user = AuthUser(
+                            id = data.user.id,
+                            email = data.user.email,
+                            fullName = data.user.fullName,
+                            role = data.user.role,
+                        ),
+                    ),
+                )
+            } else {
+                Result.failure(Exception(parseErrorMessage(response.errorBody()?.string())))
+            }
+        } catch (e: Exception) {
+            Result.failure(Exception(e.message ?: "Google sign-in failed"))
+        }
     }
 
     private fun parseErrorMessage(rawError: String?): String {
@@ -135,6 +182,15 @@ class AuthRepositoryImpl(
             val json = Gson().fromJson(rawError, JsonObject::class.java)
             json.get("message")?.asString ?: "Login failed"
         }.getOrElse { "Login failed" }
+    }
+
+    override suspend fun logout() {
+        authPreferences.clearSession()
+        try {
+            supabase.auth.signOut()
+        } catch (e: Exception) {
+            Log.e("AuthRepository", "Supabase signout error", e)
+        }
     }
 
     override suspend fun getMe(): Result<UserInfo> {

@@ -21,6 +21,7 @@ import { JwtRefreshPayload } from './strategies/jwt-refresh.strategy';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { Public } from './decorators/public.decorator';
 import { Request as ExpressRequest } from 'express';
+import { OAuthLoginDto } from './dto/oauth-login.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -50,6 +51,14 @@ export class AuthController {
   @Post('login')
   login(@Body() loginDto: LoginDto) {
     return this.authService.login(loginDto);
+  }
+
+  @Public()
+  @ApiOperation({ summary: 'Exchange a Supabase OAuth session for backend tokens' })
+  @ApiResponse({ status: 200, description: 'OAuth login successful' })
+  @Post('oauth/google')
+  loginWithGoogle(@Body() oauthLoginDto: OAuthLoginDto) {
+    return this.authService.loginWithGoogle(oauthLoginDto.accessToken);
   }
 
   /**
