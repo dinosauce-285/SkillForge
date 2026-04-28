@@ -15,6 +15,6 @@ export class DashboardController {
   @Roles('INSTRUCTOR', 'ADMIN')
   getInstructorDashboard(@CurrentUser() user: any) {
     // The user object comes from your JWT payload
-    return this.dashboardService.getInstructorDashboard(user.userId);
+    return this.dashboardService.getInstructorDashboard(user.id);
   }
 }
