@@ -17,4 +17,17 @@ interface LessonRepository {
         content: String,
         parentId: String?
     ): Result<DiscussionDto>
+
+    suspend fun getInstructorDiscussions(
+        token: String,
+        courseId: String? = null,
+        unansweredOnly: Boolean = true
+    ): Result<List<com.example.skillforge.data.remote.InstructorDiscussionDto>>
+
+    suspend fun replyToDiscussion(
+        token: String,
+        discussionId: String,
+        lessonId: String,
+        content: String
+    ): Result<com.example.skillforge.data.remote.InstructorDiscussionDto>
 }

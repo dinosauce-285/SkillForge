@@ -88,4 +88,44 @@ class LessonRepositoryImpl(private val api: LessonApi,
             Result.failure(e)
         }
     }
+
+    override suspend fun getInstructorDiscussions(
+        token: String,
+        courseId: String?,
+        unansweredOnly: Boolean
+    ): Result<List<com.example.skillforge.data.remote.InstructorDiscussionDto>> {
+        return try {
+            val response = discussionApi.getInstructorDiscussions(
+                token = "Bearer $token",
+                courseId = courseId,
+                unansweredOnly = unansweredOnly
+            )
+            if (response.isSuccessful) {
+                Result.success(response.body() ?: emptyList())
+            } else {
+                Result.failure(Exception("Failed to fetch instructor discussions. Code: ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun replyToDiscussion(
+        token: String,
+        discussionId: String,
+        lessonId: String,
+        content: String
+    ): Result<com.example.skillforge.data.remote.InstructorDiscussionDto> {
+        return try {
+            val request = com.example.skillforge.data.remote.ReplyDiscussionRequest(content, lessonId)
+            val response = discussionApi.replyToDiscussion("Bearer $token", discussionId, request)
+            if (response.isSuccessful && response.body() != null) {
+                Result.success(response.body()!!)
+            } else {
+                Result.failure(Exception("Failed to reply to discussion. Code: ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }
