@@ -112,7 +112,11 @@ export class DiscussionsService {
     };
   }
 
-  async getInstructorDiscussions(instructorId: string, courseId?: string, unansweredOnly?: boolean) {
+  async getInstructorDiscussions(
+    instructorId: string,
+    courseId?: string,
+    unansweredOnly?: boolean,
+  ) {
     const whereClause: any = {
       parentId: null,
       lesson: {
@@ -148,11 +152,21 @@ export class DiscussionsService {
           },
         },
         user: {
-          select: { id: true, fullName: true, profile: { select: { avatarUrl: true } } },
+          select: {
+            id: true,
+            fullName: true,
+            profile: { select: { avatarUrl: true } },
+          },
         },
         replies: {
           include: {
-            user: { select: { id: true, fullName: true, profile: { select: { avatarUrl: true } } } },
+            user: {
+              select: {
+                id: true,
+                fullName: true,
+                profile: { select: { avatarUrl: true } },
+              },
+            },
           },
           orderBy: { createdAt: 'asc' as const },
         },
@@ -167,7 +181,7 @@ export class DiscussionsService {
         course: {
           id: discussion.lesson.chapter.course.id,
           title: discussion.lesson.chapter.course.title,
-        }
+        },
       },
       user: {
         id: discussion.user.id,
@@ -184,7 +198,8 @@ export class DiscussionsService {
         replies: [],
       })),
     }));
-    
+  }
+
   private async createDiscussionNotification(params: {
     discussionId: string;
     lessonId: string;
