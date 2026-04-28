@@ -59,6 +59,7 @@ import com.example.skillforge.feature.profile.ui.ProfileScreen
 enum class SkillforgeInstructorRoute(val title: String, val icon: ImageVector) {
     Dashboard("Dashboard", Icons.Default.Home),
     Courses("Courses", Icons.AutoMirrored.Filled.List),
+    Coupons("Coupons", Icons.Default.Payments),
     Analytics("Analytics", Icons.Default.Info),
     QnA("Q&A", Icons.Default.ChatBubbleOutline),
     Account("Account", Icons.Default.AccountCircle)
@@ -128,6 +129,7 @@ fun SkillforgeInstructorDashboardScreen(
                 SkillforgeInstructorRoute.Courses -> {
                     CourseListTabContent(courses, isLoading, onCourseClick)
                 }
+                SkillforgeInstructorRoute.Coupons -> InstructorCouponScreen(token = token)
                 SkillforgeInstructorRoute.Analytics -> {
                     AnalyticsTabContent(dashboardData = dashboardData, isLoading = isLoading)
                 }

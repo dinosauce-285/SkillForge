@@ -55,6 +55,38 @@ class CourseRepositoryImpl(
         }
     }
 
+    override suspend fun getCourseSuggestions(): Result<List<CourseSummary>> {
+        return try {
+            val response = api.getCourseSuggestions()
+            if (response.isSuccessful && response.body() != null) {
+                Result.success(response.body()!!.map { dto ->
+                    CourseSummary(
+                        id = dto.id,
+                        title = dto.title,
+                        subtitle = dto.subtitle,
+                        summary = dto.summary,
+                        thumbnailUrl = dto.thumbnailUrl,
+                        categoryId = dto.category.id,
+                        categoryName = dto.category.name,
+                        instructorName = dto.instructor.fullName,
+                        level = dto.level,
+                        price = dto.price,
+                        isFree = dto.isFree,
+                        averageRating = dto.averageRating,
+                        studentCount = dto.studentCount,
+                        reviewCount = dto.counts.reviews,
+                        chapterCount = dto.counts.chapters,
+                        tags = dto.tags.map { it.name },
+                    )
+                })
+            } else {
+                Result.failure(Exception("Failed to load suggestions"))
+            }
+        } catch (e: Exception) {
+            Result.failure(Exception(e.message ?: "Failed to load suggestions"))
+        }
+    }
+
     override suspend fun getCourseDetails(courseId: String): Result<CourseDetails> {
         return try {
             val response = api.getCourseDetails(courseId)

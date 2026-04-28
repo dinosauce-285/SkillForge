@@ -1,4 +1,4 @@
-import { IsNumber, IsPositive, IsString } from 'class-validator';
+import { IsNumber, IsOptional, IsPositive, IsString } from 'class-validator';
 
 export class CreateOrderDto {
   @IsString()
@@ -7,4 +7,8 @@ export class CreateOrderDto {
   @IsNumber()
   @IsPositive()
   amount!: number;
+
+  @IsOptional()
+  @IsString()
+  couponCode?: string;
 }
