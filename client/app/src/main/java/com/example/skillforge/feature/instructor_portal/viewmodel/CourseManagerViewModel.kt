@@ -77,4 +77,16 @@ class CourseManagerViewModel(
             loadCourseStructure(token, courseId)
         }
     }
+
+    private val _studentsState = MutableStateFlow<List<com.example.skillforge.data.remote.CourseStudentDto>?>(null)
+    val studentsState: StateFlow<List<com.example.skillforge.data.remote.CourseStudentDto>?> = _studentsState
+
+    fun loadStudents() {
+        if (currentToken.isEmpty() || currentCourseId.isEmpty()) return
+        viewModelScope.launch {
+            courseRepo.getCourseStudents(currentToken, currentCourseId)
+                .onSuccess { _studentsState.value = it }
+                .onFailure { _studentsState.value = emptyList() } // fallback or handle error
+        }
+    }
 }
