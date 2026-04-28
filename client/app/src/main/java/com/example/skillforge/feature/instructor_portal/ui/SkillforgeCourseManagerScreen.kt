@@ -381,7 +381,7 @@ fun CourseStudentsView(studentsList: List<com.example.skillforge.data.remote.Cou
                         shape = RoundedCornerShape(8.dp),
                         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
                     ) {
-                        Text("Xem bài nộp", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        Text("View submission", fontSize = 11.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }
