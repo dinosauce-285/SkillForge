@@ -14,12 +14,15 @@ interface DashboardApi {
 data class DashboardStatsDto(
     val totalStudents: Int,
     val activeCourses: Int,
-    val totalEarnings: Double
+    val totalEarnings: Double,
+    val passRate: Float,
+    val failRate: Float
 )
 
 data class ChartDataDto(
     val month: String,
-    val count: Int
+    val count: Int,
+    val revenue: Double
 )
 
 data class InstructorDashboardDto(

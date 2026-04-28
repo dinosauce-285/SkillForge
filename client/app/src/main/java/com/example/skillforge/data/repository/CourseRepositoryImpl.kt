@@ -184,4 +184,18 @@ class CourseRepositoryImpl(
             Result.failure(Exception(e.message ?: "Failed to check enrollment status"))
         }
     }
+
+    override suspend fun getCourseStudents(token: String, courseId: String): Result<List<com.example.skillforge.data.remote.CourseStudentDto>> {
+        return try {
+            val bearerToken = if (token.startsWith("Bearer ")) token else "Bearer $token"
+            val response = api.getCourseStudents(courseId, bearerToken)
+            if (response.isSuccessful && response.body() != null) {
+                Result.success(response.body()!!)
+            } else {
+                Result.failure(Exception("Failed to fetch course students: ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(Exception(e.message ?: "Failed to fetch course students"))
+        }
+    }
 }
