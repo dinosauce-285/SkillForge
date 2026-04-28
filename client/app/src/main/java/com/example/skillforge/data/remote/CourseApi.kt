@@ -122,6 +122,9 @@ interface CourseApi {
         @Query("level") level: String? = null,
     ): Response<CourseListResponse>
 
+    @GET("courses/suggested/recommendations")
+    suspend fun getCourseSuggestions(): Response<List<CourseSummaryDto>>
+
     @GET("courses/{id}")
     suspend fun getCourseDetails(@Path("id") courseId: String): Response<CourseDetailsDto>
 

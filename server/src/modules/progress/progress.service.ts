@@ -1,9 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { NotificationType } from '@prisma/client';
+import { NotificationsService } from '../notifications/notifications.service';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class ProgressService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notificationsService: NotificationsService,
+  ) {}
 
   async markLessonCompleted(
     userId: string,
@@ -15,19 +20,43 @@ export class ProgressService {
         id: lessonId,
         deletedAt: null,
       },
+      select: {
+        id: true,
+        chapter: {
+          select: {
+            course: {
+              select: {
+                id: true,
+                title: true,
+              },
+            },
+          },
+        },
+      },
     });
 
     if (!lesson) {
       throw new NotFoundException(`Lesson with id "${lessonId}" not found.`);
     }
 
-    return await this.prisma.lessonProgress.upsert({
+    const lessonProgress = await this.prisma.lessonProgress.upsert({
       where: {
         userId_lessonId: { userId, lessonId },
       },
       update: { isCompleted },
       create: { userId, lessonId, isCompleted },
     });
+
+    if (isCompleted) {
+      await this.createCourseCompletedNotification({
+        userId,
+        lessonId,
+        courseId: lesson.chapter.course.id,
+        courseTitle: lesson.chapter.course.title,
+      });
+    }
+
+    return lessonProgress;
   }
 
   // Get % of the course (Use in Course Details)
@@ -202,5 +231,53 @@ export class ProgressService {
       badgesEarned: Math.floor(totalCompletedLessonsAllCourses / 5),
       courses: coursesData,
     };
+  }
+
+  private async createCourseCompletedNotification(params: {
+    userId: string;
+    lessonId: string;
+    courseId: string;
+    courseTitle: string;
+  }) {
+    try {
+      const courseProgress = await this.getCourseProgress(
+        params.userId,
+        params.courseId,
+      );
+
+      if (courseProgress.percentage !== 100) {
+        return;
+      }
+
+      const existingNotification = await this.prisma.notification.findFirst({
+        where: {
+          recipientId: params.userId,
+          type: NotificationType.COURSE_COMPLETED,
+          metadata: {
+            path: ['courseId'],
+            equals: params.courseId,
+          },
+        },
+        select: { id: true },
+      });
+
+      if (existingNotification) {
+        return;
+      }
+
+      await this.notificationsService.createNotification({
+        recipientId: params.userId,
+        type: NotificationType.COURSE_COMPLETED,
+        title: 'Course completed',
+        message: `You completed ${params.courseTitle}.`,
+        metadata: {
+          courseId: params.courseId,
+          courseTitle: params.courseTitle,
+          lessonId: params.lessonId,
+        },
+      });
+    } catch (error) {
+      console.error('Failed to create course completion notification', error);
+    }
   }
 }

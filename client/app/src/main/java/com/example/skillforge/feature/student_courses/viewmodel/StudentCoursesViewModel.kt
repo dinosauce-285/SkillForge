@@ -19,6 +19,7 @@ import kotlinx.coroutines.launch
 data class StudentCourseListUiState(
     val isLoading: Boolean = false,
     val courses: List<CourseSummary> = emptyList(),
+    val suggestions: List<CourseSummary> = emptyList(),
     val categories: List<Category> = emptyList(),
     val searchQuery: String = "",
     val selectedCategoryId: String? = null,
@@ -74,16 +75,21 @@ class StudentCoursesViewModel(
                     level = currentState.selectedLevel,
                 )
             }
+            val suggestionsDeferred = async { courseRepository.getCourseSuggestions() }
 
             val categoriesResult = categoriesDeferred.await()
             val coursesResult = coursesDeferred.await()
+            val suggestionsResult = suggestionsDeferred.await()
 
             val categories = categoriesResult.getOrDefault(currentState.categories)
+            val suggestions = suggestionsResult.getOrDefault(emptyList())
+
             coursesResult.fold(
                 onSuccess = { courses ->
                     _courseListState.value = currentState.copy(
                         isLoading = false,
                         categories = categories,
+                        suggestions = suggestions,
                         courses = courses,
                         errorMessage = categoriesResult.exceptionOrNull()?.message,
                     )
@@ -92,6 +98,7 @@ class StudentCoursesViewModel(
                     _courseListState.value = currentState.copy(
                         isLoading = false,
                         categories = categories,
+                        suggestions = suggestions,
                         courses = emptyList(),
                         errorMessage = error.message ?: "Unable to load courses",
                     )

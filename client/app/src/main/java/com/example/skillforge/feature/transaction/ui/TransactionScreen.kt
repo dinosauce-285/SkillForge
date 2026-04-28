@@ -226,7 +226,7 @@ fun TransactionScreen(
                                     maxLines = 2
                                 )
                                 Text("Instructor: ${uiState.course?.instructorName}", fontSize = 14.sp, color = Color.Gray)
-                                Text("${formatPrice(uiState.course?.price ?: 0.0)} VND", fontWeight = FontWeight.Bold, color = PrimaryOrange)
+                                Text(formatPrice(uiState.course?.price ?: 0.0), fontWeight = FontWeight.Bold, color = PrimaryOrange)
                             }
                         }
                     }
@@ -309,13 +309,13 @@ fun TransactionScreen(
                         
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                             Text("Subtotal", color = Color.Gray, fontSize = 14.sp)
-                            Text("${formatPrice(uiState.course?.price ?: 0.0)} VND", fontSize = 14.sp)
+                            Text(formatPrice(uiState.course?.price ?: 0.0), fontSize = 14.sp)
                         }
                         
-                        if (uiState.discountAmount > 0) {
+                        if (uiState.discountPercent > 0) {
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                 Text("Promo Code", color = Color(0xFF2E7D32), fontSize = 14.sp, fontWeight = FontWeight.Medium)
-                                Text("-${formatPrice((uiState.discountAmount / 100.0))} VND", color = Color(0xFF2E7D32), fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                                Text("-${formatPrice((uiState.discountPercent / 100.0) * (uiState.course?.price ?: 0.0))}", color = Color(0xFF2E7D32), fontSize = 14.sp, fontWeight = FontWeight.Medium)
                             }
                         }
                         
@@ -330,13 +330,13 @@ fun TransactionScreen(
                             Column(horizontalAlignment = Alignment.End) {
                                 Row(verticalAlignment = Alignment.Bottom) {
                                     Text(
-                                        formatPrice((uiState.course?.price ?: 0.0) - (uiState.discountAmount / 100.0)),
+                                        formatPrice((uiState.course?.price ?: 0.0) * (1 - (uiState.discountPercent / 100.0))),
                                         fontSize = 30.sp,
                                         fontWeight = FontWeight.ExtraBold,
                                         color = PrimaryOrange
                                     )
                                     Text(
-                                        " VND",
+                                        "",
                                         fontSize = 14.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = PrimaryOrange,
@@ -372,7 +372,7 @@ fun TransactionScreen(
 }
 
 private fun formatPrice(price: Double): String {
-    return String.format("%.0f", price * 1_000_000)
+    return String.format("$%.2f", price)
 }
 
 @Preview(showBackground = true, showSystemUi = true, device = Devices.PIXEL_7)
@@ -385,6 +385,7 @@ fun TransactionScreenPreview() {
             viewModel = remember { com.example.skillforge.feature.transaction.viewmodel.TransactionViewModel(
                 courseRepository = TODO(),
                 orderRepository = TODO(),
+                couponRepository = TODO(),
             ) }
         )
     }

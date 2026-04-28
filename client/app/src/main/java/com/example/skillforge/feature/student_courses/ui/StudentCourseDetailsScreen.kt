@@ -399,7 +399,7 @@ private fun ErrorDetailsState(
 }
 
 private fun coursePrice(course: CourseDetails): String {
-    return if (course.isFree || course.price == 0.0) "Free" else "$" + "%,.0f".format(course.price)
+    return if (course.isFree || course.price == 0.0) "Free" else String.format("$%.2f", course.price)
 }
 
 private fun formatRating(value: Float): String = String.format("%.1f", value)

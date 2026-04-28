@@ -32,6 +32,11 @@ export class CoursesController {
     return this.coursesService.findAll(query);
   }
 
+  @Get('suggested/recommendations')
+  getSuggestions() {
+    return this.coursesService.getSuggestions();
+  }
+
   @Get(':id')
   findOne(@Param('id', new ParseUUIDPipe()) id: string) {
     return this.coursesService.findOne(id);
