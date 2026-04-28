@@ -11,19 +11,23 @@ import { CourseListQueryDto } from './dto/course-list-query.dto';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { ProgressService } from '../progress/progress.service';
 
 @Injectable()
 export class CoursesService {
   private supabase: SupabaseClient;
 
-  constructor(private readonly prisma: PrismaService) {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly progressService: ProgressService
+  ) {
     this.supabase = createClient(
       process.env.SUPABASE_URL || '',
       process.env.SUPABASE_SERVICE_ROLE_KEY || '',
     );
   }
 
-  async getCourseForManager(id: string, user: { id: string; role: Role }) {
+  async getCourseForManager(id: string, user: { userId: string; role: Role }) {
     const course = await this.prisma.course.findFirst({
       where: {
         id,
@@ -54,6 +58,63 @@ export class CoursesService {
     this.assertCanManageCourse(course.instructorId, user);
 
     return course;
+  }
+
+  async getCourseStudents(courseId: string, user: { userId: string; role: Role }) {
+    const course = await this.prisma.course.findFirst({
+      where: {
+        id: courseId,
+        deletedAt: null,
+      },
+      select: { instructorId: true }
+    });
+
+    if (!course) {
+      throw new NotFoundException(`Course with id "${courseId}" not found`);
+    }
+
+    this.assertCanManageCourse(course.instructorId, user);
+
+    const enrollments = await this.prisma.enrollment.findMany({
+      where: {
+        courseId,
+        status: 'ACTIVE'
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            fullName: true,
+            email: true,
+            profile: {
+              select: {
+                avatarUrl: true
+              }
+            }
+          }
+        }
+      },
+      orderBy: {
+        enrolledAt: 'asc'
+      }
+    });
+
+    // Calculate dynamic progress for each enrolled student
+    const result = await Promise.all(
+      enrollments.map(async (enc) => {
+        const progressData = await this.progressService.getCourseProgress(enc.userId, courseId);
+        return {
+          studentId: enc.user.id,
+          fullName: enc.user.fullName,
+          email: enc.user.email,
+          avatarUrl: enc.user.profile?.avatarUrl || null,
+          progressPercentage: progressData.percentage,
+          enrolledAt: enc.enrolledAt
+        };
+      })
+    );
+
+    return result;
   }
 
   async findAll(query: CourseListQueryDto) {
@@ -191,9 +252,11 @@ export class CoursesService {
     };
   }
 
-
-  async create(user: { id: string; role: Role }, dto: any, thumbnailFile?: Express.Multer.File,) {
-
+  async create(
+    user: { userId: string; role: Role },
+    dto: any, // Use your CreateCourseDto type here
+    thumbnailFile?: Express.Multer.File,
+  ) {
     if (!dto.title?.trim()) {
       throw new BadRequestException('title is required');
     }
@@ -218,7 +281,7 @@ export class CoursesService {
     if (thumbnailFile) {
       // 1. Generate a unique file name to prevent overwriting
       const fileExt = thumbnailFile.originalname.split('.').pop();
-      const uniqueFileName = `${user.id}-${Date.now()}.${fileExt}`;
+      const uniqueFileName = `${user.userId}-${Date.now()}.${fileExt}`;
 
       // 2. Upload to Supabase Storage
       const { data, error } = await this.supabase.storage
@@ -246,7 +309,7 @@ export class CoursesService {
 
     const course = await this.prisma.course.create({
       data: {
-        instructorId: user.id,
+        instructorId: user.userId,
         categoryId,
         title: dto.title.trim(),
         subtitle: dto.subtitle?.trim() || null,
@@ -275,7 +338,7 @@ export class CoursesService {
 
   async update(
     id: string,
-    user: { id: string; role: Role },
+    user: { userId: string; role: Role },
     dto: UpdateCourseDto,
   ) {
     const course = await this.prisma.course.findFirst({
@@ -352,7 +415,7 @@ export class CoursesService {
     return updatedCourse;
   }
 
-  async remove(id: string, user: { id: string; role: Role }) {
+  async remove(id: string, user: { userId: string; role: Role }) {
     const course = await this.prisma.course.findFirst({
       where: {
         id,
@@ -470,13 +533,13 @@ export class CoursesService {
 
   private assertCanManageCourse(
     courseInstructorId: string,
-    user: { id: string; role: Role },
+    user: { userId: string; role: Role },
   ) {
     if (user.role === Role.ADMIN) {
       return;
     }
 
-    if (user.role !== Role.INSTRUCTOR || courseInstructorId !== user.id) {
+    if (user.role !== Role.INSTRUCTOR || courseInstructorId !== user.userId) {
       throw new ForbiddenException('You are not allowed to manage this course');
     }
   }

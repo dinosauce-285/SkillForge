@@ -56,7 +56,7 @@ export class CoursesController {
     @UploadedFile() thumbnail?: Express.Multer.File,
   ) {
     return this.coursesService.create(
-      { id: user.id, role: user.role },
+      { userId: user.id, role: user.role },
       dto,
       thumbnail,
     );
@@ -70,21 +70,41 @@ export class CoursesController {
     @Request() req,
     @Body() dto: UpdateCourseDto,
   ) {
-    return this.coursesService.update(id, req.user, dto);
+    return this.coursesService.update(
+      id,
+      { userId: req.user.id, role: req.user.role },
+      dto,
+    );
   }
 
   @Roles('INSTRUCTOR', 'ADMIN')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Delete(':id')
   remove(@Param('id', new ParseUUIDPipe()) id: string, @Request() req) {
-    return this.coursesService.remove(id, req.user);
+    return this.coursesService.remove(
+      id,
+      { userId: req.user.id, role: req.user.role },
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Roles('INSTRUCTOR', 'ADMIN')
+  @Get(':id/students')
+  getCourseStudents(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.coursesService.getCourseStudents(
+      id,
+      { userId: user.id, role: user.role },
+    );
   }
 
   @UseGuards(JwtAuthGuard)
   @Roles('INSTRUCTOR', 'ADMIN')
   @Get(':id/manager')
   getCourseForManager(@Param('id') id: string, @CurrentUser() user: any) {
-    return this.coursesService.getCourseForManager(id, user);
+    return this.coursesService.getCourseForManager(
+      id,
+      { userId: user.id, role: user.role },
+    );
   }
 
   @UseGuards(JwtAuthGuard)
