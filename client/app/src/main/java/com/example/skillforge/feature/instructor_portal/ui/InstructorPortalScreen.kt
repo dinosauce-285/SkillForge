@@ -60,6 +60,7 @@ enum class SkillforgeInstructorRoute(val title: String, val icon: ImageVector) {
     Dashboard("Dashboard", Icons.Default.Home),
     Courses("Courses", Icons.AutoMirrored.Filled.List),
     Analytics("Analytics", Icons.Default.Info),
+    QnA("Q&A", Icons.Default.ChatBubbleOutline),
     Account("Account", Icons.Default.AccountCircle)
 }
 
@@ -70,6 +71,7 @@ fun SkillforgeInstructorDashboardScreen(
     analyticsData: InstructorAnalyticsDto? = null,
     token: String,
     profileViewModel: ProfileViewModel,
+    qnaViewModel: com.example.skillforge.feature.instructor_portal.viewmodel.InstructorQnAViewModel,
     dashboardData: InstructorDashboardDto? = null,
     isLoading: Boolean = false,
     onNavigateToCreateCourse: () -> Unit = {},
@@ -128,6 +130,9 @@ fun SkillforgeInstructorDashboardScreen(
                 }
                 SkillforgeInstructorRoute.Analytics -> {
                     AnalyticsTabContent(dashboardData = dashboardData, isLoading = isLoading)
+                }
+                SkillforgeInstructorRoute.QnA -> {
+                    QnATabContent(viewModel = qnaViewModel)
                 }
                 SkillforgeInstructorRoute.Account -> {
                     ProfileScreen(

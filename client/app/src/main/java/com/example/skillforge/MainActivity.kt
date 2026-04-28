@@ -293,6 +293,13 @@ class MainActivity : ComponentActivity() {
                                             factory = ProfileViewModelFactory(appContainer)
                                         )
 
+                                        val qnaViewModel: com.example.skillforge.feature.instructor_portal.viewmodel.InstructorQnAViewModel = viewModel(
+                                            factory = com.example.skillforge.feature.instructor_portal.viewmodel.InstructorQnAViewModelFactory(
+                                                appContainer.lessonRepository,
+                                                appContainer.courseRepository
+                                            )
+                                        )
+
                                         val courses by portalViewModel.courses.collectAsState()
                                         val isLoading by portalViewModel.isLoading.collectAsState()
                                         val dashboardData by portalViewModel.dashboardData.collectAsState()
@@ -300,12 +307,14 @@ class MainActivity : ComponentActivity() {
                                         LaunchedEffect(Unit) {
                                             portalViewModel.fetchMyCourses(route.session.accessToken)
                                             portalViewModel.fetchDashboardData(route.session.accessToken)
+                                            qnaViewModel.initialize(route.session.accessToken)
                                         }
 
                                         SkillforgeInstructorDashboardScreen(
                                             courses = courses,
                                             isLoading = isLoading,
                                             dashboardData = dashboardData,
+                                            qnaViewModel = qnaViewModel,
                                             onNavigateToCreateCourse = {
                                                 mainViewModel.navigateTo(AppRoute.CourseForm(route.session))
                                             },
