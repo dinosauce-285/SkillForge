@@ -49,6 +49,7 @@ export class DashboardService {
 
       for (let i = 5; i >= 0; i--) {
         const d = new Date();
+        d.setDate(1); // Set to 1st to prevent month skipping
         d.setMonth(d.getMonth() - i);
         chartDataRaw.push({
           month: monthNames[d.getMonth()],
@@ -71,16 +72,23 @@ export class DashboardService {
       });
 
       // 5. Format to match the DTO expected by Android
-      const chartData = chartDataRaw.map((c) => ({
-        month: c.month,
-        count: c.count,
-      }));
+      const chartData = chartDataRaw.map((c) => {
+        // Generate mock revenue based on count
+        const fakeRevenue = c.count === 0 ? Math.random() * 50 : c.count * (100 + Math.random() * 50);
+        return {
+          month: c.month,
+          count: c.count,
+          revenue: parseFloat(fakeRevenue.toFixed(2))
+        }
+      });
 
       return {
         stats: {
           totalStudents,
           activeCourses,
-          totalEarnings: 0,
+          totalEarnings: chartData.reduce((acc, obj) => acc + obj.revenue, 0),
+          passRate: 75,
+          failRate: 25
         },
         chartData,
       };

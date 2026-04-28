@@ -151,5 +151,20 @@ interface CourseApi {
     @GET("courses/instructor/my-courses")
     suspend fun getMyCourses(
         @Header("Authorization") token: String
-    ): Response<List<CourseSummaryDto>> // translated comment
+    ): Response<List<CourseSummaryDto>>
+
+    @GET("courses/{id}/students")
+    suspend fun getCourseStudents(
+        @Path("id") courseId: String,
+        @Header("Authorization") token: String
+    ): Response<List<CourseStudentDto>>
 }
+
+data class CourseStudentDto(
+    val studentId: String,
+    val fullName: String,
+    val email: String,
+    val avatarUrl: String?,
+    val progressPercentage: Int,
+    val enrolledAt: String
+)

@@ -78,12 +78,22 @@ fun SkillforgeInstructorDashboardScreen(
     onNavigateToUploadMaterial: () -> Unit = {},
     onLogout: () -> Unit = {}
 ) {
+    val profileState by profileViewModel.uiState.collectAsState()
     var selectedRoute by remember { mutableStateOf(SkillforgeInstructorRoute.Dashboard) }
 
     Scaffold(
         topBar = { 
             if (selectedRoute != SkillforgeInstructorRoute.Account) {
-                SkillforgeInstructorTopBar() 
+                var avatarToPass: String? = null
+                var nameToPass = "Instructor"
+                if (profileState is com.example.skillforge.feature.profile.viewmodel.ProfileUiState.Success) {
+                    avatarToPass = (profileState as com.example.skillforge.feature.profile.viewmodel.ProfileUiState.Success).avatarUrl
+                    nameToPass = (profileState as com.example.skillforge.feature.profile.viewmodel.ProfileUiState.Success).fullName
+                }
+                SkillforgeInstructorTopBar(
+                    avatarUrl = avatarToPass,
+                    fullName = nameToPass
+                ) 
             }
         },
         bottomBar = {
@@ -316,7 +326,16 @@ fun CourseListTabContent(
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator(color = PrimaryOrange) }
         } else {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp), contentPadding = PaddingValues(bottom = 80.dp)) {
-                val filteredCourses = courses.filter { it.title.contains(searchQuery, ignoreCase = true) }
+                val filteredCourses = courses.filter { course ->
+                    val matchesSearch = course.title.contains(searchQuery, ignoreCase = true)
+                    val matchesFilter = when (selectedFilter) {
+                        "Published" -> course.status == "PUBLISHED"
+                        "Drafts" -> course.status == "DRAFT"
+                        "Under Review" -> course.status == "PENDING"
+                        else -> true // "All Courses"
+                    }
+                    matchesSearch && matchesFilter
+                }
                 items(filteredCourses) { course ->
                     InstructorCourseItemCard(course = course, onClick = { onCourseClick(course.id) })
                 }
@@ -499,6 +518,87 @@ fun AnalyticsTabContent(dashboardData: InstructorDashboardDto?, isLoading: Boole
                 }
             }
         }
+
+        item {
+            Card(
+                colors = CardDefaults.cardColors(containerColor = SurfaceColor),
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Column {
+                            Text("Revenue Dynamics", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = TextPrimaryColor)
+                            Text("Monthly revenue generated", fontSize = 12.sp, color = TextSecondaryColor)
+                        }
+                        Surface(color = SearchBarBackgroundColor, shape = RoundedCornerShape(8.dp)) {
+                            Text("Last 6 Months", fontSize = 10.sp, modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp), color = TextPrimaryColor)
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(32.dp))
+
+                    Box(modifier = Modifier.fillMaxWidth().height(180.dp)) {
+                        if (chartData.isEmpty()) {
+                            Text("No data available yet.", color = TextSecondaryColor, modifier = Modifier.align(Alignment.Center))
+                        } else {
+                            val maxRevenue = chartData.maxOfOrNull { it.revenue }?.toFloat()?.coerceAtLeast(1f) ?: 1f
+
+                            Row(
+                                modifier = Modifier.fillMaxSize(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.Bottom
+                            ) {
+                                chartData.forEach { dataPoint ->
+                                    val heightFraction = (dataPoint.revenue.toFloat() / maxRevenue)
+
+                                    Column(
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Text(text = "$${dataPoint.revenue.toInt()}", fontSize = 10.sp, color = TextSecondaryColor, fontWeight = FontWeight.Bold)
+                                        Spacer(modifier = Modifier.height(6.dp))
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth(0.5f)
+                                                .fillMaxHeight(heightFraction.coerceAtLeast(0.05f))
+                                                .background(Color(0xFF4CAF50), RoundedCornerShape(topStart = 6.dp, topEnd = 6.dp))
+                                        )
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Text(text = dataPoint.month, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextPrimaryColor)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        item {
+            Card(
+                colors = CardDefaults.cardColors(containerColor = SurfaceColor),
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Text("Pass vs Fail Ratio", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = TextPrimaryColor)
+                    Text("Student success metrics (Simulated)", fontSize = 12.sp, color = TextSecondaryColor)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text("Pass: ${stats.passRate}%", color = Color(0xFF4CAF50), fontWeight = FontWeight.Bold)
+                        Text("Fail: ${stats.failRate}%", color = Color(0xFFF44336), fontWeight = FontWeight.Bold)
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    LinearProgressIndicator(
+                        progress = { stats.passRate / 100f },
+                        modifier = Modifier.fillMaxWidth().height(12.dp).clip(RoundedCornerShape(8.dp)),
+                        color = Color(0xFF4CAF50),
+                        trackColor = Color(0xFFF44336)
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -534,24 +634,40 @@ fun AnalyticsMetricCard(title: String, value: String, growth: String, progressCo
         }
     }
 }
+
 @Composable
-fun SkillforgeInstructorTopBar() {
+fun SkillforgeInstructorTopBar(
+    avatarUrl: String? = null,
+    fullName: String = "Instructor"
+) {
     Row(
-        modifier = Modifier.fillMaxWidth().background(BackgroundColor).padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 20.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Image(
-                imageVector = Icons.Default.AccountCircle,
-                contentDescription = "Instructor Avatar",
-                modifier = Modifier.size(44.dp).clip(CircleShape),
-                contentScale = ContentScale.Crop
-            )
+            if (avatarUrl != null) {
+                AsyncImage(
+                    model = avatarUrl,
+                    contentDescription = "Profile",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.size(48.dp).clip(CircleShape)
+                )
+            } else {
+                Image(
+                    imageVector = Icons.Default.AccountCircle,
+                    contentDescription = "Profile",
+                    modifier = Modifier.size(48.dp).clip(CircleShape)
+                )
+            }
             Spacer(modifier = Modifier.width(12.dp))
-            Text("Digital Curator", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = TextPrimaryColor)
+            Column {
+                Text(text = "Welcome back,", fontSize = 12.sp, color = TextSecondaryColor)
+                Text(text = fullName, fontWeight = FontWeight.Bold, fontSize = 20.sp, color = TextPrimaryColor)
+            }
         }
-        Icon(Icons.Default.Notifications, contentDescription = "Notifications", tint = TextPrimaryColor)
+        
+        Surface { Icon(Icons.Default.Notifications, contentDescription = "Notifications", tint = TextPrimaryColor) }
     }
 }
 

@@ -176,7 +176,13 @@ fun MyCoursesScreen(
                             MyCourseCard(
                                 course = course,
                                 onClick = { onCourseClick(course.courseId) },
-                                onRateClick = { courseToReview = course }
+                                onRateClick = {
+                                    if (course.percentage > 20) {
+                                        courseToReview = course
+                                    } else {
+                                        Toast.makeText(context, "You can only review after completing more than 20% of the course.", Toast.LENGTH_SHORT).show()
+                                    }
+                                }
                             )
                         }
                     }

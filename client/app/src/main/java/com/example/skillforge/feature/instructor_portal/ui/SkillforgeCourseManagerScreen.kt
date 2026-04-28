@@ -37,6 +37,12 @@ import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
 import androidx.compose.ui.platform.LocalContext
+import coil.compose.AsyncImage
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
+
+enum class ManagerTab {
+    Curriculum, Students
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,10 +55,12 @@ fun SkillforgeCourseManagerScreen(
     onNavigateToQuizBuilder: (courseId: String, chapterId: String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val studentsState by viewModel.studentsState.collectAsState()
 
     var showAddChapterDialog by remember { mutableStateOf(false) }
     var showAddLessonDialogForChapter by remember { mutableStateOf<String?>(null) }
     var newItemTitle by remember { mutableStateOf("") }
+    var selectedTab by remember { mutableStateOf(ManagerTab.Curriculum) }
 
     val context = LocalContext.current
 
@@ -119,31 +127,61 @@ fun SkillforgeCourseManagerScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Curriculum Manager", fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+            Column {
+                TopAppBar(
+                    title = { Text("Course Manager", fontWeight = FontWeight.Bold) },
+                    navigationIcon = {
+                        IconButton(onClick = onBack) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
+                )
+                TabRow(
+                    selectedTabIndex = selectedTab.ordinal,
+                    containerColor = MaterialTheme.colorScheme.background,
+                    contentColor = PrimaryOrange,
+                    indicator = { tabPositions ->
+                        TabRowDefaults.SecondaryIndicator(
+                            Modifier.tabIndicatorOffset(tabPositions[selectedTab.ordinal]),
+                            color = PrimaryOrange
+                        )
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
-            )
+                ) {
+                    ManagerTab.values().forEach { tab ->
+                        Tab(
+                            selected = selectedTab == tab,
+                            onClick = { 
+                                selectedTab = tab 
+                                if (tab == ManagerTab.Students) viewModel.loadStudents()
+                            },
+                            text = { Text(tab.name, fontWeight = FontWeight.Bold) },
+                            selectedContentColor = PrimaryOrange,
+                            unselectedContentColor = Color.Gray
+                        )
+                    }
+                }
+            }
         },
         floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = { showAddChapterDialog = true },
-                icon = { Icon(Icons.Default.Add, contentDescription = "Add Chapter") },
-                text = { Text("Add Chapter", fontWeight = FontWeight.Bold) },
-                containerColor = PrimaryOrange,
-                contentColor = Color.White,
-                shape = CircleShape
-            )
+            if (selectedTab == ManagerTab.Curriculum) {
+                ExtendedFloatingActionButton(
+                    onClick = { showAddChapterDialog = true },
+                    icon = { Icon(Icons.Default.Add, contentDescription = "Add Chapter") },
+                    text = { Text("Add Chapter", fontWeight = FontWeight.Bold) },
+                    containerColor = PrimaryOrange,
+                    contentColor = Color.White,
+                    shape = CircleShape
+                )
+            }
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
-            when (val state = uiState) {
-                is CourseManagerState.Loading -> {
+            when (selectedTab) {
+                ManagerTab.Curriculum -> {
+                    when (val state = uiState) {
+                        is CourseManagerState.Loading -> {
                     CircularProgressIndicator(modifier = Modifier.align(Alignment.Center), color = PrimaryOrange)
                 }
                 is CourseManagerState.Error -> {
@@ -269,6 +307,81 @@ fun SkillforgeCourseManagerScreen(
                                 }
                             }
                         }
+                    }
+                } // closes Success
+                } // closes when(uiState)
+                } // closes ManagerTab.Curriculum
+                ManagerTab.Students -> {
+                    CourseStudentsView(studentsState)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun CourseStudentsView(studentsList: List<com.example.skillforge.data.remote.CourseStudentDto>?) {
+    if (studentsList == null) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator(color = PrimaryOrange)
+        }
+        return
+    }
+
+    if (studentsList.isEmpty()) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text("No students enrolled yet.", color = Color.Gray)
+        }
+        return
+    }
+
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        items(studentsList) { student ->
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    AsyncImage(
+                        model = student.avatarUrl ?: "https://via.placeholder.com/150",
+                        contentDescription = "Avatar",
+                        contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                        modifier = Modifier.size(50.dp).clip(CircleShape).border(1.dp, PrimaryOrange, CircleShape)
+                    )
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(student.fullName, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        Text(student.email, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            LinearProgressIndicator(
+                                progress = { student.progressPercentage / 100f },
+                                modifier = Modifier.weight(1f).height(6.dp),
+                                color = PrimaryOrange,
+                                trackColor = MaterialTheme.colorScheme.outlineVariant,
+                                strokeCap = androidx.compose.ui.graphics.StrokeCap.Round
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("${student.progressPercentage}%", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = PrimaryOrange)
+                        }
+                    }
+                    Spacer(modifier = Modifier.width(12.dp))
+                    OutlinedButton(
+                        onClick = { /* TODO: View submissions */ },
+                        border = BorderStroke(1.dp, PrimaryOrange),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = PrimaryOrange),
+                        shape = RoundedCornerShape(8.dp),
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        Text("View submission", fontSize = 11.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }
