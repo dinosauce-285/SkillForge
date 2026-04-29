@@ -33,8 +33,13 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -81,6 +86,7 @@ fun FavoriteRoute(
         onBackClick = onBackClick,
         onCourseClick = onCourseClick,
         onNavigateToDiscovery = onNavigateToDiscovery,
+        onRefresh = { viewModel.loadFavorites(session.accessToken) },
     )
 }
 
@@ -91,6 +97,7 @@ fun FavoriteScreen(
     onBackClick: () -> Unit,
     onCourseClick: (String) -> Unit,
     onNavigateToDiscovery: () -> Unit,
+    onRefresh: () -> Unit,
 ) {
     Scaffold(
         topBar = {
@@ -120,24 +127,41 @@ fun FavoriteScreen(
         },
         containerColor = BackgroundColor,
     ) { innerPadding ->
-        when {
-            uiState.isLoading -> FavoriteLoadingState(modifier = Modifier.padding(innerPadding))
-            uiState.errorMessage != null -> FavoriteErrorState(
-                message = uiState.errorMessage,
-                modifier = Modifier.padding(innerPadding),
-            )
-            uiState.courses.isEmpty() -> FavoriteEmptyState(
-                onNavigateToDiscovery = onNavigateToDiscovery,
-                modifier = Modifier.padding(innerPadding),
-            )
-            else -> LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .padding(horizontal = 24.dp),
-                verticalArrangement = Arrangement.spacedBy(24.dp),
-            ) {
-                item {
+        var isRefreshing by remember { mutableStateOf(false) }
+
+        LaunchedEffect(uiState.isLoading) {
+            if (!uiState.isLoading) {
+                isRefreshing = false
+            }
+        }
+
+        PullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = {
+                isRefreshing = true
+                onRefresh()
+            },
+            modifier = Modifier
+                .padding(innerPadding)
+                .fillMaxSize()
+        ) {
+            when {
+                uiState.isLoading && !isRefreshing -> FavoriteLoadingState(modifier = Modifier.fillMaxSize())
+                uiState.errorMessage != null -> FavoriteErrorState(
+                    message = uiState.errorMessage,
+                    modifier = Modifier.fillMaxSize(),
+                )
+                uiState.courses.isEmpty() -> FavoriteEmptyState(
+                    onNavigateToDiscovery = onNavigateToDiscovery,
+                    modifier = Modifier.fillMaxSize(),
+                )
+                else -> LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 24.dp),
+                    verticalArrangement = Arrangement.spacedBy(24.dp),
+                ) {
+                    item {
                     FavoriteHeaderSection()
                 }
 
@@ -154,6 +178,7 @@ fun FavoriteScreen(
                 }
             }
         }
+    }
     }
 }
 
@@ -423,5 +448,6 @@ fun FavoriteScreenPreview() {
         onBackClick = {},
         onCourseClick = {},
         onNavigateToDiscovery = {},
+        onRefresh = {},
     )
 }

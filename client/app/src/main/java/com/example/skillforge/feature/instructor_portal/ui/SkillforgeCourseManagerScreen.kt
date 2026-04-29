@@ -20,6 +20,8 @@ import androidx.compose.material.icons.filled.OndemandVideo
 import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.Quiz
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -178,12 +180,39 @@ fun SkillforgeCourseManagerScreen(
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
-            when (selectedTab) {
-                ManagerTab.Curriculum -> {
-                    when (val state = uiState) {
-                        is CourseManagerState.Loading -> {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center), color = PrimaryOrange)
+            var isRefreshing by remember { mutableStateOf(false) }
+
+            LaunchedEffect(uiState) {
+                if (uiState !is CourseManagerState.Loading) {
+                    isRefreshing = false
                 }
+            }
+            LaunchedEffect(studentsState) {
+                if (studentsState != null) {
+                    isRefreshing = false
+                }
+            }
+
+            PullToRefreshBox(
+                isRefreshing = isRefreshing,
+                onRefresh = {
+                    isRefreshing = true
+                    if (selectedTab == ManagerTab.Curriculum) {
+                        viewModel.loadCourseStructure(token, courseId)
+                    } else {
+                        viewModel.loadStudents()
+                    }
+                },
+                modifier = Modifier.fillMaxSize()
+            ) {
+                when (selectedTab) {
+                    ManagerTab.Curriculum -> {
+                        when (val state = uiState) {
+                            is CourseManagerState.Loading -> {
+                                if (!isRefreshing) {
+                                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center), color = PrimaryOrange)
+                                }
+                            }
                 is CourseManagerState.Error -> {
                     Text(
                         text = "Error: ${state.message}",
@@ -314,6 +343,7 @@ fun SkillforgeCourseManagerScreen(
                 ManagerTab.Students -> {
                     CourseStudentsView(studentsState)
                 }
+            }
             }
         }
     }

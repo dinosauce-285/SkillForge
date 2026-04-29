@@ -48,6 +48,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Badge
@@ -119,6 +121,7 @@ fun StudentCourseListingRoute(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StudentCourseListingScreen(
     session: AuthSession,
@@ -143,12 +146,28 @@ fun StudentCourseListingScreen(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
+        var isRefreshing by remember { mutableStateOf(false) }
+
+        LaunchedEffect(uiState.isLoading) {
+            if (!uiState.isLoading) {
+                isRefreshing = false
+            }
+        }
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background),
         ) {
-            LazyColumn(
+            PullToRefreshBox(
+                isRefreshing = isRefreshing,
+                onRefresh = {
+                    isRefreshing = true
+                    onRetry()
+                },
+                modifier = Modifier.fillMaxSize()
+            ) {
+                LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(
                     start = SkillforgeLayout.screenHorizontalPadding,
@@ -212,6 +231,7 @@ fun StudentCourseListingScreen(
                         onRetry = onRetry,
                         onCourseSelected = onCourseSelected,
                     )
+                }
                 }
             }
 

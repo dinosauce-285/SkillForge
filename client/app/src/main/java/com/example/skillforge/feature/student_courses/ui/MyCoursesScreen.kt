@@ -14,6 +14,8 @@ import androidx.compose.material.icons.filled.PlayCircleOutline
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -126,8 +128,27 @@ fun MyCoursesScreen(
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
-        when (homeUiState) {
-            is com.example.skillforge.feature.home.viewmodel.HomeUiState.Loading -> {
+        var isRefreshing by remember { mutableStateOf(false) }
+
+        // Automatically reset isRefreshing when the state changes from Loading
+        LaunchedEffect(homeUiState) {
+            if (homeUiState !is com.example.skillforge.feature.home.viewmodel.HomeUiState.Loading) {
+                isRefreshing = false
+            }
+        }
+
+        PullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = {
+                isRefreshing = true
+                homeViewModel.fetchDashboard(token)
+            },
+            modifier = Modifier
+                .padding(paddingValues)
+                .fillMaxSize()
+        ) {
+            when (homeUiState) {
+                is com.example.skillforge.feature.home.viewmodel.HomeUiState.Loading -> {
                 Box(
                     modifier = Modifier
                         .padding(paddingValues)
@@ -189,6 +210,7 @@ fun MyCoursesScreen(
                 }
             }
         }
+    }
     }
 }
 

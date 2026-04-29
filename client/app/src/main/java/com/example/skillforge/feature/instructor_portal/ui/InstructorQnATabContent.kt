@@ -11,6 +11,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -25,6 +27,7 @@ import com.example.skillforge.core.designsystem.*
 import com.example.skillforge.feature.instructor_portal.viewmodel.InstructorQnAState
 import com.example.skillforge.feature.instructor_portal.viewmodel.InstructorQnAViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun QnATabContent(viewModel: InstructorQnAViewModel) {
     val uiState by viewModel.uiState.collectAsState()
@@ -80,12 +83,30 @@ fun QnATabContent(viewModel: InstructorQnAViewModel) {
         Spacer(modifier = Modifier.height(16.dp))
 
         // Content
-        when (uiState) {
-            is InstructorQnAState.Loading -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = PrimaryOrange)
-                }
+        var isRefreshing by remember { mutableStateOf(false) }
+
+        LaunchedEffect(uiState) {
+            if (uiState !is InstructorQnAState.Loading) {
+                isRefreshing = false
             }
+        }
+
+        PullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = {
+                isRefreshing = true
+                viewModel.fetchDiscussions()
+            },
+            modifier = Modifier.fillMaxSize()
+        ) {
+            when (uiState) {
+                is InstructorQnAState.Loading -> {
+                    if (!isRefreshing) {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator(color = PrimaryOrange)
+                        }
+                    }
+                }
             is InstructorQnAState.Error -> {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text((uiState as InstructorQnAState.Error).message, color = Color.Red)
@@ -118,6 +139,7 @@ fun QnATabContent(viewModel: InstructorQnAViewModel) {
             }
         }
     }
+}
 }
 
 @Composable
