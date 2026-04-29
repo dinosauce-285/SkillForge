@@ -25,7 +25,7 @@ const { PrismaClient, Prisma, Role, CourseLevel, CourseStatus, MaterialType, Mat
 const bcrypt = require('bcrypt');
 
 const prisma = new PrismaClient();
-const PASSWORD = 'SkillForge123!';
+const PASSWORD = '123456';
 const DEFAULT_DOC_SIZE = 1_250_000;
 
 // ─── BLUEPRINTS ────────────────────────────────────────────────────────────────
