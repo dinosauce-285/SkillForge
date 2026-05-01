@@ -4,20 +4,26 @@ import {
   IsPositive,
   IsBoolean,
   IsArray,
+  IsOptional,
   ValidateNested,
+  IsNumber,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { CreateQuestionDto } from 'src/modules/question/dto/create.dto';
 
 export class CreateQuizDto {
   @IsString()
-  lessonId!: string;
+  chapterId!: string;
+
+  @IsOptional()
+  @IsString()
+  title?: string;
 
   @IsInt()
   @IsPositive()
   timeLimit!: number;
 
-  @IsInt()
+  @IsNumber()
   @IsPositive()
   passingScore!: number;
 

@@ -8,6 +8,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ListAlt
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -15,29 +16,52 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Devices
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.skillforge.core.designsystem.BackgroundColor
 import com.example.skillforge.core.designsystem.PrimaryOrange
-import com.example.skillforge.core.designsystem.SkillforgeTheme
+
+import com.example.skillforge.feature.instructor_portal.viewmodel.QuizBuilderViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddQuestionScreen(
+    viewModel: QuizBuilderViewModel,
+    questionId: String? = null,
     onBackClick: () -> Unit = {},
     onSaveClick: () -> Unit = {},
     onNavigateToSettings: () -> Unit = {}
 ) {
-    var questionText by remember { mutableStateOf("") }
-    var options by remember { mutableStateOf(listOf("The Great Wall", "Mount Everest", "")) }
-    var selectedOptionIndex by remember { mutableStateOf(0) }
+    val isEditMode = questionId != null
+    val existingQuestion = remember(questionId) {
+        questionId?.let { viewModel.getQuestionById(it) }
+    }
+
+    var questionText by remember(existingQuestion) {
+        mutableStateOf(existingQuestion?.content ?: "")
+    }
+    var options by remember(existingQuestion) {
+        mutableStateOf(
+            existingQuestion?.choices?.sortedBy { it.orderIndex }?.map { it.content }
+                ?: listOf("", "")
+        )
+    }
+    var selectedOptionIndex by remember(existingQuestion) {
+        mutableStateOf(
+            existingQuestion?.choices?.indexOfFirst { it.isCorrect }?.takeIf { it >= 0 } ?: 0
+        )
+    }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Add Question", fontWeight = FontWeight.Bold, fontSize = 18.sp) },
+                title = {
+                    Text(
+                        if (isEditMode) "Edit Question" else "Add Question",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = PrimaryOrange)
@@ -45,12 +69,24 @@ fun AddQuestionScreen(
                 },
                 actions = {
                     Button(
-                        onClick = onSaveClick,
+                        onClick = {
+                            val filteredOptions = options.filter { it.isNotBlank() }
+                            if (isEditMode && questionId != null) {
+                                viewModel.updateQuestion(questionId, questionText, filteredOptions, selectedOptionIndex)
+                            } else {
+                                viewModel.addQuestion(questionText, filteredOptions, selectedOptionIndex)
+                            }
+                            onSaveClick()
+                        },
                         colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange),
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier.padding(end = 8.dp)
                     ) {
-                        Text("Publish", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                        Text(
+                            if (isEditMode) "Save" else "Publish",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
@@ -58,10 +94,9 @@ fun AddQuestionScreen(
         },
         bottomBar = {
             QuizBuilderBottomBar(
-                selectedTab = 0, // Default to Builder tab when adding a question
+                selectedTab = 0,
                 onTabSelected = {
                     if (it == 1) {
-                        // Directly navigate to Quiz Builder Settings screen
                         onNavigateToSettings()
                     }
                 }
@@ -120,7 +155,7 @@ fun AddQuestionScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Icon(Icons.Default.ListAlt, contentDescription = null, tint = PrimaryOrange)
+                        Icon(Icons.AutoMirrored.Filled.ListAlt, contentDescription = null, tint = PrimaryOrange)
                         Text(
                             text = "Multiple Choice",
                             fontWeight = FontWeight.Bold,
@@ -248,13 +283,5 @@ fun OptionItem(
                 Icon(Icons.Default.Check, contentDescription = null, tint = Color.White)
             }
         }
-    }
-}
-
-@Preview(showBackground = true, showSystemUi = true, device = Devices.PIXEL_7)
-@Composable
-fun AddQuestionScreenPreview() {
-    SkillforgeTheme {
-        AddQuestionScreen()
     }
 }

@@ -25,12 +25,18 @@ import com.example.skillforge.core.designsystem.SkillforgeTheme
 
 @Composable
 fun QuizSettingsScreen(
-    onSaveSettings: () -> Unit = {},
-    onResetDefaults: () -> Unit = {}
+    initialTitle: String = "Untitled Quiz",
+    initialPassMark: String = "80",
+    initialTimeLimit: String = "45",
+    initialShuffle: Boolean = true,
+    onSaveSettings: (String, String, String, Boolean) -> Unit = { _, _, _, _ -> },
+    onResetDefaults: () -> Unit = {},
+    onDeleteQuiz: () -> Unit = {}
 ) {
-    var passMark by remember { mutableStateOf("80") }
-    var timeLimit by remember { mutableStateOf("45") }
-    var shuffleQuestions by remember { mutableStateOf(true) }
+    var title by remember { mutableStateOf(initialTitle) }
+    var passMark by remember { mutableStateOf(initialPassMark) }
+    var timeLimit by remember { mutableStateOf(initialTimeLimit) }
+    var shuffleQuestions by remember { mutableStateOf(initialShuffle) }
     var allowRetakes by remember { mutableStateOf(false) }
 
     LazyColumn(
@@ -85,16 +91,25 @@ fun QuizSettingsScreen(
             ) {
                 Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
                     SettingInput(
+                        label = "Quiz Title",
+                        value = title,
+                        onValueChange = { title = it },
+                        suffix = "",
+                        isNumber = false
+                    )
+                    SettingInput(
                         label = "Pass mark percentage",
                         value = passMark,
                         onValueChange = { passMark = it },
-                        suffix = "%"
+                        suffix = "%",
+                        isNumber = true
                     )
                     SettingInput(
                         label = "Time limit (minutes)",
                         value = timeLimit,
                         onValueChange = { timeLimit = it },
-                        suffix = "min"
+                        suffix = "min",
+                        isNumber = true
                     )
                 }
             }
@@ -161,7 +176,7 @@ fun QuizSettingsScreen(
         item {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Button(
-                    onClick = onSaveSettings,
+                    onClick = { onSaveSettings(title, passMark, timeLimit, shuffleQuestions) },
                     modifier = Modifier.fillMaxWidth().height(56.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange),
                     shape = RoundedCornerShape(12.dp)
@@ -174,6 +189,15 @@ fun QuizSettingsScreen(
                     colors = ButtonDefaults.textButtonColors(contentColor = PrimaryOrange)
                 ) {
                     Text("Reset to Defaults", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                }
+                OutlinedButton(
+                    onClick = onDeleteQuiz,
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Red),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color.Red),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("Delete Quiz", fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 }
             }
         }
@@ -189,7 +213,8 @@ fun SettingInput(
     label: String,
     value: String,
     onValueChange: (String) -> Unit,
-    suffix: String
+    suffix: String,
+    isNumber: Boolean = true
 ) {
     Column {
         Text(
@@ -205,7 +230,7 @@ fun SettingInput(
                 value = value,
                 onValueChange = onValueChange,
                 modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                keyboardOptions = if (isNumber) KeyboardOptions(keyboardType = KeyboardType.Number) else KeyboardOptions.Default,
                 shape = RoundedCornerShape(12.dp),
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color(0xFFF3F3F4),

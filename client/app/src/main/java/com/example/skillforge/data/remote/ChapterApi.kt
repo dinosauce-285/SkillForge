@@ -14,8 +14,17 @@ data class ChapterDto(
     val title: String,
     val orderIndex: Int,
 
-    val lessons: List<LessonDto> = emptyList()
+    val lessons: List<LessonDto> = emptyList(),
+    val quizzes: List<ChapterQuizDto> = emptyList()
 )
+
+data class ChapterQuizDto(
+    val id: String,
+    val title: String?,
+    val _count: ChapterQuizCount? = null
+) {
+    data class ChapterQuizCount(val questions: Int = 0)
+}
 
 data class CourseManagerDto(
     val id: String,

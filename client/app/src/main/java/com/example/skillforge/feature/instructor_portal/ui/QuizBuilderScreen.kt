@@ -19,54 +19,45 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Devices
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.skillforge.core.designsystem.BackgroundColor
 import com.example.skillforge.core.designsystem.PrimaryOrange
-import com.example.skillforge.core.designsystem.SkillforgeTheme
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
+
+import com.example.skillforge.feature.instructor_portal.viewmodel.QuizBuilderViewModel
+import com.example.skillforge.feature.instructor_portal.viewmodel.QuizUiState
+import com.example.skillforge.domain.model.Question
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun QuizBuilderScreen(
-    initialTab: Int = 0, // Ensure this parameter exists for navigation
+    initialTab: Int = 0,
+    viewModel: QuizBuilderViewModel,
     onBackClick: () -> Unit = {},
     onPublishClick: () -> Unit = {},
-    onAddQuestionClick: () -> Unit = {}
+    onAddQuestionClick: () -> Unit = {},
+    onEditQuestionClick: (questionId: String) -> Unit = {}
 ) {
+    val uiState by viewModel.uiState.collectAsState()
+    
     var quizTitle by remember { mutableStateOf("") }
     var quizDescription by remember { mutableStateOf("") }
     
-    // Manage selected tab using initialTab
     var selectedTab by remember { mutableStateOf(initialTab) }
 
-    // Synchronize tab state if initialTab changes from outside navigation
     LaunchedEffect(initialTab) {
         selectedTab = initialTab
     }
 
-    val questions = remember {
-        mutableStateListOf(
-            QuestionData(1, "What are the primary drivers of hyperinflation in emerging market economies according to the Quantity Theory of Money?", "Multiple Choice", 10),
-            QuestionData(2, "Discuss the impact of interest rate parity on short-term exchange rate fluctuations.", "Open Ended", 25)
-        )
-    }
-
     val lazyListState = rememberLazyListState()
+    // The reorderable list uses header items (title, description, "Curated Questions", add button) = 4 items offset
+    val headerItemCount = 4
     val reorderableLazyListState = rememberReorderableLazyListState(lazyListState) { from, to ->
-        // The questions section starts after 4 header items
-        val headerOffset = 4
-        val fromIndex = from.index - headerOffset
-        val toIndex = to.index - headerOffset
-        
-        if (fromIndex in questions.indices && toIndex in questions.indices) {
-            questions.apply {
-                add(toIndex, removeAt(fromIndex))
-            }
-        }
+        val fromQuestionIndex = from.index - headerItemCount
+        val toQuestionIndex = to.index - headerItemCount
+        viewModel.reorderQuestions(fromQuestionIndex, toQuestionIndex)
     }
 
     Scaffold(
@@ -85,8 +76,8 @@ fun QuizBuilderScreen(
                     }
                 },
                 actions = {
-                    TextButton(onClick = onPublishClick) {
-                        Text("Publish", color = PrimaryOrange, fontWeight = FontWeight.Bold)
+                    TextButton(onClick = { onPublishClick() }) {
+                        Text("Done", color = PrimaryOrange, fontWeight = FontWeight.Bold)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
@@ -101,77 +92,118 @@ fun QuizBuilderScreen(
         containerColor = BackgroundColor
     ) { paddingValues ->
         if (selectedTab == 0) {
-            LazyColumn(
-                state = lazyListState,
-                modifier = Modifier
-                    .padding(paddingValues)
-                    .fillMaxSize(),
-                contentPadding = PaddingValues(24.dp),
-                verticalArrangement = Arrangement.spacedBy(24.dp)
-            ) {
-                // Index 0: Creation Suite Header
-                item {
-                    Column {
-                        Text(text = "CREATION SUITE", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = PrimaryOrange, letterSpacing = 2.sp)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(text = "Quiz Builder", fontSize = 32.sp, fontWeight = FontWeight.Black, color = Color.Black)
+            when (uiState) {
+                is QuizUiState.Loading -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(color = PrimaryOrange)
                     }
                 }
-
-                // Index 1: Inputs
-                item {
-                    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                        QuizInput(label = "Title of Assessment", value = quizTitle, onValueChange = { quizTitle = it }, placeholder = "e.g. Advanced Macroeconomics Final")
-                        QuizInput(label = "Brief Description", value = quizDescription, onValueChange = { quizDescription = it }, placeholder = "Define the core objectives of this quiz...", isMultiline = true)
+                is QuizUiState.Error -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(text = (uiState as QuizUiState.Error).message, color = Color.Red)
                     }
                 }
-
-                // Index 2: List Header
-                item {
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Bottom) {
-                        Text("Curated Questions", fontWeight = FontWeight.Bold, fontSize = 20.sp)
-                        Text("${questions.size} Items", color = Color.Gray, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                    }
-                }
-
-                // Index 3: Append Button
-                item {
-                    OutlinedButton(
-                        onClick = onAddQuestionClick,
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
-                        border = BorderStroke(2.dp, PrimaryOrange.copy(alpha = 0.3f)),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = PrimaryOrange),
-                        contentPadding = PaddingValues(vertical = 32.dp)
+                is QuizUiState.Success -> {
+                    val quiz = (uiState as QuizUiState.Success).quiz
+                    val questions = quiz?.questions ?: emptyList()
+                    
+                    LazyColumn(
+                        state = lazyListState,
+                        modifier = Modifier
+                            .padding(paddingValues)
+                            .fillMaxSize(),
+                        contentPadding = PaddingValues(24.dp),
+                        verticalArrangement = Arrangement.spacedBy(24.dp)
                     ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                            Icon(imageVector = Icons.Default.AddCircle, contentDescription = null, modifier = Modifier.size(32.dp))
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text("APPEND NEW QUESTION", fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                        item {
+                            Column {
+                                Text(text = "CREATION SUITE", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = PrimaryOrange, letterSpacing = 2.sp)
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(text = "Quiz Builder", fontSize = 32.sp, fontWeight = FontWeight.Black, color = Color.Black)
+                            }
                         }
-                    }
-                }
 
-                // Index 4 and onwards: Questions
-                itemsIndexed(questions, key = { _, item -> item.id }) { index, question ->
-                    ReorderableItem(reorderableLazyListState, key = question.id) { isDragging ->
-                        val elevation by animateDpAsState(if (isDragging) 8.dp else 0.dp)
-                        Surface(
-                            modifier = Modifier.fillMaxWidth().longPressDraggableHandle(), // Long press to start dragging
-                            shadowElevation = elevation,
-                            shape = RoundedCornerShape(16.dp),
-                            color = Color.Transparent
-                        ) {
-                            QuestionCard(index + 1, question)
+                        item {
+                            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                                QuizInput(label = "Title of Assessment", value = quizTitle, onValueChange = { quizTitle = it }, placeholder = "e.g. Advanced Macroeconomics Final")
+                                QuizInput(label = "Brief Description", value = quizDescription, onValueChange = { quizDescription = it }, placeholder = "Define the core objectives of this quiz...", isMultiline = true)
+                            }
                         }
+
+                        item {
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Bottom) {
+                                Text("Curated Questions", fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                                Text("${questions.size} Items", color = Color.Gray, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            }
+                        }
+
+                        item {
+                            OutlinedButton(
+                                onClick = onAddQuestionClick,
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(16.dp),
+                                border = BorderStroke(2.dp, PrimaryOrange.copy(alpha = 0.3f)),
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = PrimaryOrange),
+                                contentPadding = PaddingValues(vertical = 32.dp)
+                            ) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                                    Icon(imageVector = Icons.Default.AddCircle, contentDescription = null, modifier = Modifier.size(32.dp))
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text("APPEND NEW QUESTION", fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                                }
+                            }
+                        }
+
+                        itemsIndexed(questions, key = { _, item -> item.id }) { index, question ->
+                            ReorderableItem(reorderableLazyListState, key = question.id) { isDragging ->
+                                val elevation by animateDpAsState(if (isDragging) 8.dp else 0.dp)
+                                Surface(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shadowElevation = elevation,
+                                    shape = RoundedCornerShape(16.dp),
+                                    color = Color.Transparent
+                                ) {
+                                    QuestionCard(
+                                        number = index + 1,
+                                        data = question,
+                                        onEditClick = { onEditQuestionClick(question.id) },
+                                        dragModifier = Modifier.longPressDraggableHandle(
+                                            onDragStopped = {
+                                                viewModel.commitReorder()
+                                            }
+                                        )
+                                    )
+                                }
+                            }
+                        }
+                        
+                        item { Spacer(modifier = Modifier.height(32.dp)) }
                     }
                 }
-                
-                item { Spacer(modifier = Modifier.height(32.dp)) }
             }
         } else {
             Box(modifier = Modifier.padding(paddingValues)) {
-                QuizSettingsScreen()
+                val quiz = (uiState as? QuizUiState.Success)?.quiz
+                QuizSettingsScreen(
+                    initialTitle = quiz?.title ?: "Untitled Quiz",
+                    initialPassMark = quiz?.passingScore?.toInt()?.toString() ?: "50",
+                    initialTimeLimit = quiz?.timeLimit?.toString() ?: "60",
+                    initialShuffle = quiz?.randomizeQuestions ?: false,
+                    onSaveSettings = { title, passMark, timeLimit, shuffle ->
+                        viewModel.updateQuizSettings(
+                            title = title,
+                            timeLimit = timeLimit.toIntOrNull() ?: 60,
+                            passingScore = passMark.toFloatOrNull() ?: 50f,
+                            randomizeQuestions = shuffle
+                        )
+                        onPublishClick()
+                    },
+                    onDeleteQuiz = {
+                        viewModel.deleteQuiz {
+                            onBackClick()
+                        }
+                    }
+                )
             }
         }
     }
@@ -221,27 +253,32 @@ fun QuizInput(label: String, value: String, onValueChange: (String) -> Unit, pla
     }
 }
 
-data class QuestionData(val id: Int, val text: String, val type: String, val points: Int)
-
 @Composable
-fun QuestionCard(number: Int, data: QuestionData) {
+fun QuestionCard(number: Int, data: Question, onEditClick: () -> Unit = {}, dragModifier: Modifier = Modifier) {
     Surface(modifier = Modifier.fillMaxWidth(), color = Color.White, shape = RoundedCornerShape(16.dp), shadowElevation = 1.dp) {
         Row(modifier = Modifier.padding(20.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            // Drag handle
+            Icon(
+                Icons.Default.DragHandle,
+                contentDescription = "Drag to reorder",
+                tint = Color.LightGray,
+                modifier = dragModifier.size(24.dp)
+            )
             Box(modifier = Modifier.size(40.dp).background(PrimaryOrange.copy(alpha = 0.1f), RoundedCornerShape(8.dp)), contentAlignment = Alignment.Center) {
                 Text(text = number.toString().padStart(2, '0'), color = PrimaryOrange, fontWeight = FontWeight.Bold)
             }
             Column(modifier = Modifier.weight(1f)) {
                 Text("Question $number", fontWeight = FontWeight.Bold, color = Color.Black)
                 Spacer(modifier = Modifier.height(4.dp))
-                Text(text = data.text, fontSize = 14.sp, color = Color.DarkGray, lineHeight = 20.sp)
+                Text(text = data.content, fontSize = 14.sp, color = Color.DarkGray, lineHeight = 20.sp)
                 Spacer(modifier = Modifier.height(16.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Badge(data.type.uppercase())
-                    Badge("${data.points} POINTS")
+                    Badge("MULTIPLE CHOICE")
+                    Badge("${data.choices.size} OPTIONS")
                 }
             }
-            IconButton(onClick = { }, modifier = Modifier.size(24.dp)) {
-                Icon(Icons.Default.Edit, contentDescription = "Edit", tint = Color.LightGray, modifier = Modifier.size(20.dp))
+            IconButton(onClick = onEditClick, modifier = Modifier.size(24.dp)) {
+                Icon(Icons.Default.Edit, contentDescription = "Edit", tint = PrimaryOrange, modifier = Modifier.size(20.dp))
             }
         }
     }
@@ -251,13 +288,5 @@ fun QuestionCard(number: Int, data: QuestionData) {
 fun Badge(text: String) {
     Surface(color = Color(0xFFF3F3F4), shape = RoundedCornerShape(100.dp) ) {
         Text(text = text, modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp), fontSize = 9.sp, fontWeight = FontWeight.Bold, color = Color.Gray)
-    }
-}
-
-@Preview(showBackground = true, showSystemUi = true, device = Devices.PIXEL_7)
-@Composable
-fun QuizBuilderScreenPreview() {
-    SkillforgeTheme {
-        QuizBuilderScreen()
     }
 }

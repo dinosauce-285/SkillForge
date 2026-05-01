@@ -1,7 +1,6 @@
 import {
   IsInt,
   IsOptional,
-  IsPositive,
   IsString,
   IsArray,
   ValidateNested,
@@ -10,24 +9,23 @@ import {
 import { Type } from 'class-transformer';
 import { CreateAnswerChoiceDto } from 'src/modules/answer_choices/dto/create.dto';
 
-export class CreateQuestionDto {
+export class UpdateQuestionDto {
   @IsOptional()
   @IsString()
-  quizId?: string;
-
-  @IsString()
-  content!: string;
+  content?: string;
 
   @IsOptional()
   @IsString()
   explanation?: string;
 
+  @IsOptional()
   @IsInt()
   @Min(0)
-  orderIndex!: number;
+  orderIndex?: number;
 
+  @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CreateAnswerChoiceDto)
-  choices!: CreateAnswerChoiceDto[];
+  choices?: CreateAnswerChoiceDto[];
 }

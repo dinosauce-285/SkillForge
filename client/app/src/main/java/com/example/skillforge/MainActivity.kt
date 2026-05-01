@@ -106,6 +106,11 @@ class MainActivity : ComponentActivity() {
                 val mainViewModel: MainViewModel = viewModel(
                     factory = MainViewModelFactory(appContainer.checkSessionUseCase)
                 )
+                val quizBuilderViewModel: com.example.skillforge.feature.instructor_portal.viewmodel.QuizBuilderViewModel = viewModel(
+                    factory = com.example.skillforge.feature.instructor_portal.viewmodel.QuizBuilderViewModel.provideFactory(
+                        appContainer.quizRepository
+                    )
+                )
 
                 val currentRoute by mainViewModel.uiState.collectAsState()
 
@@ -404,7 +409,10 @@ class MainActivity : ComponentActivity() {
                                                 mainViewModel.navigateTo(AppRoute.MaterialUpload(route.session, lessonId))
                                             },
                                             onNavigateToQuizBuilder = { courseId, chapterId ->
-                                                mainViewModel.navigateTo(AppRoute.QuizBuilder(route.session, courseId, chapterId))
+                                                mainViewModel.navigateTo(AppRoute.QuizBuilder(route.session, courseId, chapterId, null))
+                                            },
+                                            onNavigateToEditQuiz = { courseId, quizId ->
+                                                mainViewModel.navigateTo(AppRoute.QuizBuilder(route.session, courseId, null, quizId))
                                             }
                                         )
                                     }
@@ -440,6 +448,51 @@ class MainActivity : ComponentActivity() {
                                         session = route.session,
                                         onLogout = { mainViewModel.navigateTo(AppRoute.Login) }
                                     )
+
+                                     is AppRoute.QuizBuilder -> {
+                                         // Load quiz whenever we enter this route
+                                         LaunchedEffect(route.quizId, route.chapterId) {
+                                             if (route.quizId != null) {
+                                                 quizBuilderViewModel.loadQuiz(route.quizId)
+                                             } else if (route.chapterId != null) {
+                                                 quizBuilderViewModel.createNewQuiz(route.chapterId, "Untitled Quiz", 60, 50f)
+                                             }
+                                         }
+                                         com.example.skillforge.feature.instructor_portal.ui.QuizBuilderScreen(
+                                             initialTab = route.initialTab,
+                                             viewModel = quizBuilderViewModel,
+                                             onBackClick = {
+                                                 mainViewModel.navigateTo(AppRoute.CourseManager(route.session, route.courseId))
+                                             },
+                                             onPublishClick = {
+                                                 mainViewModel.navigateTo(AppRoute.CourseManager(route.session, route.courseId))
+                                             },
+                                             onAddQuestionClick = {
+                                                 val currentQuizId = (quizBuilderViewModel.uiState.value as? com.example.skillforge.feature.instructor_portal.viewmodel.QuizUiState.Success)?.quiz?.id
+                                                 mainViewModel.navigateTo(AppRoute.AddQuestion(route.session, route.courseId, route.chapterId, currentQuizId ?: route.quizId))
+                                             },
+                                             onEditQuestionClick = { questionId ->
+                                                 val currentQuizId = (quizBuilderViewModel.uiState.value as? com.example.skillforge.feature.instructor_portal.viewmodel.QuizUiState.Success)?.quiz?.id
+                                                 mainViewModel.navigateTo(AppRoute.AddQuestion(route.session, route.courseId, route.chapterId, currentQuizId ?: route.quizId, questionId))
+                                             }
+                                         )
+                                     }
+
+                                     is AppRoute.AddQuestion -> {
+                                         com.example.skillforge.feature.instructor_portal.ui.AddQuestionScreen(
+                                             viewModel = quizBuilderViewModel,
+                                             questionId = route.questionId,
+                                             onBackClick = {
+                                                 mainViewModel.navigateTo(AppRoute.QuizBuilder(route.session, route.courseId, route.chapterId, route.quizId, 0))
+                                             },
+                                             onSaveClick = {
+                                                 mainViewModel.navigateTo(AppRoute.QuizBuilder(route.session, route.courseId, route.chapterId, route.quizId, 0))
+                                             },
+                                             onNavigateToSettings = {
+                                                 mainViewModel.navigateTo(AppRoute.QuizBuilder(route.session, route.courseId, route.chapterId, route.quizId, 1))
+                                             }
+                                         )
+                                     }
 
                                     else -> {}
                                 }

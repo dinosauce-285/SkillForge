@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.InsertDriveFile
 import androidx.compose.material.icons.filled.OndemandVideo
 import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.Quiz
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -46,7 +47,8 @@ fun SkillforgeCourseManagerScreen(
     token: String,
     onBack: () -> Unit,
     onNavigateToUpload: (lessonId: String) -> Unit,
-    onNavigateToQuizBuilder: (courseId: String, chapterId: String) -> Unit
+    onNavigateToQuizBuilder: (courseId: String, chapterId: String) -> Unit,
+    onNavigateToEditQuiz: (courseId: String, quizId: String) -> Unit = { _, _ -> }
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -237,6 +239,47 @@ fun SkillforgeCourseManagerScreen(
                                                     }
                                                     // ---------------------------
                                                 )
+                                            }
+                                        }
+                                    }
+
+                                    // Quiz List
+                                    if (!chapter.quizzes.isNullOrEmpty()) {
+                                        Column(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(horizontal = 16.dp, vertical = 4.dp)
+                                        ) {
+                                            chapter.quizzes?.forEach { quiz ->
+                                                Surface(
+                                                    onClick = { onNavigateToEditQuiz(courseId, quiz.id) },
+                                                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                                                    shape = RoundedCornerShape(10.dp),
+                                                    color = PrimaryOrange.copy(alpha = 0.08f)
+                                                ) {
+                                                    Row(
+                                                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                                                        verticalAlignment = Alignment.CenterVertically,
+                                                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                                    ) {
+                                                        Icon(Icons.Default.Quiz, contentDescription = null, tint = PrimaryOrange, modifier = Modifier.size(20.dp))
+                                                        Column(modifier = Modifier.weight(1f)) {
+                                                            Text(
+                                                                text = quiz.title ?: "Untitled Quiz",
+                                                                style = MaterialTheme.typography.bodyMedium,
+                                                                fontWeight = FontWeight.Bold,
+                                                                color = PrimaryOrange
+                                                            )
+                                                            val questionCount = quiz._count?.questions ?: 0
+                                                            Text(
+                                                                text = "$questionCount question${if (questionCount != 1) "s" else ""}",
+                                                                style = MaterialTheme.typography.bodySmall,
+                                                                color = Color.Gray
+                                                            )
+                                                        }
+                                                        Icon(Icons.Default.Edit, contentDescription = "Edit Quiz", tint = PrimaryOrange, modifier = Modifier.size(20.dp))
+                                                    }
+                                                }
                                             }
                                         }
                                     }

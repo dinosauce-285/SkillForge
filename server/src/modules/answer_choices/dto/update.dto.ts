@@ -4,21 +4,19 @@ import {
   IsBoolean,
   IsPositive,
   IsOptional,
-  Min,
 } from 'class-validator';
 
-export class CreateAnswerChoiceDto {
+export class UpdateAnswerChoiceDto {
   @IsOptional()
   @IsString()
-  questionId?: string;
+  content?: string;
 
-  @IsString()
-  content!: string;
-
+  @IsOptional()
   @IsBoolean()
-  isCorrect!: boolean;
+  isCorrect?: boolean;
 
+  @IsOptional()
   @IsInt()
-  @Min(0)
-  orderIndex!: number;
+  @IsPositive()
+  orderIndex?: number;
 }

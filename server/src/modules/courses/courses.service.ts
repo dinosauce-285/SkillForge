@@ -42,6 +42,15 @@ export class CoursesService {
                 materials: true,
               },
             },
+            quizzes: {
+              select: {
+                id: true,
+                title: true,
+                _count: {
+                  select: { questions: true },
+                },
+              },
+            },
           },
         },
       },

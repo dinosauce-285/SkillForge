@@ -1,8 +1,8 @@
 import { PrismaService } from '../prisma/prisma.service';
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateQuizDto } from './dto/create.dto';
+import { UpdateQuizDto } from './dto/update.dto';
 import { QuestionService } from '../question/question.service';
-import { NotFoundException } from '@nestjs/common';
 
 @Injectable()
 export class QuizService {
@@ -13,30 +13,93 @@ export class QuizService {
 
   async createQuiz(quiz: CreateQuizDto) {
     return this.prisma.$transaction(async (tx) => {
-      const lesson = await this.prisma.lesson.findUnique({
-        where: { id: quiz.lessonId },
+      const chapter = await tx.chapter.findUnique({
+        where: { id: quiz.chapterId },
       });
 
-      if (!lesson) {
-        throw new NotFoundException('Lesson is not found');
+      if (!chapter) {
+        throw new NotFoundException('Chapter is not found');
       }
 
       const createdQuiz = await tx.quiz.create({
         data: {
-          lessonId: quiz.lessonId,
+          chapterId: quiz.chapterId,
+          title: quiz.title || 'Untitled Quiz',
           timeLimit: quiz.timeLimit,
           passingScore: quiz.passingScore,
           randomizeQuestions: quiz.randomizeQuestions,
         },
       });
 
-      await this.questionService.createQuestions(
-        createdQuiz.id,
-        quiz.questions,
-        tx,
-      );
+      if (quiz.questions && quiz.questions.length > 0) {
+        await this.questionService.createQuestions(
+          createdQuiz.id,
+          quiz.questions,
+          tx,
+        );
+      }
 
       return createdQuiz;
+    });
+  }
+
+  async findAllByChapter(chapterId: string) {
+    return this.prisma.quiz.findMany({
+      where: { chapterId },
+      include: {
+        questions: {
+          include: {
+            choices: true,
+          },
+          orderBy: {
+            orderIndex: 'asc',
+          },
+        },
+        _count: {
+          select: { questions: true },
+        },
+      },
+    });
+  }
+
+  async findOne(id: string) {
+    const quiz = await this.prisma.quiz.findUnique({
+      where: { id },
+      include: {
+        questions: {
+          include: {
+            choices: true,
+          },
+          orderBy: {
+            orderIndex: 'asc',
+          },
+        },
+      },
+    });
+
+    if (!quiz) {
+      throw new NotFoundException('Quiz not found');
+    }
+
+    return quiz;
+  }
+
+  async update(id: string, updateQuizDto: UpdateQuizDto) {
+    const quiz = await this.prisma.quiz.findUnique({ where: { id } });
+    if (!quiz) throw new NotFoundException('Quiz not found');
+
+    return this.prisma.quiz.update({
+      where: { id },
+      data: updateQuizDto,
+    });
+  }
+
+  async remove(id: string) {
+    const quiz = await this.prisma.quiz.findUnique({ where: { id } });
+    if (!quiz) throw new NotFoundException('Quiz not found');
+
+    return this.prisma.quiz.delete({
+      where: { id },
     });
   }
 }
