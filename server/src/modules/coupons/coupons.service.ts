@@ -32,7 +32,7 @@ export class CouponsService {
     });
   }
 
-  async validateCoupon(code: string) {
+  async validateCoupon(code: string, courseId?: string) {
     const coupon = await this.prisma.coupon.findUnique({
       where: { code: code.toUpperCase() }
     });
@@ -43,6 +43,19 @@ export class CouponsService {
 
     if (!coupon.isActive) {
       throw new BadRequestException('Coupon is inactive');
+    }
+
+    if (courseId) {
+      const course = await this.prisma.course.findUnique({
+        where: { id: courseId },
+        select: { instructorId: true }
+      });
+      if (!course) {
+        throw new NotFoundException('Course not found');
+      }
+      if (course.instructorId !== coupon.instructorId) {
+        throw new BadRequestException('This coupon cannot be applied to this course');
+      }
     }
 
     return {

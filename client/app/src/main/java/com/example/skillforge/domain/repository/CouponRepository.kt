@@ -6,6 +6,6 @@ import com.example.skillforge.data.remote.CouponValidationResponse
 interface CouponRepository {
     suspend fun createCoupon(code: String, discountPercent: Int, isActive: Boolean): Result<CouponDto>
     suspend fun getInstructorCoupons(): Result<List<CouponDto>>
-    suspend fun validateCoupon(code: String): Result<CouponValidationResponse>
+    suspend fun validateCoupon(code: String, courseId: String): Result<CouponValidationResponse>
     suspend fun deleteCoupon(id: String): Result<Unit>
 }
