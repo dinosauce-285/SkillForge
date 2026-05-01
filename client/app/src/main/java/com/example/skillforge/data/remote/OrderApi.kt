@@ -15,14 +15,23 @@ data class CreateOrderRequest(
 data class OrderCourseDto(
     val id: String,
     val title: String,
+    val price: Double,
     val thumbnailUrl: String?,
+)
+
+data class OrderCouponDto(
+    val id: String,
+    val code: String,
+    val discountPercent: Int
 )
 
 data class OrderDto(
     val id: String,
     val amount: Double,
     val status: String,
+    val createdAt: String? = null,
     val course: OrderCourseDto,
+    val coupon: OrderCouponDto? = null,
 )
 
 interface OrderApi {

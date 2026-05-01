@@ -18,14 +18,14 @@ export class OrderService {
   async getAllByUser(userId: string) {
     return this.prisma.order.findMany({
       where: { userId },
-      include: { course: true, transaction: true },
+      include: { course: true, transaction: true, coupon: true },
     });
   }
 
   async getByOrderId(userId: string, orderId: string) {
     const order = await this.prisma.order.findUnique({
       where: { id: orderId },
-      include: { course: true, transaction: true },
+      include: { course: true, transaction: true, coupon: true },
     });
 
     if (!order) throw new NotFoundException('Order not found!');

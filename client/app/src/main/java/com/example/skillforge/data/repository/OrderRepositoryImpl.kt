@@ -36,6 +36,10 @@ class OrderRepositoryImpl(
                         status = dto.status,
                         courseTitle = dto.course.title,
                         courseId = dto.course.id,
+                        originalPrice = dto.course.price,
+                        discountPercent = dto.coupon?.discountPercent,
+                        createdAt = dto.createdAt,
+                        courseThumbnailUrl = dto.course.thumbnailUrl,
                     ),
                 )
             } else {
@@ -65,6 +69,10 @@ class OrderRepositoryImpl(
                             status = dto.status,
                             courseTitle = dto.course.title,
                             courseId = dto.course.id,
+                            originalPrice = dto.course.price,
+                            discountPercent = dto.coupon?.discountPercent,
+                            createdAt = dto.createdAt,
+                            courseThumbnailUrl = dto.course.thumbnailUrl,
                         )
                     },
                 )
