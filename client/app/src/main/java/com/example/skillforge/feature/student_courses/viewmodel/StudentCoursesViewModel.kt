@@ -31,6 +31,7 @@ data class StudentCourseDetailsUiState(
     val isLoading: Boolean = false,
     val course: CourseDetails? = null,
     val isEnrolled: Boolean = false,
+    val completedLessonIds: List<String> = emptyList(),
     val errorMessage: String? = null,
 )
 
@@ -45,6 +46,7 @@ class StudentCoursesViewModel(
     private val courseRepository: CourseRepository,
     private val categoryRepository: CategoryRepository,
     private val lessonRepository: LessonRepository,
+    private val progressRepository: com.example.skillforge.domain.repository.ProgressRepository,
 ) : ViewModel() {
     private val _courseListState = MutableStateFlow(StudentCourseListUiState(isLoading = true))
     val courseListState: StateFlow<StudentCourseListUiState> = _courseListState
@@ -182,11 +184,22 @@ class StudentCoursesViewModel(
                     loadedCourseDetailsId = courseId
                     val enrollmentResult = courseRepository.getEnrollmentStatus(token, courseId)
                     val userIsEnrolled = enrollmentResult.getOrNull() ?: false
+                    
+                    var completedLessons: List<String> = emptyList()
+                    if (userIsEnrolled) {
+                        try {
+                            val progress = progressRepository.getCourseProgress(courseId)
+                            completedLessons = progress.completedLessonIds ?: emptyList()
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }
 
                     _courseDetailsState.value = StudentCourseDetailsUiState(
                         isLoading = false,
                         course = course,
                         isEnrolled = userIsEnrolled,
+                        completedLessonIds = completedLessons,
                     )
                 },
                 onFailure = { error ->

@@ -90,8 +90,8 @@ export class ProgressService {
       0,
     );
 
-    // count completed lessons
-    const completedLessons = await this.prisma.lessonProgress.count({
+    // Get completed lessons records
+    const completedLessonsData = await this.prisma.lessonProgress.findMany({
       where: {
         userId,
         isCompleted: true,
@@ -101,19 +101,26 @@ export class ProgressService {
           },
         },
       },
+      select: {
+        lessonId: true,
+      },
     });
+
+    const completedLessonIds = completedLessonsData.map((data) => data.lessonId);
+    const completedLessonsCount = completedLessonIds.length;
 
     // Calculate percent
     const percentage =
       totalLessons === 0
         ? 0
-        : Math.round((completedLessons / totalLessons) * 100);
+        : Math.round((completedLessonsCount / totalLessons) * 100);
 
     return {
       courseId,
       totalLessons,
-      completedLessons,
+      completedLessons: completedLessonsCount,
       percentage,
+      completedLessonIds,
     };
   }
 
