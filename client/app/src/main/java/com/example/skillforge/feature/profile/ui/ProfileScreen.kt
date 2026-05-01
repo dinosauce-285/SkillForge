@@ -12,8 +12,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -41,6 +42,7 @@ fun ProfileScreen(
     token: String,
     viewModel: ProfileViewModel,
     onLogoutClick: () -> Unit,
+    onNavigateToPurchaseHistory: () -> Unit = {},
     onBackClick: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -100,7 +102,7 @@ fun ProfileScreen(
                                 },
                                 leadingIcon = {
                                     Icon(
-                                        imageVector = Icons.Default.ExitToApp,
+                                        imageVector = Icons.AutoMirrored.Filled.ExitToApp,
                                         contentDescription = null,
                                         tint = MaterialTheme.colorScheme.error
                                     )
@@ -208,6 +210,17 @@ fun ProfileScreen(
                                 onLearningGoalsChange = { viewModel.onLearningGoalsChange(it) },
                                 isEditMode = isEditMode
                             )
+
+                            OutlinedButton(
+                                onClick = onNavigateToPurchaseHistory,
+                                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                                shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
+                                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary)
+                            ) {
+                                Icon(Icons.AutoMirrored.Filled.MenuBook, contentDescription = null)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Purchase History")
+                            }
                         }
                     }
                 }

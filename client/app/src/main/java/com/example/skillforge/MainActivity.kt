@@ -58,6 +58,8 @@ import com.example.skillforge.feature.main.viewmodel.MainViewModelFactory
 import com.example.skillforge.feature.transaction.ui.TransactionScreenRoute
 import com.example.skillforge.feature.transaction.viewmodel.TransactionViewModel
 import com.example.skillforge.feature.transaction.viewmodel.TransactionViewModelFactory
+import com.example.skillforge.feature.transaction.viewmodel.TransactionHistoryViewModel
+import com.example.skillforge.feature.transaction.viewmodel.TransactionHistoryViewModelFactory
 import androidx.compose.foundation.layout.padding
 import com.example.skillforge.feature.profile.ui.ProfileScreen
 import com.example.skillforge.feature.profile.viewmodel.ProfileViewModel
@@ -97,6 +99,7 @@ class MainActivity : ComponentActivity() {
                         appContainer.courseRepository,
                         appContainer.categoryRepository,
                         appContainer.lessonRepository,
+                        appContainer.progressRepository,
                     )
                 )
                 val transactionViewModel: TransactionViewModel = viewModel(
@@ -104,6 +107,11 @@ class MainActivity : ComponentActivity() {
                         appContainer.courseRepository,
                         appContainer.orderRepository,
                         appContainer.couponRepository,
+                    )
+                )
+                val transactionHistoryViewModel: TransactionHistoryViewModel = viewModel(
+                    factory = TransactionHistoryViewModelFactory(
+                        appContainer.orderRepository,
                     )
                 )
                 val favoriteViewModel: FavoriteViewModel = viewModel(
@@ -476,6 +484,19 @@ class MainActivity : ComponentActivity() {
                                             onLogoutClick = { 
                                                 mainViewModel.logout()
                                                 loginViewModel.logout() 
+                                            },
+                                            onNavigateToPurchaseHistory = {
+                                                mainViewModel.navigateTo(AppRoute.TransactionHistory(route.session))
+                                            }
+                                        )
+                                    }
+
+                                    is AppRoute.TransactionHistory -> {
+                                        com.example.skillforge.feature.transaction.ui.TransactionHistoryScreen(
+                                            token = route.session.accessToken,
+                                            viewModel = transactionHistoryViewModel,
+                                            onBackClick = {
+                                                mainViewModel.navigateTo(AppRoute.Profile(route.session))
                                             }
                                         )
                                     }

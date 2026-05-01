@@ -76,4 +76,8 @@ sealed interface AppRoute {
     ) : AppRoute
 
     data class Home(val session: AuthSession) : AppRoute
+
+    data class TransactionHistory(
+        val session: AuthSession
+    ) : AppRoute
 }
