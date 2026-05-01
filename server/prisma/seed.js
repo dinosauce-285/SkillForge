@@ -28,7 +28,7 @@ const prisma = new PrismaClient();
 const PASSWORD = '123456';
 const DEFAULT_DOC_SIZE = 1_250_000;
 
-// ─── BLUEPRINTS ────────────────────────────────────────────────────────────────
+// === BLUEPRINTS ================================================================
 
 const courseBlueprints = [
   {
@@ -142,7 +142,7 @@ const courseBlueprints = [
   {
     title: 'Python for Data Science',
     subtitle: 'Analyze and visualize real-world data with Python.',
-    summary: 'From NumPy arrays to Pandas DataFrames and Matplotlib charts — build the foundation for machine learning projects.',
+    summary: 'From NumPy arrays to Pandas DataFrames and Matplotlib charts - build the foundation for machine learning projects.',
     categoryName: 'Data Science',
     instructorEmail: 'han@skillforge.dev',
     level: CourseLevel.BEGINNER,
@@ -227,7 +227,7 @@ const baseUsers = [
 const allCategories = ['Web Development', 'JavaScript', 'Frontend Engineering', 'Backend Engineering', 'Developer Tools', 'Databases', 'Data Science', 'AI & Machine Learning', 'DevOps & Cloud', 'Design'];
 const allTags = ['HTML', 'CSS', 'Responsive Design', 'JavaScript', 'Async', 'ES6', 'React', 'UI', 'Hooks', 'Node.js', 'Express', 'API', 'Git', 'GitHub', 'Collaboration', 'PostgreSQL', 'Prisma', 'SQL', 'Python', 'Data Science', 'NumPy', 'Machine Learning', 'scikit-learn', 'Docker', 'Kubernetes', 'DevOps', 'UX', 'Figma'];
 
-// ─── HELPERS ──────────────────────────────────────────────────────────────────
+// === HELPERS ==================================================================
 
 function buildMaterials(docUrl, videoUrl, videoSize) {
   return {
@@ -242,7 +242,7 @@ function flattenLessons(course) {
   return course.chapters.flatMap((ch) => ch.lessons);
 }
 
-// ─── CLEAR ────────────────────────────────────────────────────────────────────
+// === CLEAR ====================================================================
 
 async function clearAll() {
   console.log('[seed] Clearing all data...');
@@ -262,7 +262,7 @@ async function clearAll() {
   try { await prisma.category.deleteMany(); } catch (_) {}
 }
 
-// ─── USERS ────────────────────────────────────────────────────────────────────
+// === USERS ====================================================================
 
 async function seedUsers(passwordHash) {
   const map = new Map();
@@ -282,7 +282,7 @@ async function seedUsers(passwordHash) {
   return map;
 }
 
-// ─── LOOKUP ───────────────────────────────────────────────────────────────────
+// === LOOKUP ===================================================================
 
 async function seedLookup() {
   const categoryMap = new Map();
@@ -298,7 +298,7 @@ async function seedLookup() {
   return { categoryMap, tagMap };
 }
 
-// ─── COURSES ──────────────────────────────────────────────────────────────────
+// === COURSES ==================================================================
 
 async function seedCourses(categoryMap, tagMap, userMap) {
   const created = [];
@@ -336,7 +336,7 @@ async function seedCourses(categoryMap, tagMap, userMap) {
   return created;
 }
 
-// ─── ENROLLMENTS, PROGRESS, REVIEWS ──────────────────────────────────────────
+// === ENROLLMENTS, PROGRESS, REVIEWS ===========================================
 
 async function seedActivity(courses, userMap) {
   const students = [
@@ -348,7 +348,7 @@ async function seedActivity(courses, userMap) {
   ];
 
   const reviewContents = [
-    'Extremely well structured — I completed this in a weekend and could immediately apply it.',
+    'Extremely well structured - I completed this in a weekend and could immediately apply it.',
     'Clear explanations with just the right level of depth. Highly recommend.',
     'Great content. Some sections could use more exercises but overall fantastic.',
     'This course accelerated my learning significantly. Worth every cent.',
@@ -403,7 +403,7 @@ async function seedActivity(courses, userMap) {
   }
 }
 
-// ─── COUPONS ──────────────────────────────────────────────────────────────────
+// === COUPONS ==================================================================
 
 async function seedCoupons(userMap) {
   const khoa = userMap.get('khoa@skillforge.dev');
@@ -420,7 +420,7 @@ async function seedCoupons(userMap) {
   }
 }
 
-// ─── MAIN ─────────────────────────────────────────────────────────────────────
+// === MAIN =====================================================================
 
 async function main() {
   const passwordHash = await bcrypt.hash(PASSWORD, 10);
@@ -445,23 +445,23 @@ async function main() {
 
   console.log(`\n${'-'.repeat(60)}`);
   console.log('SEEDED ACCOUNTS (password: ' + PASSWORD + ')');
-  console.log('─'.repeat(60));
+  console.log('='.repeat(60));
   console.log('INSTRUCTORS:');
-  console.log('  khoa@skillforge.dev  →  Nguyen Minh Khoa  (INSTRUCTOR)');
-  console.log('  han@skillforge.dev   →  Tran Gia Han       (INSTRUCTOR)');
+  console.log('  khoa@skillforge.dev  ->  Nguyen Minh Khoa  (INSTRUCTOR)');
+  console.log('  han@skillforge.dev   ->  Tran Gia Han       (INSTRUCTOR)');
   console.log('STUDENTS:');
-  console.log('  nam@skillforge.dev   →  Le Hoang Nam       (STUDENT)  — enrolled in courses 1-4');
-  console.log('  anh@skillforge.dev   →  Ngo Minh Anh       (STUDENT)  — enrolled in courses 1-4,7,8,10');
-  console.log('  tung@skillforge.dev  →  Vu Thanh Tung      (STUDENT)  — enrolled in courses 2,4,6,9');
-  console.log('  linh@skillforge.dev  →  Pham Thanh Linh    (STUDENT)  — enrolled in courses 7,8');
-  console.log('  duc@skillforge.dev   →  Nguyen Hoang Duc   (STUDENT)  — enrolled in courses 1,3,10');
+  console.log('  nam@skillforge.dev   ->  Le Hoang Nam       (STUDENT)  - enrolled in courses 1-4');
+  console.log('  anh@skillforge.dev   ->  Ngo Minh Anh       (STUDENT)  - enrolled in courses 1-4,7,8,10');
+  console.log('  tung@skillforge.dev  ->  Vu Thanh Tung      (STUDENT)  - enrolled in courses 2,4,6,9');
+  console.log('  linh@skillforge.dev  ->  Pham Thanh Linh    (STUDENT)  - enrolled in courses 7,8');
+  console.log('  duc@skillforge.dev   ->  Nguyen Hoang Duc   (STUDENT)  - enrolled in courses 1,3,10');
   console.log('ADMIN:');
-  console.log('  admin@skillforge.dev →  SkillForge Admin   (ADMIN)');
+  console.log('  admin@skillforge.dev ->  SkillForge Admin   (ADMIN)');
   console.log('COUPONS:');
-  console.log('  WELCOME10  → 10% off  (khoa)');
-  console.log('  REACT20    → 20% off  (khoa)');
-  console.log('  A15   → 15% off  (han)');
-  console.log('  BACKEND30  → 30% off  (han)');
+  console.log('  WELCOME10  -> 10% off  (khoa)');
+  console.log('  REACT20    -> 20% off  (khoa)');
+  console.log('  A15   -> 15% off  (han)');
+  console.log('  BACKEND30  -> 30% off  (han)');
   console.log('-'.repeat(60));
 }
 

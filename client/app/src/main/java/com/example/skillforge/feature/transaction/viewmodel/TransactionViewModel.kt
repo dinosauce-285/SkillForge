@@ -95,7 +95,7 @@ class TransactionViewModel(
                     _uiState.update {
                         it.copy(
                             discountPercent = validationResponse.discountPercent,
-                            promoMessage = "✓ Code applied! ${validationResponse.discountPercent}% off",
+                            promoMessage = "Code applied! ${validationResponse.discountPercent}% off",
                             promoApplied = true,
                             isLoading = false
                         )
