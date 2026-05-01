@@ -28,13 +28,19 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
     buildFeatures {
         buildConfig = true
         compose = true
     }
+}
+
+// Declare required JDK version – Gradle will locate any compatible JDK 21+
+// on the developer's machine automatically (no hardcoded paths).
+kotlin {
+    jvmToolchain(21)
 }
 
 dependencies {

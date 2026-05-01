@@ -16,4 +16,8 @@ class ProgressRepositoryImpl(
         // We ignore the token parameter here as the Interceptor provides it globally
         return progressApi.getDashboardProgress()
     }
+
+    override suspend fun getCourseProgress(courseId: String): com.example.skillforge.data.remote.CourseProgressDto {
+        return progressApi.getCourseProgress(courseId)
+    }
 }

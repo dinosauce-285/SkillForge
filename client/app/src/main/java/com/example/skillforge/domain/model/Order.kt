@@ -6,4 +6,8 @@ data class OrderSummary(
     val status: String,
     val courseTitle: String,
     val courseId: String,
+    val originalPrice: Double,
+    val discountPercent: Int? = null,
+    val createdAt: String? = null,
+    val courseThumbnailUrl: String? = null,
 )

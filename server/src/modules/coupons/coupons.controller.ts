@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query, Delete, UseGuards } from '@nestjs/common';
 import { CouponsService } from './coupons.service';
 import { CreateCouponDto } from './dto/create-coupon.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -28,8 +28,11 @@ export class CouponsController {
   }
 
   @Get('validate/:code')
-  validateCoupon(@Param('code') code: string) {
-    return this.couponsService.validateCoupon(code);
+  validateCoupon(
+    @Param('code') code: string,
+    @Query('courseId') courseId?: string
+  ) {
+    return this.couponsService.validateCoupon(code, courseId);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)

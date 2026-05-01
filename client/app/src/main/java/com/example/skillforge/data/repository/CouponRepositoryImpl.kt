@@ -49,9 +49,9 @@ class CouponRepositoryImpl(
         }
     }
 
-    override suspend fun validateCoupon(code: String): Result<CouponValidationResponse> = withContext(Dispatchers.IO) {
+    override suspend fun validateCoupon(code: String, courseId: String): Result<CouponValidationResponse> = withContext(Dispatchers.IO) {
         try {
-            val response = api.validateCoupon(code)
+            val response = api.validateCoupon(code, courseId)
             if (response.isSuccessful && response.body() != null) {
                 Result.success(response.body()!!)
             } else {

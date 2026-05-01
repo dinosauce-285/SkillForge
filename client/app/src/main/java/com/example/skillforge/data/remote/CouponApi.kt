@@ -41,7 +41,8 @@ interface CouponApi {
 
     @GET("coupons/validate/{code}")
     suspend fun validateCoupon(
-        @Path("code") code: String
+        @Path("code") code: String,
+        @retrofit2.http.Query("courseId") courseId: String
     ): Response<CouponValidationResponse>
 
     @DELETE("coupons/{id}")

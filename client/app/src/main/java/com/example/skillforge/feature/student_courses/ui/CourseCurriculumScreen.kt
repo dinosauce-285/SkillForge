@@ -22,6 +22,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.PlayLesson
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -75,6 +76,7 @@ fun CourseCurriculumRoute(
         course = uiState.course,
         isLoading = uiState.isLoading,
         errorMessage = uiState.errorMessage,
+        completedLessonIds = uiState.completedLessonIds,
         onLessonSelected = onLessonSelected,
         onNavigateBack = onNavigateBack,
     )
@@ -86,6 +88,7 @@ fun CourseCurriculumScreen(
     course: CourseDetails?,
     isLoading: Boolean,
     errorMessage: String?,
+    completedLessonIds: List<String> = emptyList(),
     onLessonSelected: (String) -> Unit,
     onNavigateBack: () -> Unit,
 ) {
@@ -156,6 +159,7 @@ fun CourseCurriculumScreen(
                             chapter = chapter,
                             chapterNumber = index + 1,
                             expanded = chapter.id in expandedChapterIds,
+                            completedLessonIds = completedLessonIds,
                             onToggle = {
                                 expandedChapterIds = if (chapter.id in expandedChapterIds) {
                                     expandedChapterIds - chapter.id
@@ -177,6 +181,7 @@ private fun CurriculumChapter(
     chapter: CourseChapter,
     chapterNumber: Int,
     expanded: Boolean,
+    completedLessonIds: List<String>,
     onToggle: () -> Unit,
     onLessonSelected: (String) -> Unit,
 ) {
@@ -251,6 +256,7 @@ private fun CurriculumChapter(
                         CurriculumLessonRow(
                             lesson = lesson,
                             lessonNumber = lessonIndex + 1,
+                            isCompleted = lesson.id in completedLessonIds,
                             onClick = { onLessonSelected(lesson.id) },
                         )
                     }
@@ -264,6 +270,7 @@ private fun CurriculumChapter(
 private fun CurriculumLessonRow(
     lesson: CourseLesson,
     lessonNumber: Int,
+    isCompleted: Boolean,
     onClick: () -> Unit,
 ) {
     Row(
@@ -286,9 +293,9 @@ private fun CurriculumLessonRow(
                 ),
         )
         Icon(
-            imageVector = Icons.Default.PlayLesson,
+            imageVector = if (isCompleted) Icons.Default.CheckCircle else Icons.Default.PlayLesson,
             contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            tint = if (isCompleted) Color(0xFF4CAF50) else MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.size(18.dp),
         )
         Column(modifier = Modifier.weight(1f)) {
@@ -348,6 +355,7 @@ private fun CourseCurriculumScreenPreview() {
             course = StudentCourseMockData.courseDetails,
             isLoading = false,
             errorMessage = null,
+            completedLessonIds = emptyList(),
             onLessonSelected = {},
             onNavigateBack = {},
         )

@@ -28,7 +28,7 @@ const prisma = new PrismaClient();
 const PASSWORD = '123456';
 const DEFAULT_DOC_SIZE = 1_250_000;
 
-// ─── BLUEPRINTS ────────────────────────────────────────────────────────────────
+// === BLUEPRINTS ================================================================
 
 const courseBlueprints = [
   {
@@ -40,12 +40,12 @@ const courseBlueprints = [
     level: CourseLevel.BEGINNER,
     price: 0, isFree: true,
     thumbnailUrl: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80',
-    promoVideoUrl: 'https://www.youtube.com/watch?v=UB1O30fR-EE',
+    promoVideoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/1777606563423-11274341-uhd_3840_2160_25fps.mp4',
     tagNames: ['HTML', 'CSS', 'Responsive Design'],
     chapters: [
-      { title: 'HTML Basics', docUrl: 'https://developer.mozilla.org/en-US/docs/Web/HTML', videoUrl: 'https://www.youtube.com/watch?v=BsDoLVMnmZs', videoSize: 41_000_000,
+      { title: 'HTML Basics', docUrl: 'https://developer.mozilla.org/en-US/docs/Web/HTML', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/1777606596402-9198192-hd_1920_1080_25fps.mp4', videoSize: 41_000_000,
         lessons: ['Document structure and semantic tags', 'Forms, tables, and accessibility'] },
-      { title: 'Modern CSS', docUrl: 'https://developer.mozilla.org/en-US/docs/Web/CSS', videoUrl: 'https://www.youtube.com/watch?v=rIO5326FgPE', videoSize: 43_000_000,
+      { title: 'Modern CSS', docUrl: 'https://developer.mozilla.org/en-US/docs/Web/CSS', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/1777606563423-11274341-uhd_3840_2160_25fps.mp4', videoSize: 43_000_000,
         lessons: ['Box model and spacing', 'Flexbox and responsive layout'] },
     ],
   },
@@ -58,12 +58,12 @@ const courseBlueprints = [
     level: CourseLevel.BEGINNER,
     price: 19.99, isFree: false,
     thumbnailUrl: 'https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&w=1200&q=80',
-    promoVideoUrl: 'https://www.youtube.com/watch?v=hdI2bqOjy3c',
+    promoVideoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/1777606567008-3982250-uhd_3840_2160_30fps.mp4',
     tagNames: ['JavaScript', 'Async', 'ES6'],
     chapters: [
-      { title: 'Language Essentials', docUrl: 'https://developer.mozilla.org/en-US/docs/Web/JavaScript', videoUrl: 'https://www.youtube.com/watch?v=W6NZfCO5SIk', videoSize: 47_000_000,
+      { title: 'Language Essentials', docUrl: 'https://developer.mozilla.org/en-US/docs/Web/JavaScript', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/1777606567008-3982250-uhd_3840_2160_30fps.mp4', videoSize: 47_000_000,
         lessons: ['Syntax, types, and control flow', 'Arrays, objects, and loops'] },
-      { title: 'Async JavaScript', docUrl: 'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide', videoUrl: 'https://www.youtube.com/watch?v=V_Kr9OSfDeU', videoSize: 50_000_000,
+      { title: 'Async JavaScript', docUrl: 'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/1777606571767-4298113-uhd_3840_2160_25fps.mp4', videoSize: 50_000_000,
         lessons: ['Functions and scope', 'Async/await and fetch'] },
     ],
   },
@@ -76,12 +76,12 @@ const courseBlueprints = [
     level: CourseLevel.INTERMEDIATE,
     price: 29.99, isFree: false,
     thumbnailUrl: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=1200&q=80',
-    promoVideoUrl: 'https://www.youtube.com/watch?v=w7ejDZ8SWv8',
+    promoVideoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/1777606571767-4298113-uhd_3840_2160_25fps.mp4',
     tagNames: ['React', 'UI', 'Hooks'],
     chapters: [
-      { title: 'Components and State', docUrl: 'https://react.dev/learn', videoUrl: 'https://www.youtube.com/watch?v=Ke90Tje7VS0', videoSize: 52_000_000,
+      { title: 'Components and State', docUrl: 'https://react.dev/learn', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/1777606574913-4494856-uhd_3840_2160_25fps.mp4', videoSize: 52_000_000,
         lessons: ['Components and JSX', 'Props, state, and rendering'] },
-      { title: 'Data and Reusability', docUrl: 'https://react.dev/reference/react', videoUrl: 'https://www.youtube.com/watch?v=G6D9cBaLViA', videoSize: 56_000_000,
+      { title: 'Data and Reusability', docUrl: 'https://react.dev/reference/react', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/1777606576887-4974769-hd_1920_1080_25fps.mp4', videoSize: 56_000_000,
         lessons: ['Hooks and component lifecycle thinking', 'Data fetching and reusable UI'] },
     ],
   },
@@ -94,12 +94,12 @@ const courseBlueprints = [
     level: CourseLevel.INTERMEDIATE,
     price: 34.99, isFree: false,
     thumbnailUrl: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=1200&q=80',
-    promoVideoUrl: 'https://www.youtube.com/watch?v=fBNz5xF-Kx4',
+    promoVideoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/1777606574913-4494856-uhd_3840_2160_25fps.mp4',
     tagNames: ['Node.js', 'Express', 'API'],
     chapters: [
-      { title: 'Runtime and Routing', docUrl: 'https://nodejs.org/en/learn/getting-started/introduction-to-nodejs', videoUrl: 'https://www.youtube.com/watch?v=L72fhGm1tfE', videoSize: 58_000_000,
+      { title: 'Runtime and Routing', docUrl: 'https://nodejs.org/en/learn/getting-started/introduction-to-nodejs', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/1777606578515-4974888-hd_1920_1080_25fps.mp4', videoSize: 58_000_000,
         lessons: ['Node runtime and project setup', 'Express routing and middleware'] },
-      { title: 'Production Patterns', docUrl: 'https://expressjs.com/en/guide/routing.html', videoUrl: 'https://www.youtube.com/watch?v=7H_QH9nipNs', videoSize: 60_000_000,
+      { title: 'Production Patterns', docUrl: 'https://expressjs.com/en/guide/routing.html', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/1777606580233-6672610-uhd_3840_2160_24fps.mp4', videoSize: 60_000_000,
         lessons: ['Validation and error handling', 'Authentication and API hardening'] },
     ],
   },
@@ -112,12 +112,12 @@ const courseBlueprints = [
     level: CourseLevel.BEGINNER,
     price: 0, isFree: true,
     thumbnailUrl: 'https://images.unsplash.com/photo-1516321497487-e288fb19713f?auto=format&fit=crop&w=1200&q=80',
-    promoVideoUrl: 'https://www.youtube.com/watch?v=RGOj5yH7evk',
+    promoVideoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/1777606576887-4974769-hd_1920_1080_25fps.mp4',
     tagNames: ['Git', 'GitHub', 'Collaboration'],
     chapters: [
-      { title: 'Version Control Basics', docUrl: 'https://git-scm.com/book/en/v2', videoUrl: 'https://www.youtube.com/watch?v=RGOj5yH7evk', videoSize: 42_000_000,
+      { title: 'Version Control Basics', docUrl: 'https://git-scm.com/book/en/v2', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/1777606582479-6985310-uhd_3840_2160_25fps.mp4', videoSize: 42_000_000,
         lessons: ['Git init, commit, and history', 'Branching and merge strategies'] },
-      { title: 'Team Workflow', docUrl: 'https://docs.github.com/en/get-started', videoUrl: 'https://www.youtube.com/watch?v=dCzjp95Q1Yk', videoSize: 44_000_000,
+      { title: 'Team Workflow', docUrl: 'https://docs.github.com/en/get-started', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/1777606586644-8088455-uhd_3840_2160_30fps.mp4', videoSize: 44_000_000,
         lessons: ['Pull requests and code review', 'Conflict resolution and release flow'] },
     ],
   },
@@ -130,30 +130,30 @@ const courseBlueprints = [
     level: CourseLevel.INTERMEDIATE,
     price: 24.99, isFree: false,
     thumbnailUrl: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80',
-    promoVideoUrl: 'https://www.youtube.com/watch?v=qw--VYLpxG4',
+    promoVideoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/1777606578515-4974888-hd_1920_1080_25fps.mp4',
     tagNames: ['PostgreSQL', 'Prisma', 'SQL'],
     chapters: [
-      { title: 'Relational Design', docUrl: 'https://www.postgresql.org/docs/current/tutorial.html', videoUrl: 'https://www.youtube.com/watch?v=qw--VYLpxG4', videoSize: 53_000_000,
+      { title: 'Relational Design', docUrl: 'https://www.postgresql.org/docs/current/tutorial.html', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/1777606592016-8088557-uhd_3840_2160_30fps.mp4', videoSize: 53_000_000,
         lessons: ['Relational modeling and primary keys', 'Foreign keys and indexing'] },
-      { title: 'Prisma Workflow', docUrl: 'https://www.prisma.io/docs/getting-started', videoUrl: 'https://www.youtube.com/watch?v=RebA5J-rlwg', videoSize: 55_000_000,
+      { title: 'Prisma Workflow', docUrl: 'https://www.prisma.io/docs/getting-started', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/1777606596402-9198192-hd_1920_1080_25fps.mp4', videoSize: 55_000_000,
         lessons: ['Prisma schema design', 'Querying and migrations'] },
     ],
   },
   {
     title: 'Python for Data Science',
     subtitle: 'Analyze and visualize real-world data with Python.',
-    summary: 'From NumPy arrays to Pandas DataFrames and Matplotlib charts — build the foundation for machine learning projects.',
+    summary: 'From NumPy arrays to Pandas DataFrames and Matplotlib charts - build the foundation for machine learning projects.',
     categoryName: 'Data Science',
     instructorEmail: 'han@skillforge.dev',
     level: CourseLevel.BEGINNER,
     price: 39.99, isFree: false,
     thumbnailUrl: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=1200&q=80',
-    promoVideoUrl: 'https://www.youtube.com/watch?v=rfscVS0vtbw',
+    promoVideoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/1777606580233-6672610-uhd_3840_2160_24fps.mp4',
     tagNames: ['Python', 'Data Science', 'NumPy'],
     chapters: [
-      { title: 'Python Essentials', docUrl: 'https://docs.python.org/3/tutorial/', videoUrl: 'https://www.youtube.com/watch?v=rfscVS0vtbw', videoSize: 62_000_000,
+      { title: 'Python Essentials', docUrl: 'https://docs.python.org/3/tutorial/', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/1777606563423-11274341-uhd_3840_2160_25fps.mp4', videoSize: 62_000_000,
         lessons: ['Variables, lists, and loops', 'Functions and modules'] },
-      { title: 'Data Analysis', docUrl: 'https://pandas.pydata.org/docs/', videoUrl: 'https://www.youtube.com/watch?v=vmEHCJofslg', videoSize: 65_000_000,
+      { title: 'Data Analysis', docUrl: 'https://pandas.pydata.org/docs/', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/1777606567008-3982250-uhd_3840_2160_30fps.mp4', videoSize: 65_000_000,
         lessons: ['NumPy arrays and operations', 'Pandas DataFrames and cleaning'] },
     ],
   },
@@ -166,12 +166,12 @@ const courseBlueprints = [
     level: CourseLevel.INTERMEDIATE,
     price: 49.99, isFree: false,
     thumbnailUrl: 'https://images.unsplash.com/photo-1509228468518-180dd4864904?auto=format&fit=crop&w=1200&q=80',
-    promoVideoUrl: 'https://www.youtube.com/watch?v=pqNCD_5r0IU',
+    promoVideoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/1777606582479-6985310-uhd_3840_2160_25fps.mp4',
     tagNames: ['Python', 'Machine Learning', 'scikit-learn'],
     chapters: [
-      { title: 'Supervised Learning', docUrl: 'https://scikit-learn.org/stable/supervised_learning.html', videoUrl: 'https://www.youtube.com/watch?v=pqNCD_5r0IU', videoSize: 68_000_000,
+      { title: 'Supervised Learning', docUrl: 'https://scikit-learn.org/stable/supervised_learning.html', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/1777606571767-4298113-uhd_3840_2160_25fps.mp4', videoSize: 68_000_000,
         lessons: ['Linear regression from scratch', 'Classification with decision trees'] },
-      { title: 'Model Evaluation', docUrl: 'https://scikit-learn.org/stable/model_selection.html', videoUrl: 'https://www.youtube.com/watch?v=0B5eIE_1vpU', videoSize: 70_000_000,
+      { title: 'Model Evaluation', docUrl: 'https://scikit-learn.org/stable/model_selection.html', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/1777606574913-4494856-uhd_3840_2160_25fps.mp4', videoSize: 70_000_000,
         lessons: ['Train/test split and cross-validation', 'Precision, recall, and F1'] },
     ],
   },
@@ -184,12 +184,12 @@ const courseBlueprints = [
     level: CourseLevel.INTERMEDIATE,
     price: 44.99, isFree: false,
     thumbnailUrl: 'https://images.unsplash.com/photo-1667372393119-3d4c48d07fc9?auto=format&fit=crop&w=1200&q=80',
-    promoVideoUrl: 'https://www.youtube.com/watch?v=Gjnup-PuquQ',
+    promoVideoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/1777606586644-8088455-uhd_3840_2160_30fps.mp4',
     tagNames: ['Docker', 'Kubernetes', 'DevOps'],
     chapters: [
-      { title: 'Containers with Docker', docUrl: 'https://docs.docker.com/get-started/', videoUrl: 'https://www.youtube.com/watch?v=Gjnup-PuquQ', videoSize: 72_000_000,
+      { title: 'Containers with Docker', docUrl: 'https://docs.docker.com/get-started/', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/1777606576887-4974769-hd_1920_1080_25fps.mp4', videoSize: 72_000_000,
         lessons: ['Dockerfile and image layers', 'Docker Compose for local development'] },
-      { title: 'Orchestration with Kubernetes', docUrl: 'https://kubernetes.io/docs/home/', videoUrl: 'https://www.youtube.com/watch?v=s_o8dwzRlu4', videoSize: 75_000_000,
+      { title: 'Orchestration with Kubernetes', docUrl: 'https://kubernetes.io/docs/home/', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/1777606578515-4974888-hd_1920_1080_25fps.mp4', videoSize: 75_000_000,
         lessons: ['Pods, deployments, and services', 'ConfigMaps, secrets, and rolling updates'] },
     ],
   },
@@ -202,12 +202,12 @@ const courseBlueprints = [
     level: CourseLevel.BEGINNER,
     price: 22.99, isFree: false,
     thumbnailUrl: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?auto=format&fit=crop&w=1200&q=80',
-    promoVideoUrl: 'https://www.youtube.com/watch?v=c9Wg6Cb_YlU',
+    promoVideoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/1777606592016-8088557-uhd_3840_2160_30fps.mp4',
     tagNames: ['UI', 'UX', 'Figma'],
     chapters: [
-      { title: 'Design Principles', docUrl: 'https://www.nngroup.com/articles/ten-usability-heuristics/', videoUrl: 'https://www.youtube.com/watch?v=c9Wg6Cb_YlU', videoSize: 58_000_000,
+      { title: 'Design Principles', docUrl: 'https://www.nngroup.com/articles/ten-usability-heuristics/', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/1777606580233-6672610-uhd_3840_2160_24fps.mp4', videoSize: 58_000_000,
         lessons: ['Typography and color theory', 'Gestalt principles and visual hierarchy'] },
-      { title: 'Prototyping', docUrl: 'https://help.figma.com/hc/en-us/articles/360040314193', videoUrl: 'https://www.youtube.com/watch?v=FTFaQWZBqQ8', videoSize: 60_000_000,
+      { title: 'Prototyping', docUrl: 'https://help.figma.com/hc/en-us/articles/360040314193', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/1777606582479-6985310-uhd_3840_2160_25fps.mp4', videoSize: 60_000_000,
         lessons: ['Wireframing with Figma', 'User testing and iterating on feedback'] },
     ],
   },
@@ -227,7 +227,7 @@ const baseUsers = [
 const allCategories = ['Web Development', 'JavaScript', 'Frontend Engineering', 'Backend Engineering', 'Developer Tools', 'Databases', 'Data Science', 'AI & Machine Learning', 'DevOps & Cloud', 'Design'];
 const allTags = ['HTML', 'CSS', 'Responsive Design', 'JavaScript', 'Async', 'ES6', 'React', 'UI', 'Hooks', 'Node.js', 'Express', 'API', 'Git', 'GitHub', 'Collaboration', 'PostgreSQL', 'Prisma', 'SQL', 'Python', 'Data Science', 'NumPy', 'Machine Learning', 'scikit-learn', 'Docker', 'Kubernetes', 'DevOps', 'UX', 'Figma'];
 
-// ─── HELPERS ──────────────────────────────────────────────────────────────────
+// === HELPERS ==================================================================
 
 function buildMaterials(docUrl, videoUrl, videoSize) {
   return {
@@ -242,7 +242,7 @@ function flattenLessons(course) {
   return course.chapters.flatMap((ch) => ch.lessons);
 }
 
-// ─── CLEAR ────────────────────────────────────────────────────────────────────
+// === CLEAR ====================================================================
 
 async function clearAll() {
   console.log('[seed] Clearing all data...');
@@ -262,7 +262,7 @@ async function clearAll() {
   try { await prisma.category.deleteMany(); } catch (_) {}
 }
 
-// ─── USERS ────────────────────────────────────────────────────────────────────
+// === USERS ====================================================================
 
 async function seedUsers(passwordHash) {
   const map = new Map();
@@ -282,7 +282,7 @@ async function seedUsers(passwordHash) {
   return map;
 }
 
-// ─── LOOKUP ───────────────────────────────────────────────────────────────────
+// === LOOKUP ===================================================================
 
 async function seedLookup() {
   const categoryMap = new Map();
@@ -298,7 +298,7 @@ async function seedLookup() {
   return { categoryMap, tagMap };
 }
 
-// ─── COURSES ──────────────────────────────────────────────────────────────────
+// === COURSES ==================================================================
 
 async function seedCourses(categoryMap, tagMap, userMap) {
   const created = [];
@@ -336,7 +336,7 @@ async function seedCourses(categoryMap, tagMap, userMap) {
   return created;
 }
 
-// ─── ENROLLMENTS, PROGRESS, REVIEWS ──────────────────────────────────────────
+// === ENROLLMENTS, PROGRESS, REVIEWS ===========================================
 
 async function seedActivity(courses, userMap) {
   const students = [
@@ -348,7 +348,7 @@ async function seedActivity(courses, userMap) {
   ];
 
   const reviewContents = [
-    'Extremely well structured — I completed this in a weekend and could immediately apply it.',
+    'Extremely well structured - I completed this in a weekend and could immediately apply it.',
     'Clear explanations with just the right level of depth. Highly recommend.',
     'Great content. Some sections could use more exercises but overall fantastic.',
     'This course accelerated my learning significantly. Worth every cent.',
@@ -403,7 +403,7 @@ async function seedActivity(courses, userMap) {
   }
 }
 
-// ─── COUPONS ──────────────────────────────────────────────────────────────────
+// === COUPONS ==================================================================
 
 async function seedCoupons(userMap) {
   const khoa = userMap.get('khoa@skillforge.dev');
@@ -420,7 +420,7 @@ async function seedCoupons(userMap) {
   }
 }
 
-// ─── MAIN ─────────────────────────────────────────────────────────────────────
+// === MAIN =====================================================================
 
 async function main() {
   const passwordHash = await bcrypt.hash(PASSWORD, 10);
@@ -445,23 +445,23 @@ async function main() {
 
   console.log(`\n${'-'.repeat(60)}`);
   console.log('SEEDED ACCOUNTS (password: ' + PASSWORD + ')');
-  console.log('─'.repeat(60));
+  console.log('='.repeat(60));
   console.log('INSTRUCTORS:');
-  console.log('  khoa@skillforge.dev  →  Nguyen Minh Khoa  (INSTRUCTOR)');
-  console.log('  han@skillforge.dev   →  Tran Gia Han       (INSTRUCTOR)');
+  console.log('  khoa@skillforge.dev  ->  Nguyen Minh Khoa  (INSTRUCTOR)');
+  console.log('  han@skillforge.dev   ->  Tran Gia Han       (INSTRUCTOR)');
   console.log('STUDENTS:');
-  console.log('  nam@skillforge.dev   →  Le Hoang Nam       (STUDENT)  — enrolled in courses 1-4');
-  console.log('  anh@skillforge.dev   →  Ngo Minh Anh       (STUDENT)  — enrolled in courses 1-4,7,8,10');
-  console.log('  tung@skillforge.dev  →  Vu Thanh Tung      (STUDENT)  — enrolled in courses 2,4,6,9');
-  console.log('  linh@skillforge.dev  →  Pham Thanh Linh    (STUDENT)  — enrolled in courses 7,8');
-  console.log('  duc@skillforge.dev   →  Nguyen Hoang Duc   (STUDENT)  — enrolled in courses 1,3,10');
+  console.log('  nam@skillforge.dev   ->  Le Hoang Nam       (STUDENT)  - enrolled in courses 1-4');
+  console.log('  anh@skillforge.dev   ->  Ngo Minh Anh       (STUDENT)  - enrolled in courses 1-4,7,8,10');
+  console.log('  tung@skillforge.dev  ->  Vu Thanh Tung      (STUDENT)  - enrolled in courses 2,4,6,9');
+  console.log('  linh@skillforge.dev  ->  Pham Thanh Linh    (STUDENT)  - enrolled in courses 7,8');
+  console.log('  duc@skillforge.dev   ->  Nguyen Hoang Duc   (STUDENT)  - enrolled in courses 1,3,10');
   console.log('ADMIN:');
-  console.log('  admin@skillforge.dev →  SkillForge Admin   (ADMIN)');
+  console.log('  admin@skillforge.dev ->  SkillForge Admin   (ADMIN)');
   console.log('COUPONS:');
-  console.log('  WELCOME10  → 10% off  (khoa)');
-  console.log('  REACT20    → 20% off  (khoa)');
-  console.log('  SUMMER15   → 15% off  (han)');
-  console.log('  BACKEND30  → 30% off  (han)');
+  console.log('  WELCOME10  -> 10% off  (khoa)');
+  console.log('  REACT20    -> 20% off  (khoa)');
+  console.log('  A15   -> 15% off  (han)');
+  console.log('  BACKEND30  -> 30% off  (han)');
   console.log('-'.repeat(60));
 }
 

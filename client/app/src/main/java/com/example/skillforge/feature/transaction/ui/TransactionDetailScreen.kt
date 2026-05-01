@@ -11,7 +11,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.CreditCard
-import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.HelpOutline
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -199,28 +198,15 @@ fun TransactionDetailScreen(
 
             // Action Buttons
             item {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Button(
-                        onClick = { },
-                        modifier = Modifier.fillMaxWidth().height(56.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Icon(Icons.Default.Download, contentDescription = null)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Download Invoice (PDF)", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                    }
-                    
-                    OutlinedButton(
-                        onClick = { },
-                        modifier = Modifier.fillMaxWidth().height(56.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        border = BorderStroke(1.dp, Color.LightGray)
-                    ) {
-                        Icon(Icons.Default.HelpOutline, contentDescription = null, tint = Color.DarkGray)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Contact Support", fontWeight = FontWeight.SemiBold, fontSize = 16.sp, color = Color.DarkGray)
-                    }
+                OutlinedButton(
+                    onClick = { },
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, Color.LightGray)
+                ) {
+                    Icon(Icons.Default.HelpOutline, contentDescription = null, tint = Color.DarkGray)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Contact Support", fontWeight = FontWeight.SemiBold, fontSize = 16.sp, color = Color.DarkGray)
                 }
             }
             
