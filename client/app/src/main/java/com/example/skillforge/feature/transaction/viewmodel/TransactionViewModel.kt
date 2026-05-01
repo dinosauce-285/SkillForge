@@ -19,6 +19,8 @@ data class TransactionUiState(
     val isLoading: Boolean = false,
     val isProcessing: Boolean = false,
     val errorMessage: String? = null,
+    val promoMessage: String? = null,   // success msg for promo
+    val promoApplied: Boolean = false,  // true = applied successfully
     val orderSuccessful: Boolean = false,
 ) {
     val totalPrice: Double get() = (course?.price ?: 0.0) * (1 - (discountPercent / 100.0))
@@ -32,9 +34,13 @@ class TransactionViewModel(
     private val _uiState = MutableStateFlow(TransactionUiState())
     val uiState: StateFlow<TransactionUiState> = _uiState.asStateFlow()
 
+    fun resetState() {
+        _uiState.value = TransactionUiState()
+    }
+
     fun loadCourse(courseId: String) {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            _uiState.value = TransactionUiState(isLoading = true)
             courseRepository.getCourseDetails(courseId).fold(
                 onSuccess = { courseDetails ->
                     val summary = CourseSummary(
@@ -70,34 +76,39 @@ class TransactionViewModel(
     }
 
     fun onPromoCodeChange(code: String) {
-        _uiState.update { it.copy(promoCode = code) }
+        _uiState.update { it.copy(promoCode = code, promoMessage = null, promoApplied = false, discountPercent = 0) }
     }
 
     fun applyPromoCode() {
-        if (_uiState.value.promoCode.isEmpty()) {
-            _uiState.update { it.copy(discountPercent = 0, errorMessage = null) }
-        } else {
-            viewModelScope.launch {
-                _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-                val result = couponRepository.validateCoupon(_uiState.value.promoCode)
-                if (result.isSuccess) {
-                    val validationResponse = result.getOrNull()
-                    if (validationResponse != null) {
-                        _uiState.update { 
-                            it.copy(
-                                discountPercent = validationResponse.discountPercent,
-                                isLoading = false
-                            ) 
-                        }
-                    }
-                } else {
-                    _uiState.update { 
+        val code = _uiState.value.promoCode.trim()
+        val courseId = _uiState.value.course?.id
+        if (code.isEmpty() || courseId == null) {
+            _uiState.update { it.copy(discountPercent = 0, promoMessage = null, promoApplied = false) }
+            return
+        }
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, promoMessage = null, promoApplied = false) }
+            val result = couponRepository.validateCoupon(code, courseId)
+            if (result.isSuccess) {
+                val validationResponse = result.getOrNull()
+                if (validationResponse != null) {
+                    _uiState.update {
                         it.copy(
-                            discountPercent = 0,
-                            errorMessage = result.exceptionOrNull()?.message ?: "Invalid promo code",
+                            discountPercent = validationResponse.discountPercent,
+                            promoMessage = "✓ Code applied! ${validationResponse.discountPercent}% off",
+                            promoApplied = true,
                             isLoading = false
                         )
                     }
+                }
+            } else {
+                _uiState.update {
+                    it.copy(
+                        discountPercent = 0,
+                        promoMessage = result.exceptionOrNull()?.message ?: "Invalid promo code",
+                        promoApplied = false,
+                        isLoading = false
+                    )
                 }
             }
         }

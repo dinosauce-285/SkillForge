@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -51,6 +52,12 @@ fun TransactionScreenRoute(
         viewModel.loadCourse(courseId)
     }
 
+    DisposableEffect(Unit) {
+        onDispose {
+            viewModel.resetState()
+        }
+    }
+
     LaunchedEffect(uiState.orderSuccessful) {
         if (uiState.orderSuccessful) {
             onPaymentSuccess()
@@ -73,8 +80,7 @@ fun TransactionScreen(
     viewModel: TransactionViewModel,
     onBackClick: () -> Unit = {},
 ) {
-    var promoCode by remember { mutableStateOf("") }
-
+    // Removed local promoCode state
     Scaffold(
         topBar = {
             TopAppBar(
@@ -237,8 +243,8 @@ fun TransactionScreen(
                     Text("Promo Code", fontWeight = FontWeight.Bold, fontSize = 18.sp)
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         TextField(
-                            value = promoCode,
-                            onValueChange = { promoCode = it },
+                            value = uiState.promoCode,
+                            onValueChange = { viewModel.onPromoCodeChange(it) },
                             placeholder = { Text("Enter code...", fontSize = 14.sp) },
                             modifier = Modifier.weight(1.6f),
                             shape = RoundedCornerShape(12.dp),
@@ -259,6 +265,15 @@ fun TransactionScreen(
                         ) {
                             Text("Apply", color = PrimaryOrange, fontWeight = FontWeight.Bold)
                         }
+                    }
+                    if (uiState.promoMessage != null) {
+                        Text(
+                            text = uiState.promoMessage,
+                            color = if (uiState.promoApplied) Color(0xFF2E7D32) else MaterialTheme.colorScheme.error,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.padding(start = 4.dp)
+                        )
                     }
                 }
 
@@ -314,7 +329,7 @@ fun TransactionScreen(
                         
                         if (uiState.discountPercent > 0) {
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text("Promo Code", color = Color(0xFF2E7D32), fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                                Text("Promo Code (${uiState.discountPercent}% off)", color = Color(0xFF2E7D32), fontSize = 14.sp, fontWeight = FontWeight.Medium)
                                 Text("-${formatPrice((uiState.discountPercent / 100.0) * (uiState.course?.price ?: 0.0))}", color = Color(0xFF2E7D32), fontSize = 14.sp, fontWeight = FontWeight.Medium)
                             }
                         }
