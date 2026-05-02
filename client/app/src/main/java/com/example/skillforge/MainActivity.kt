@@ -109,6 +109,11 @@ class MainActivity : ComponentActivity() {
                         appContainer.couponRepository,
                     )
                 )
+                val studentQuizViewModel: com.example.skillforge.feature.student_courses.viewmodel.StudentQuizViewModel = viewModel(
+                    factory = com.example.skillforge.feature.student_courses.viewmodel.StudentQuizViewModelFactory(
+                        appContainer.quizRepository
+                    )
+                )
                 val transactionHistoryViewModel: TransactionHistoryViewModel = viewModel(
                     factory = TransactionHistoryViewModelFactory(
                         appContainer.orderRepository,
@@ -262,6 +267,9 @@ class MainActivity : ComponentActivity() {
                                         onLessonSelected = { lessonId ->
                                             mainViewModel.navigateTo(AppRoute.LessonLearning(route.session, route.courseId, lessonId))
                                         },
+                                        onQuizSelected = { quizId ->
+                                            mainViewModel.navigateTo(AppRoute.StudentQuiz(route.session, route.courseId, quizId))
+                                        },
                                         onNavigateBack = {
                                             mainViewModel.navigateTo(AppRoute.StudentCourseDetails(route.session, route.courseId))
                                         }
@@ -276,6 +284,18 @@ class MainActivity : ComponentActivity() {
                                         },
                                         onPaymentSuccess = {
                                             studentCoursesViewModel.loadCourseDetails(route.courseId, route.session.accessToken, forceReload = true)
+                                            mainViewModel.navigateTo(AppRoute.CourseCurriculum(route.session, route.courseId))
+                                        }
+                                    )
+
+                                    is AppRoute.StudentQuiz -> com.example.skillforge.feature.student_courses.ui.StudentQuizRoute(
+                                        quizId = route.quizId,
+                                        viewModel = studentQuizViewModel,
+                                        onBack = {
+                                            mainViewModel.navigateTo(AppRoute.CourseCurriculum(route.session, route.courseId))
+                                        },
+                                        onSubmit = { answers ->
+                                            // TODO: Submit answers logic
                                             mainViewModel.navigateTo(AppRoute.CourseCurriculum(route.session, route.courseId))
                                         }
                                     )

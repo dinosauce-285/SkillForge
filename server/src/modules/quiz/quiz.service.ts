@@ -1,8 +1,10 @@
-import { PrismaService } from '../prisma/prisma.service';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateQuizDto } from './dto/create.dto';
 import { UpdateQuizDto } from './dto/update.dto';
+import { SubmitQuizDto } from './dto/submit.dto';
 import { QuestionService } from '../question/question.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { AttemptStatus } from '@prisma/client';
 
 @Injectable()
 export class QuizService {
@@ -90,5 +92,68 @@ export class QuizService {
     return this.prisma.quiz.delete({
       where: { id },
     });
+  }
+
+  async submitQuiz(userId: string, quizId: string, submitQuizDto: SubmitQuizDto) {
+    const quiz = await this.prisma.quiz.findUnique({
+      where: { id: quizId },
+      include: {
+        questions: {
+          include: {
+            choices: true,
+          },
+        },
+      },
+    });
+
+    if (!quiz) {
+      throw new NotFoundException(`Quiz with ID ${quizId} not found`);
+    }
+
+    let correctAnswers = 0;
+    const totalQuestions = quiz.questions.length;
+
+    const answerRecords: any[] = [];
+
+    quiz.questions.forEach((question) => {
+      const selectedChoiceId = submitQuizDto.answers[question.id];
+      const correctChoice = question.choices.find((c) => c.isCorrect);
+
+      if (selectedChoiceId && correctChoice && selectedChoiceId === correctChoice.id) {
+        correctAnswers++;
+      }
+
+      if (selectedChoiceId) {
+        answerRecords.push({
+          questionId: question.id,
+          selectedChoiceId: selectedChoiceId,
+        });
+      }
+    });
+
+    const score = totalQuestions > 0 ? Math.round((correctAnswers / totalQuestions) * 100) : 0;
+    const isPassed = score >= quiz.passingScore;
+
+    const attempt = await this.prisma.quizAttempt.create({
+      data: {
+        studentId: userId,
+        quizId: quiz.id,
+        score: score,
+        isPassed: isPassed,
+        status: AttemptStatus.SUBMITTED,
+        endTime: new Date(),
+        answers: {
+          create: answerRecords,
+        },
+      },
+    });
+
+    return {
+      attemptId: attempt.id,
+      score: score,
+      isPassed: isPassed,
+      correctAnswers: correctAnswers,
+      totalQuestions: totalQuestions,
+    };
   }
 }

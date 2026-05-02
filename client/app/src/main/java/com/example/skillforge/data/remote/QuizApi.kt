@@ -14,6 +14,12 @@ interface QuizApi {
     @POST("quiz")
     suspend fun createQuiz(@Body request: CreateQuizRequest): Response<QuizDto>
 
+    @POST("quiz/{id}/submit")
+    suspend fun submitQuiz(
+        @Path("id") id: String,
+        @Body request: SubmitQuizRequest
+    ): Response<QuizSubmissionResultDto>
+
     @PATCH("quiz/{id}")
     suspend fun updateQuiz(
         @Path("id") id: String,

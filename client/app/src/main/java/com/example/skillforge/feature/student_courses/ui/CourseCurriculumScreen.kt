@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.PlayLesson
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Quiz
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -64,6 +65,7 @@ fun CourseCurriculumRoute(
     token: String,
     viewModel: StudentCoursesViewModel,
     onLessonSelected: (String) -> Unit,
+    onQuizSelected: (String) -> Unit = {},
     onNavigateBack: () -> Unit,
 ) {
     val uiState by viewModel.courseDetailsState.collectAsState()
@@ -77,7 +79,9 @@ fun CourseCurriculumRoute(
         isLoading = uiState.isLoading,
         errorMessage = uiState.errorMessage,
         completedLessonIds = uiState.completedLessonIds,
+        completedQuizIds = uiState.completedQuizIds,
         onLessonSelected = onLessonSelected,
+        onQuizSelected = onQuizSelected,
         onNavigateBack = onNavigateBack,
     )
 }
@@ -89,7 +93,9 @@ fun CourseCurriculumScreen(
     isLoading: Boolean,
     errorMessage: String?,
     completedLessonIds: List<String> = emptyList(),
+    completedQuizIds: List<String> = emptyList(),
     onLessonSelected: (String) -> Unit,
+    onQuizSelected: (String) -> Unit = {},
     onNavigateBack: () -> Unit,
 ) {
     var expandedChapterIds by rememberSaveable(course?.id) { mutableStateOf(setOf<String>()) }
@@ -160,6 +166,7 @@ fun CourseCurriculumScreen(
                             chapterNumber = index + 1,
                             expanded = chapter.id in expandedChapterIds,
                             completedLessonIds = completedLessonIds,
+                            completedQuizIds = completedQuizIds,
                             onToggle = {
                                 expandedChapterIds = if (chapter.id in expandedChapterIds) {
                                     expandedChapterIds - chapter.id
@@ -168,6 +175,7 @@ fun CourseCurriculumScreen(
                                 }
                             },
                             onLessonSelected = onLessonSelected,
+                            onQuizSelected = onQuizSelected,
                         )
                     }
                 }
@@ -182,8 +190,10 @@ private fun CurriculumChapter(
     chapterNumber: Int,
     expanded: Boolean,
     completedLessonIds: List<String>,
+    completedQuizIds: List<String>,
     onToggle: () -> Unit,
     onLessonSelected: (String) -> Unit,
+    onQuizSelected: (String) -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(SkillforgeSpacing.small)) {
         Row(
@@ -216,7 +226,7 @@ private fun CurriculumChapter(
                         fontWeight = FontWeight.Bold,
                     )
                     Text(
-                        text = "${chapter.lessons.size} lessons",
+                        text = "${chapter.lessons.size} lessons" + if (chapter.quizzes.isNotEmpty()) " • ${chapter.quizzes.size} quizzes" else "",
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.labelMedium,
                     )
@@ -243,7 +253,7 @@ private fun CurriculumChapter(
                     modifier = Modifier
                         .padding(start = 4.dp)
                         .width(2.dp)
-                        .height((chapter.lessons.size * 58).dp)
+                        .height(((chapter.lessons.size + chapter.quizzes.size) * 58).dp)
                         .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f)),
                 )
                 Column(
@@ -260,9 +270,69 @@ private fun CurriculumChapter(
                             onClick = { onLessonSelected(lesson.id) },
                         )
                     }
+                    chapter.quizzes.forEachIndexed { quizIndex, quiz ->
+                        CurriculumQuizRow(
+                            quiz = quiz,
+                            quizNumber = quizIndex + 1,
+                            isCompleted = quiz.id in completedQuizIds,
+                            onClick = { onQuizSelected(quiz.id) },
+                        )
+                    }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun CurriculumQuizRow(
+    quiz: com.example.skillforge.domain.model.CourseQuiz,
+    quizNumber: Int,
+    isCompleted: Boolean = false,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color.Transparent)
+            .padding(horizontal = 12.dp, vertical = 12.dp),
+        horizontalArrangement = Arrangement.spacedBy(SkillforgeSpacing.small),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier = Modifier
+                .width(12.dp)
+                .height(2.dp)
+                .background(
+                    color = MaterialTheme.colorScheme.outlineVariant,
+                    shape = RoundedCornerShape(99.dp),
+                ),
+        )
+        Icon(
+            imageVector = if (isCompleted) Icons.Default.CheckCircle else Icons.Default.Quiz, // Use a different icon for quiz if available
+            contentDescription = null,
+            tint = if (isCompleted) Color(0xFF4CAF50) else PrimaryOrange,
+            modifier = Modifier.size(18.dp),
+        )
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = "Quiz $quizNumber",
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.labelMedium,
+            )
+            Text(
+                text = quiz.title,
+                fontWeight = FontWeight.Medium,
+            )
+        }
+        Icon(
+            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(18.dp),
+        )
     }
 }
 
@@ -356,6 +426,7 @@ private fun CourseCurriculumScreenPreview() {
             isLoading = false,
             errorMessage = null,
             completedLessonIds = emptyList(),
+            completedQuizIds = emptyList(),
             onLessonSelected = {},
             onNavigateBack = {},
         )

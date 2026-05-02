@@ -32,6 +32,7 @@ data class StudentCourseDetailsUiState(
     val course: CourseDetails? = null,
     val isEnrolled: Boolean = false,
     val completedLessonIds: List<String> = emptyList(),
+    val completedQuizIds: List<String> = emptyList(),
     val errorMessage: String? = null,
 )
 
@@ -186,10 +187,12 @@ class StudentCoursesViewModel(
                     val userIsEnrolled = enrollmentResult.getOrNull() ?: false
                     
                     var completedLessons: List<String> = emptyList()
+                    var completedQuizzes: List<String> = emptyList()
                     if (userIsEnrolled) {
                         try {
                             val progress = progressRepository.getCourseProgress(courseId)
                             completedLessons = progress.completedLessonIds ?: emptyList()
+                            completedQuizzes = progress.completedQuizIds ?: emptyList()
                         } catch (e: Exception) {
                             e.printStackTrace()
                         }
@@ -200,6 +203,7 @@ class StudentCoursesViewModel(
                         course = course,
                         isEnrolled = userIsEnrolled,
                         completedLessonIds = completedLessons,
+                        completedQuizIds = completedQuizzes,
                     )
                 },
                 onFailure = { error ->

@@ -121,6 +121,12 @@ class CourseRepositoryImpl(
                                         title = lesson.title,
                                     )
                                 },
+                                quizzes = chapter.quizzes?.map { quiz ->
+                                    com.example.skillforge.domain.model.CourseQuiz(
+                                        id = quiz.id,
+                                        title = quiz.title,
+                                    )
+                                } ?: emptyList(),
                             )
                         },
                     )

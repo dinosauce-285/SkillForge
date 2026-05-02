@@ -23,9 +23,15 @@ data class CourseChapter(
     val id: String,
     val title: String,
     val lessons: List<CourseLesson>,
+    val quizzes: List<CourseQuiz> = emptyList(),
 )
 
 data class CourseLesson(
+    val id: String,
+    val title: String,
+)
+
+data class CourseQuiz(
     val id: String,
     val title: String,
 )

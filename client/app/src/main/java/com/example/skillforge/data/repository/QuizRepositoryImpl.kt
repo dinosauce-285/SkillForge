@@ -177,4 +177,30 @@ class QuizRepositoryImpl(private val api: QuizApi) : QuizRepository {
             Result.failure(e)
         }
     }
+
+    override suspend fun submitQuiz(
+        quizId: String,
+        answers: Map<String, String>
+    ): Result<com.example.skillforge.domain.model.QuizSubmissionResult> {
+        return try {
+            val response = api.submitQuiz(quizId, com.example.skillforge.data.remote.dto.SubmitQuizRequest(answers))
+            if (response.isSuccessful && response.body() != null) {
+                val dto = response.body()!!
+                Result.success(
+                    com.example.skillforge.domain.model.QuizSubmissionResult(
+                        attemptId = dto.attemptId,
+                        score = dto.score,
+                        isPassed = dto.isPassed,
+                        correctAnswers = dto.correctAnswers,
+                        totalQuestions = dto.totalQuestions
+                    )
+                )
+            } else {
+                val errorMsg = response.errorBody()?.string() ?: response.message()
+                Result.failure(Exception(errorMsg))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }
