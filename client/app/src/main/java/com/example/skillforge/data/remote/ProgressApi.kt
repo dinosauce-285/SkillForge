@@ -9,7 +9,8 @@ data class CourseProgressDto(
     val totalLessons: Int,
     val completedLessons: Int,
     val percentage: Int,
-    val completedLessonIds: List<String>?
+    val completedLessonIds: List<String>?,
+    val completedQuizIds: List<String>? = emptyList()
 )
 
 interface ProgressApi {

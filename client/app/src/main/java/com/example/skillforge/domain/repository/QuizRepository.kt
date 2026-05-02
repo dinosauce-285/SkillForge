@@ -17,4 +17,5 @@ interface QuizRepository {
     suspend fun updateQuestion(id: String, request: UpdateQuestionRequest): Result<Question>
     suspend fun deleteQuestion(id: String): Result<Unit>
     suspend fun reorderQuestions(quizId: String, orderedQuestionIds: List<String>): Result<List<Question>>
+    suspend fun submitQuiz(quizId: String, answers: Map<String, String>): Result<com.example.skillforge.domain.model.QuizSubmissionResult>
 }

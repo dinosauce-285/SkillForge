@@ -83,6 +83,7 @@ data class CourseChapterDto(
     val id: String,
     val title: String,
     val lessons: List<CourseLessonDto>,
+    val quizzes: List<com.example.skillforge.data.remote.dto.QuizDto>? = emptyList()
 )
 
 data class MaterialDto(

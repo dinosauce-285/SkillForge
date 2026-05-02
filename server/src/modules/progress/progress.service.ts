@@ -73,6 +73,7 @@ export class ProgressService {
                 lessons: {
                   where: { deletedAt: null },
                 },
+                quizzes: true,
               },
             },
           },
@@ -84,11 +85,16 @@ export class ProgressService {
       throw new NotFoundException(`Course with id "${courseId}" not found`);
     }
 
-    // Sum lesson
+    // Sum lesson and quizzes
     const totalLessons = course.chapters.reduce(
       (sum, chap) => sum + chap._count.lessons,
       0,
     );
+    const totalQuizzes = course.chapters.reduce(
+      (sum, chap) => sum + chap._count.quizzes,
+      0,
+    );
+    const totalItems = totalLessons + totalQuizzes;
 
     // Get completed lessons records
     const completedLessonsData = await this.prisma.lessonProgress.findMany({
@@ -109,11 +115,33 @@ export class ProgressService {
     const completedLessonIds = completedLessonsData.map((data) => data.lessonId);
     const completedLessonsCount = completedLessonIds.length;
 
+    // Get completed quizzes records
+    const completedQuizzesData = await this.prisma.quizAttempt.findMany({
+      where: {
+        studentId: userId,
+        isPassed: true,
+        quiz: {
+          chapter: {
+            courseId: courseId,
+          },
+        },
+      },
+      distinct: ['quizId'],
+      select: {
+        quizId: true,
+      },
+    });
+
+    const completedQuizIds = completedQuizzesData.map((data) => data.quizId);
+    const completedQuizzesCount = completedQuizIds.length;
+
+    const completedItemsCount = completedLessonsCount + completedQuizzesCount;
+
     // Calculate percent
     const percentage =
-      totalLessons === 0
+      totalItems === 0
         ? 0
-        : Math.round((completedLessonsCount / totalLessons) * 100);
+        : Math.round((completedItemsCount / totalItems) * 100);
 
     return {
       courseId,
@@ -121,6 +149,7 @@ export class ProgressService {
       completedLessons: completedLessonsCount,
       percentage,
       completedLessonIds,
+      completedQuizIds,
     };
   }
 
@@ -168,7 +197,7 @@ export class ProgressService {
         chapters: {
           where: { deletedAt: null },
           select: {
-            _count: { select: { lessons: { where: { deletedAt: null } } } },
+            _count: { select: { lessons: { where: { deletedAt: null } }, quizzes: true } },
           },
         },
       },
@@ -177,7 +206,7 @@ export class ProgressService {
     const totalLessonsMap = new Map<string, number>();
     coursesWithLessons.forEach((course) => {
       const total = course.chapters.reduce(
-        (sum, chap) => sum + chap._count.lessons,
+        (sum, chap) => sum + chap._count.lessons + chap._count.quizzes,
         0,
       );
       totalLessonsMap.set(course.id, total);
@@ -194,32 +223,48 @@ export class ProgressService {
       },
     });
 
-    const completedLessonsMap = new Map<string, number>();
+    const completedQuizzesData = await this.prisma.quizAttempt.findMany({
+      where: {
+        studentId: userId,
+        isPassed: true,
+        quiz: { chapter: { courseId: { in: courseIds } } },
+      },
+      distinct: ['quizId'],
+      select: {
+        quiz: { select: { chapter: { select: { courseId: true } } } },
+      },
+    });
+
+    const completedItemsMap = new Map<string, number>();
     completedLessonsData.forEach((progress) => {
       const cId = progress.lesson.chapter.courseId;
-      completedLessonsMap.set(cId, (completedLessonsMap.get(cId) || 0) + 1);
+      completedItemsMap.set(cId, (completedItemsMap.get(cId) || 0) + 1);
+    });
+    completedQuizzesData.forEach((attempt) => {
+      const cId = attempt.quiz.chapter.courseId;
+      completedItemsMap.set(cId, (completedItemsMap.get(cId) || 0) + 1);
     });
 
     let totalCompletedLessonsAllCourses = 0;
 
     const coursesData = enrollments.map((enroll) => {
       const courseId = enroll.course.id;
-      const totalLessons = totalLessonsMap.get(courseId) || 0;
-      const completedLessons = completedLessonsMap.get(courseId) || 0;
+      const totalItems = totalLessonsMap.get(courseId) || 0;
+      const completedItems = completedItemsMap.get(courseId) || 0;
       const percentage =
-        totalLessons === 0
+        totalItems === 0
           ? 0
-          : Math.round((completedLessons / totalLessons) * 100);
+          : Math.round((completedItems / totalItems) * 100);
 
-      totalCompletedLessonsAllCourses += completedLessons;
+      totalCompletedLessonsAllCourses += completedItems;
 
       return {
         courseId: courseId,
         title: enroll.course.title,
         thumbnailUrl: enroll.course.thumbnailUrl,
         instructorName: enroll.course.instructor.fullName,
-        totalLessons,
-        completedLessons,
+        totalLessons: totalItems,
+        completedLessons: completedItems,
         percentage,
       };
     });

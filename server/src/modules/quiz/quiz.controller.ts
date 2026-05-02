@@ -6,6 +6,8 @@ import { Role } from '@prisma/client';
 import { QuizService } from './quiz.service';
 import { CreateQuizDto } from './dto/create.dto';
 import { UpdateQuizDto } from './dto/update.dto';
+import { SubmitQuizDto } from './dto/submit.dto';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('quiz')
@@ -40,5 +42,15 @@ export class QuizController {
   @Roles(Role.INSTRUCTOR)
   remove(@Param('id') id: string) {
     return this.quizService.remove(id);
+  }
+
+  @Post(':id/submit')
+  @Roles(Role.STUDENT)
+  submit(
+    @Param('id') id: string,
+    @Body() submitQuizDto: SubmitQuizDto,
+    @CurrentUser('id') userId: string
+  ) {
+    return this.quizService.submitQuiz(userId, id, submitQuizDto);
   }
 }
