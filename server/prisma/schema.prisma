@@ -106,6 +106,7 @@ model Chapter {
   deletedAt  DateTime? @map("deleted_at")
   course     Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
   lessons    Lesson[]
+  quizzes    Quiz[]
 
   @@map("chapters")
 }
@@ -120,7 +121,6 @@ model Lesson {
   materials        LessonMaterial[]
   lessonProgresses LessonProgress[]
   chapter          Chapter          @relation(fields: [chapterId], references: [id], onDelete: Cascade)
-  quiz             Quiz?
 
   @@map("lessons")
 }
@@ -244,13 +244,14 @@ model LessonProgress {
 
 model Quiz {
   id                 String        @id @default(uuid())
-  lessonId           String        @unique @map("lesson_id")
+  chapterId          String        @map("chapter_id")
+  title              String        @default("Untitled Quiz")
   timeLimit          Int           @map("time_limit")
   passingScore       Float         @map("passing_score")
   randomizeQuestions Boolean       @default(false) @map("randomize_questions")
   questions          Question[]
   attempts           QuizAttempt[]
-  lesson             Lesson        @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  chapter            Chapter       @relation(fields: [chapterId], references: [id], onDelete: Cascade)
 
   @@map("quizzes")
 }

@@ -441,8 +441,67 @@ class MainActivity : ComponentActivity() {
                                             onNavigateToUpload = { lessonId ->
                                                 mainViewModel.navigateTo(AppRoute.MaterialUpload(route.session, lessonId))
                                             },
-                                            onNavigateToQuizBuilder = { courseId, chapterId ->
-                                                mainViewModel.navigateTo(AppRoute.QuizBuilder(route.session, courseId, chapterId))
+                                            onNavigateToQuizBuilder = { courseId, chapterId, quizId ->
+                                                mainViewModel.navigateTo(AppRoute.QuizBuilder(route.session, courseId, chapterId, quizId))
+                                            }
+                                        )
+                                    }
+
+                                    is AppRoute.QuizBuilder -> {
+                                        val quizBuilderViewModel: com.example.skillforge.feature.instructor_portal.viewmodel.QuizBuilderViewModel = viewModel(
+                                            factory = com.example.skillforge.feature.instructor_portal.viewmodel.QuizBuilderViewModel.provideFactory(appContainer.quizRepository)
+                                        )
+
+                                        com.example.skillforge.feature.instructor_portal.ui.QuizBuilderScreen(
+                                            viewModel = quizBuilderViewModel,
+                                            chapterId = route.chapterId,
+                                            quizId = route.quizId,
+                                            initialTab = route.initialTab,
+                                            onBackClick = {
+                                                mainViewModel.navigateTo(AppRoute.CourseManager(route.session, route.courseId))
+                                            },
+                                            onNavigateToAddQuestion = {
+                                                mainViewModel.navigateTo(AppRoute.AddQuestion(route.session, route.courseId, route.quizId))
+                                            },
+                                            onNavigateToEditQuestion = { questionId ->
+                                                mainViewModel.navigateTo(AppRoute.EditQuestion(route.session, route.courseId, route.quizId, questionId))
+                                            }
+                                        )
+                                    }
+
+                                    is AppRoute.AddQuestion -> {
+                                        val quizBuilderViewModel: com.example.skillforge.feature.instructor_portal.viewmodel.QuizBuilderViewModel = viewModel(
+                                            factory = com.example.skillforge.feature.instructor_portal.viewmodel.QuizBuilderViewModel.provideFactory(appContainer.quizRepository)
+                                        )
+
+                                        // Load quiz first so ViewModel has context
+                                        LaunchedEffect(route.quizId) {
+                                            route.quizId?.let { quizBuilderViewModel.loadQuiz(it) }
+                                        }
+
+                                        com.example.skillforge.feature.instructor_portal.ui.AddQuestionScreen(
+                                            viewModel = quizBuilderViewModel,
+                                            onBackClick = {
+                                                mainViewModel.navigateTo(AppRoute.QuizBuilder(route.session, route.courseId, null, route.quizId, 0))
+                                            }
+                                        )
+                                    }
+
+                                    is AppRoute.EditQuestion -> {
+                                        val quizBuilderViewModel: com.example.skillforge.feature.instructor_portal.viewmodel.QuizBuilderViewModel = viewModel(
+                                            factory = com.example.skillforge.feature.instructor_portal.viewmodel.QuizBuilderViewModel.provideFactory(appContainer.quizRepository)
+                                        )
+
+                                        // Load quiz first so ViewModel has the question data
+                                        LaunchedEffect(route.quizId) {
+                                            route.quizId?.let { quizBuilderViewModel.loadQuiz(it) }
+                                        }
+
+                                        com.example.skillforge.feature.instructor_portal.ui.AddQuestionScreen(
+                                            viewModel = quizBuilderViewModel,
+                                            editQuestionId = route.questionId,
+                                            onBackClick = {
+                                                mainViewModel.navigateTo(AppRoute.QuizBuilder(route.session, route.courseId, null, route.quizId, 0))
                                             }
                                         )
                                     }

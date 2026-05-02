@@ -14,7 +14,8 @@ data class ChapterDto(
     val title: String,
     val orderIndex: Int,
 
-    val lessons: List<LessonDto> = emptyList()
+    val lessons: List<LessonDto> = emptyList(),
+    val quizzes: List<com.example.skillforge.data.remote.dto.QuizDto>? = emptyList()
 )
 
 data class CourseManagerDto(
