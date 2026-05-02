@@ -32,15 +32,6 @@ export class LessonsService {
           },
         },
         materials: true,
-        quiz: {
-          include: {
-            questions: {
-              include: {
-                choices: true,
-              },
-            },
-          },
-        },
       },
     });
 

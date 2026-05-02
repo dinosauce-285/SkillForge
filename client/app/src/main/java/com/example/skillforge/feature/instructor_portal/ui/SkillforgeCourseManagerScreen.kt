@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.InsertDriveFile
 import androidx.compose.material.icons.filled.OndemandVideo
 import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.Quiz
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
@@ -54,7 +55,7 @@ fun SkillforgeCourseManagerScreen(
     token: String,
     onBack: () -> Unit,
     onNavigateToUpload: (lessonId: String) -> Unit,
-    onNavigateToQuizBuilder: (courseId: String, chapterId: String) -> Unit
+    onNavigateToQuizBuilder: (courseId: String, chapterId: String, quizId: String?) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val studentsState by viewModel.studentsState.collectAsState()
@@ -324,13 +325,40 @@ fun SkillforgeCourseManagerScreen(
                                         }
 
                                         TextButton(
-                                            onClick = { onNavigateToQuizBuilder(courseId, chapter.id) },
+                                            onClick = { onNavigateToQuizBuilder(courseId, chapter.id, null) },
                                             modifier = Modifier.weight(1f),
                                             colors = ButtonDefaults.textButtonColors(contentColor = PrimaryOrange)
                                         ) {
                                             Icon(Icons.Default.Quiz, contentDescription = null, modifier = Modifier.size(18.dp))
                                             Spacer(Modifier.width(8.dp))
                                             Text("Add Quiz", fontWeight = FontWeight.Bold)
+                                        }
+                                    }
+
+                                    // Quizzes List
+                                    if (!chapter.quizzes.isNullOrEmpty()) {
+                                        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+                                            Text("Quizzes", style = MaterialTheme.typography.titleSmall, color = PrimaryOrange, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 8.dp))
+                                            chapter.quizzes?.forEach { quiz ->
+                                                Card(
+                                                    modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp).clickable { onNavigateToQuizBuilder(courseId, chapter.id, quiz.id) },
+                                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+                                                    shape = RoundedCornerShape(12.dp)
+                                                ) {
+                                                    Row(
+                                                        modifier = Modifier.fillMaxWidth().padding(12.dp),
+                                                        verticalAlignment = Alignment.CenterVertically
+                                                    ) {
+                                                        Icon(Icons.Default.Quiz, contentDescription = null, tint = PrimaryOrange, modifier = Modifier.size(24.dp))
+                                                        Spacer(modifier = Modifier.width(12.dp))
+                                                        Column(modifier = Modifier.weight(1f)) {
+                                                            Text(text = quiz.title, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
+                                                            Text(text = "${quiz.questions?.size ?: 0} questions • ${quiz.timeLimit} mins • Pass: ${quiz.passingScore.toInt()}%", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                                                        }
+                                                        Icon(Icons.Default.Edit, contentDescription = "Edit Quiz", tint = Color.Gray)
+                                                    }
+                                                }
+                                            }
                                         }
                                     }
                                 }

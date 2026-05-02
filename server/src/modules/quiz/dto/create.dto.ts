@@ -11,7 +11,10 @@ import { CreateQuestionDto } from 'src/modules/question/dto/create.dto';
 
 export class CreateQuizDto {
   @IsString()
-  lessonId!: string;
+  chapterId!: string;
+
+  @IsString()
+  title!: string;
 
   @IsInt()
   @IsPositive()

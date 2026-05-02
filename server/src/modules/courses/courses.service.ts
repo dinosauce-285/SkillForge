@@ -46,6 +46,11 @@ export class CoursesService {
                 materials: true,
               },
             },
+            quizzes: {
+              include: {
+                questions: true,
+              }
+            },
           },
         },
       },
@@ -252,6 +257,7 @@ export class CoursesService {
                 orderIndex: 'asc',
               },
             },
+            quizzes: true,
           },
         },
         _count: {
@@ -540,6 +546,7 @@ export class CoursesService {
               orderIndex: 'asc' as const,
             },
           },
+          quizzes: true,
         },
       },
       _count: {

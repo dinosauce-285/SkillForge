@@ -66,6 +66,7 @@ sealed interface AppRoute {
         val session: AuthSession,
         val courseId: String,
         val chapterId: String? = null,
+        val quizId: String? = null,
         val initialTab: Int = 0
     ) : AppRoute
 
@@ -73,6 +74,13 @@ sealed interface AppRoute {
         val session: AuthSession,
         val courseId: String,
         val quizId: String? = null
+    ) : AppRoute
+
+    data class EditQuestion(
+        val session: AuthSession,
+        val courseId: String,
+        val quizId: String?,
+        val questionId: String
     ) : AppRoute
 
     data class Home(val session: AuthSession) : AppRoute
