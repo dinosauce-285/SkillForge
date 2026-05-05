@@ -236,4 +236,24 @@ class CourseRepositoryImpl(
             Result.failure(Exception(e.message ?: "Failed to fetch course students"))
         }
     }
+
+    override suspend fun updateCourse(
+        token: String,
+        courseId: String,
+        status: String?,
+        level: String?
+    ): Result<CourseSummaryDto> {
+        return try {
+            val bearerToken = if (token.startsWith("Bearer ")) token else "Bearer $token"
+            val request = com.example.skillforge.data.remote.UpdateCourseRequest(status, level)
+            val response = api.updateCourse(courseId, bearerToken, request)
+            if (response.isSuccessful && response.body() != null) {
+                Result.success(response.body()!!)
+            } else {
+                Result.failure(Exception("Failed to update course: ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(Exception(e.message ?: "Failed to update course"))
+        }
+    }
 }
