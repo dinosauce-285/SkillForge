@@ -114,6 +114,7 @@ class AppContainer(private val context: Context) {
     private val dashboardApi= retrofit.create(DashboardApi::class.java)
     private val couponApi = retrofit.create(CouponApi::class.java)
     private val quizApi = retrofit.create(QuizApi::class.java)
+    private val adminApi = retrofit.create(AdminApi::class.java)
     
     private val materialApi: MaterialApi by lazy {
         retrofit.create(MaterialApi::class.java)
@@ -141,6 +142,7 @@ class AppContainer(private val context: Context) {
     val dashboardRepository: DashboardRepository = DashboardRepositoryImpl(dashboardApi)
     val couponRepository: CouponRepository = CouponRepositoryImpl(couponApi)
     val quizRepository: QuizRepository = QuizRepositoryImpl(quizApi)
+    val adminRepository: AdminRepository = AdminRepositoryImpl(adminApi)
 
     // --- Use Cases ---
     val loginUseCase = LoginUseCase(authRepository)
