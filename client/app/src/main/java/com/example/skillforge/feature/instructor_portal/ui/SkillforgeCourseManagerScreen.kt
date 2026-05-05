@@ -232,17 +232,59 @@ fun SkillforgeCourseManagerScreen(
                             Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
                                 Text(course.title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.ExtraBold)
                                 Spacer(modifier = Modifier.height(4.dp))
-                                Surface(
-                                    shape = RoundedCornerShape(8.dp),
-                                    color = PrimaryOrange.copy(alpha = 0.1f)
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Text(
-                                        text = course.category?.name ?: "Uncategorized",
-                                        color = PrimaryOrange,
-                                        style = MaterialTheme.typography.labelMedium,
-                                        fontWeight = FontWeight.Bold,
-                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                                    )
+                                    Surface(
+                                        shape = RoundedCornerShape(8.dp),
+                                        color = PrimaryOrange.copy(alpha = 0.1f)
+                                    ) {
+                                        Text(
+                                            text = course.category?.name ?: "Uncategorized",
+                                            color = PrimaryOrange,
+                                            style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                                        )
+                                    }
+
+                                    if (course.status == "DRAFT") {
+                                        Button(
+                                            onClick = { viewModel.requestApproval() },
+                                            colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange),
+                                            shape = RoundedCornerShape(8.dp)
+                                        ) {
+                                            Text("Request Approval", color = Color.White, fontWeight = FontWeight.Bold)
+                                        }
+                                    } else if (course.status == "PENDING") {
+                                        Surface(
+                                            shape = RoundedCornerShape(8.dp),
+                                            color = Color.Yellow.copy(alpha = 0.3f)
+                                        ) {
+                                            Text(
+                                                text = "Pending Approval",
+                                                color = Color(0xFFB8860B),
+                                                style = MaterialTheme.typography.labelMedium,
+                                                fontWeight = FontWeight.Bold,
+                                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                                            )
+                                        }
+                                    } else if (course.status == "PUBLISHED") {
+                                        Surface(
+                                            shape = RoundedCornerShape(8.dp),
+                                            color = Color.Green.copy(alpha = 0.1f)
+                                        ) {
+                                            Text(
+                                                text = "Published",
+                                                color = Color(0xFF4CAF50),
+                                                style = MaterialTheme.typography.labelMedium,
+                                                fontWeight = FontWeight.Bold,
+                                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                                            )
+                                        }
+                                    }
                                 }
                                 Spacer(modifier = Modifier.height(24.dp))
                             }

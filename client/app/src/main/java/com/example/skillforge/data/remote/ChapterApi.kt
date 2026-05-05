@@ -22,6 +22,7 @@ data class CourseManagerDto(
     val id: String,
     val title: String,
     val category: CategoryDto?,
+    val status: String? = null,
 
     val chapters: List<ChapterDto> = emptyList(),
     @SerializedName("_count")

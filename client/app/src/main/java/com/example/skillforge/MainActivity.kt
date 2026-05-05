@@ -134,6 +134,12 @@ class MainActivity : ComponentActivity() {
                         appContainer.logoutUseCase
                     )
                 )
+                
+                val adminViewModel: com.example.skillforge.feature.admin_portal.viewmodel.AdminViewModel = viewModel(
+                    factory = com.example.skillforge.feature.admin_portal.viewmodel.AdminViewModelFactory(
+                        appContainer.adminRepository
+                    )
+                )
 
                 val currentRoute by mainViewModel.uiState.collectAsState()
 
@@ -193,6 +199,8 @@ class MainActivity : ComponentActivity() {
                                             mainViewModel.navigateTo(
                                                 if (session.user.role.equals("STUDENT", ignoreCase = true)) {
                                                     AppRoute.Home(session)
+                                                } else if (session.user.role.equals("ADMIN", ignoreCase = true)) {
+                                                    AppRoute.AdminPortal(session)
                                                 } else {
                                                     AppRoute.InstructorPortal(session)
                                                 }
@@ -576,6 +584,55 @@ class MainActivity : ComponentActivity() {
                                             viewModel = transactionHistoryViewModel,
                                             onBackClick = {
                                                 mainViewModel.navigateTo(AppRoute.Profile(route.session))
+                                            }
+                                        )
+                                    }
+                                    
+                                    is AppRoute.AdminPortal -> {
+                                        com.example.skillforge.feature.admin_portal.ui.AdminPortalScreen(
+                                            onNavigateToUsers = {
+                                                mainViewModel.navigateTo(AppRoute.AdminUsers(route.session))
+                                            },
+                                            onNavigateToCourses = {
+                                                mainViewModel.navigateTo(AppRoute.AdminCoursesQueue(route.session))
+                                            },
+                                            onLogout = {
+                                                mainViewModel.logout()
+                                                loginViewModel.logout()
+                                            }
+                                        )
+                                    }
+                                    
+                                    is AppRoute.AdminUsers -> {
+                                        com.example.skillforge.feature.admin_portal.ui.AdminUsersScreen(
+                                            token = route.session.accessToken,
+                                            viewModel = adminViewModel,
+                                            onBack = {
+                                                mainViewModel.navigateTo(AppRoute.AdminPortal(route.session))
+                                            }
+                                        )
+                                    }
+                                    
+                                    is AppRoute.AdminCoursesQueue -> {
+                                        com.example.skillforge.feature.admin_portal.ui.AdminCoursesQueueScreen(
+                                            token = route.session.accessToken,
+                                            viewModel = adminViewModel,
+                                            onBack = {
+                                                mainViewModel.navigateTo(AppRoute.AdminPortal(route.session))
+                                            },
+                                            onNavigateToPreview = { courseId ->
+                                                mainViewModel.navigateTo(AppRoute.AdminCoursePreview(route.session, courseId))
+                                            }
+                                        )
+                                    }
+                                    
+                                    is AppRoute.AdminCoursePreview -> {
+                                        com.example.skillforge.feature.admin_portal.ui.AdminCoursePreviewScreen(
+                                            token = route.session.accessToken,
+                                            courseId = route.courseId,
+                                            viewModel = adminViewModel,
+                                            onBack = {
+                                                mainViewModel.navigateTo(AppRoute.AdminCoursesQueue(route.session))
                                             }
                                         )
                                     }

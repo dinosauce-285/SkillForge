@@ -94,4 +94,21 @@ sealed interface AppRoute {
     data class TransactionHistory(
         val session: AuthSession
     ) : AppRoute
+
+    data class AdminPortal(
+        val session: AuthSession
+    ) : AppRoute
+
+    data class AdminUsers(
+        val session: AuthSession
+    ) : AppRoute
+
+    data class AdminCoursesQueue(
+        val session: AuthSession
+    ) : AppRoute
+
+    data class AdminCoursePreview(
+        val session: AuthSession,
+        val courseId: String
+    ) : AppRoute
 }

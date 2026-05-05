@@ -56,3 +56,17 @@ data class CourseDetails(
     val tags: List<String>,
     val chapters: List<CourseChapter>,
 )
+
+data class Course(
+    val id: String,
+    val title: String,
+    val level: String,
+    val status: String,
+    val instructor: User?,
+    val category: Category?
+)
+
+data class CourseStructure(
+    val course: Course?,
+    val chapters: List<CourseChapter>?
+)

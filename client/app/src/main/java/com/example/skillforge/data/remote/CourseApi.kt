@@ -9,6 +9,7 @@ import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.Multipart
 import retrofit2.http.POST
+import retrofit2.http.PATCH
 import retrofit2.http.Part
 import retrofit2.http.PartMap
 import retrofit2.http.Path
@@ -159,7 +160,19 @@ interface CourseApi {
         @Path("id") courseId: String,
         @Header("Authorization") token: String
     ): Response<List<CourseStudentDto>>
+
+    @PATCH("courses/{id}")
+    suspend fun updateCourse(
+        @Path("id") courseId: String,
+        @Header("Authorization") token: String,
+        @Body request: UpdateCourseRequest
+    ): Response<CourseSummaryDto>
 }
+
+data class UpdateCourseRequest(
+    val status: String? = null,
+    val level: String? = null
+)
 
 data class CourseStudentDto(
     val studentId: String,
