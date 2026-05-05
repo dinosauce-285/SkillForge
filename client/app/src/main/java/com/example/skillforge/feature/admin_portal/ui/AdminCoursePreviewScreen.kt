@@ -126,7 +126,7 @@ fun AdminCoursePreviewScreen(
                                                 Text("  - ${lesson.title}")
                                             }
                                             chapter.quizzes?.forEach { quiz ->
-                                                Text("  🎯 Quiz: ${quiz.title}")
+                                                Text("Quiz: ${quiz.title}")
                                             }
                                         }
                                     }
