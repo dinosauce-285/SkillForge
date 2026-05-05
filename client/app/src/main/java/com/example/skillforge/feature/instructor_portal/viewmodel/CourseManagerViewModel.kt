@@ -89,4 +89,18 @@ class CourseManagerViewModel(
                 .onFailure { _studentsState.value = emptyList() } // fallback or handle error
         }
     }
+
+    fun requestApproval() {
+        if (currentToken.isEmpty() || currentCourseId.isEmpty()) return
+        viewModelScope.launch {
+            courseRepo.updateCourse(currentToken, currentCourseId, status = "PENDING", level = null)
+                .onSuccess {
+                    // Update UI state by fetching again
+                    fetchData()
+                }
+                .onFailure {
+                    // error handle if needed
+                }
+        }
+    }
 }
