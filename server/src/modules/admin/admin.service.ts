@@ -4,8 +4,15 @@ import { CreateInstructorDto } from './dto/create-instructor.dto';
 import { ModerateCourseDto } from './dto/moderate-course.dto';
 import { CreateCouponDto } from '../coupons/dto/create-coupon.dto';
 import { UpdatePlatformCouponDto } from './dto/update-platform-coupon.dto';
+import {
+  FinanceDateRangeQueryDto,
+  FinanceSnapshotListQueryDto,
+} from './dto/admin-finance-query.dto';
 import * as bcrypt from 'bcrypt';
 import { CouponScope, Prisma, Role, CourseStatus } from '@prisma/client';
+
+const DEFAULT_FINANCE_PAGE = 1;
+const DEFAULT_FINANCE_LIMIT = 20;
 
 @Injectable()
 export class AdminService {
@@ -201,6 +208,120 @@ export class AdminService {
     });
   }
 
+  async getFinanceSummary(query: FinanceDateRangeQueryDto) {
+    const baseWhere = this.buildFinanceDateWhere(query);
+    const now = new Date();
+
+    const [total, pendingInstructor, availableInstructor] = await Promise.all([
+      this.prisma.orderFinancialSnapshot.aggregate({
+        where: baseWhere,
+        _sum: {
+          customerPaidAmount: true,
+          platformNetRevenue: true,
+        },
+      }),
+      this.prisma.orderFinancialSnapshot.aggregate({
+        where: {
+          ...baseWhere,
+          pendingReleaseDate: { gt: now },
+        },
+        _sum: {
+          instructorNetRevenue: true,
+        },
+      }),
+      this.prisma.orderFinancialSnapshot.aggregate({
+        where: {
+          ...baseWhere,
+          pendingReleaseDate: { lte: now },
+        },
+        _sum: {
+          instructorNetRevenue: true,
+        },
+      }),
+    ]);
+
+    return {
+      grossRevenue: this.toNumber(total._sum.customerPaidAmount),
+      netPlatformRevenue: this.toNumber(total._sum.platformNetRevenue),
+      pendingInstructorBalance: this.toNumber(
+        pendingInstructor._sum.instructorNetRevenue,
+      ),
+      availableInstructorBalance: this.toNumber(
+        availableInstructor._sum.instructorNetRevenue,
+      ),
+    };
+  }
+
+  async getFinanceSnapshots(query: FinanceSnapshotListQueryDto) {
+    const page = query.page ?? DEFAULT_FINANCE_PAGE;
+    const limit = query.limit ?? DEFAULT_FINANCE_LIMIT;
+    const where = this.buildFinanceDateWhere(query);
+
+    const [total, snapshots] = await this.prisma.$transaction([
+      this.prisma.orderFinancialSnapshot.count({ where }),
+      this.prisma.orderFinancialSnapshot.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+        include: {
+          order: {
+            select: {
+              id: true,
+              status: true,
+              createdAt: true,
+              course: {
+                select: {
+                  id: true,
+                  title: true,
+                  instructorId: true,
+                },
+              },
+            },
+          },
+        },
+      }),
+    ]);
+
+    return {
+      data: snapshots.map((snapshot) => ({
+        id: snapshot.id,
+        orderId: snapshot.orderId,
+        orderStatus: snapshot.order.status,
+        orderCreatedAt: snapshot.order.createdAt,
+        courseId: snapshot.order.course.id,
+        courseTitle: snapshot.order.course.title,
+        instructorId: snapshot.order.course.instructorId,
+        originalCoursePrice: this.toNumber(snapshot.originalCoursePrice),
+        customerPaidAmount: this.toNumber(snapshot.customerPaidAmount),
+        couponId: snapshot.couponId,
+        couponCode: snapshot.couponCode,
+        couponScope: snapshot.couponScope,
+        discountAmount: this.toNumber(snapshot.discountAmount),
+        discountAbsorbedByPlatform: this.toNumber(
+          snapshot.discountAbsorbedByPlatform,
+        ),
+        discountAbsorbedByInstructor: this.toNumber(
+          snapshot.discountAbsorbedByInstructor,
+        ),
+        platformShareRate: snapshot.platformShareRate,
+        instructorShareRate: snapshot.instructorShareRate,
+        instructorGrossRevenue: this.toNumber(snapshot.instructorGrossRevenue),
+        instructorNetRevenue: this.toNumber(snapshot.instructorNetRevenue),
+        platformGrossRevenue: this.toNumber(snapshot.platformGrossRevenue),
+        platformNetRevenue: this.toNumber(snapshot.platformNetRevenue),
+        pendingReleaseDate: snapshot.pendingReleaseDate,
+        createdAt: snapshot.createdAt,
+      })),
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
   private normalizeCouponCode(code: string): string {
     const normalizedCode = code.trim().toUpperCase();
     if (!normalizedCode) {
@@ -217,5 +338,27 @@ export class AdminService {
     }
 
     return coupon;
+  }
+
+  private buildFinanceDateWhere(
+    query: FinanceDateRangeQueryDto,
+  ): Prisma.OrderFinancialSnapshotWhereInput {
+    const createdAt: Prisma.DateTimeFilter = {};
+    if (query.startDate) {
+      createdAt.gte = new Date(query.startDate);
+    }
+    if (query.endDate) {
+      createdAt.lte = new Date(query.endDate);
+    }
+
+    if (Object.keys(createdAt).length === 0) {
+      return {};
+    }
+
+    return { createdAt };
+  }
+
+  private toNumber(value: Prisma.Decimal | null | undefined): number {
+    return Number(value ?? 0);
   }
 }

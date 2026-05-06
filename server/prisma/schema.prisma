@@ -172,8 +172,37 @@ model Order {
   transaction Transaction?
   couponId    String?      @map("coupon_id")
   coupon      Coupon?      @relation(fields: [couponId], references: [id])
+  financialSnapshot OrderFinancialSnapshot?
 
   @@map("orders")
+}
+
+model OrderFinancialSnapshot {
+  id                           String       @id @default(uuid())
+  orderId                      String       @unique @map("order_id")
+  originalCoursePrice          Decimal      @map("original_course_price") @db.Decimal(10, 2)
+  customerPaidAmount           Decimal      @map("customer_paid_amount") @db.Decimal(10, 2)
+  couponId                     String?      @map("coupon_id")
+  couponCode                   String?      @map("coupon_code")
+  couponScope                  CouponScope? @map("coupon_scope")
+  discountAmount               Decimal      @map("discount_amount") @db.Decimal(10, 2)
+  discountAbsorbedByPlatform   Decimal      @map("discount_absorbed_by_platform") @db.Decimal(10, 2)
+  discountAbsorbedByInstructor Decimal      @map("discount_absorbed_by_instructor") @db.Decimal(10, 2)
+  platformShareRate            Int          @default(30) @map("platform_share_rate")
+  instructorShareRate          Int          @default(70) @map("instructor_share_rate")
+  instructorGrossRevenue       Decimal      @map("instructor_gross_revenue") @db.Decimal(10, 2)
+  instructorNetRevenue         Decimal      @map("instructor_net_revenue") @db.Decimal(10, 2)
+  platformGrossRevenue         Decimal      @map("platform_gross_revenue") @db.Decimal(10, 2)
+  platformNetRevenue           Decimal      @map("platform_net_revenue") @db.Decimal(10, 2)
+  pendingReleaseDate           DateTime     @map("pending_release_date")
+  createdAt                    DateTime     @default(now()) @map("created_at")
+  order                        Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  coupon                       Coupon?      @relation(fields: [couponId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([pendingReleaseDate])
+  @@index([couponScope])
+  @@map("order_financial_snapshots")
 }
 
 model Transaction {
@@ -448,6 +477,7 @@ model Coupon {
   createdAt       DateTime    @default(now()) @map("created_at")
   instructor      User?       @relation("InstructorCoupons", fields: [instructorId], references: [id])
   orders          Order[]
+  financialSnapshots OrderFinancialSnapshot[]
 
   @@index([scope])
   @@map("coupons")
