@@ -34,6 +34,7 @@ model User {
   profile             UserProfile?
   wallet              Wallet?
   favorites           Favorite[]
+  instructorSubscription InstructorSubscription?
   
   notifications        Notification[]   @relation("NotificationRecipient")
   notificationsActed   Notification[]   @relation("NotificationActor")
@@ -215,6 +216,25 @@ model Transaction {
   order                 Order          @relation(fields: [orderId], references: [id])
 
   @@map("transactions")
+}
+
+model InstructorSubscription {
+  id                   String                              @id @default(uuid())
+  userId               String                              @unique @map("user_id")
+  planCode             String                              @map("plan_code")
+  amount               Decimal                             @db.Decimal(10, 2)
+  currency             String                              @default("USD")
+  status               InstructorSubscriptionStatus        @default(ACTIVE)
+  paymentStatus        InstructorSubscriptionPaymentStatus @default(SUCCEEDED) @map("payment_status")
+  mockPaymentReference String                              @unique @default(uuid()) @map("mock_payment_reference")
+  startedAt            DateTime                            @default(now()) @map("started_at")
+  expiresAt            DateTime?                           @map("expires_at")
+  createdAt            DateTime                            @default(now()) @map("created_at")
+  updatedAt            DateTime                            @updatedAt @map("updated_at")
+  user                 User                                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@map("instructor_subscriptions")
 }
 
 model Wallet {
@@ -550,6 +570,16 @@ enum PaymentGateway {
 enum CouponScope {
   INSTRUCTOR
   PLATFORM
+enum InstructorSubscriptionStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
+
+enum InstructorSubscriptionPaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
 }
 
 enum WithdrawalStatus {

@@ -64,6 +64,9 @@ import androidx.compose.foundation.layout.padding
 import com.example.skillforge.feature.profile.ui.ProfileScreen
 import com.example.skillforge.feature.profile.viewmodel.ProfileViewModel
 import com.example.skillforge.feature.profile.viewmodel.ProfileViewModelFactory
+import com.example.skillforge.feature.subscription.ui.InstructorSubscriptionRoute
+import com.example.skillforge.feature.subscription.viewmodel.InstructorSubscriptionViewModel
+import com.example.skillforge.feature.subscription.viewmodel.InstructorSubscriptionViewModelFactory
 
 import com.example.skillforge.feature.student_courses.viewmodel.ReviewViewModel
 import com.example.skillforge.feature.student_courses.viewmodel.ReviewViewModelFactory
@@ -134,6 +137,12 @@ class MainActivity : ComponentActivity() {
                         appContainer.logoutUseCase
                     )
                 )
+                val instructorSubscriptionViewModel: InstructorSubscriptionViewModel = viewModel(
+                    factory = InstructorSubscriptionViewModelFactory(
+                        appContainer.becomeInstructorUseCase
+                    )
+                )
+                
                 val adminViewModel: com.example.skillforge.feature.admin_portal.viewmodel.AdminViewModel = viewModel(
                     factory = com.example.skillforge.feature.admin_portal.viewmodel.AdminViewModelFactory(
                         appContainer.adminRepository
@@ -573,6 +582,21 @@ class MainActivity : ComponentActivity() {
                                             },
                                             onNavigateToPurchaseHistory = {
                                                 mainViewModel.navigateTo(AppRoute.TransactionHistory(route.session))
+                                            },
+                                            onBecomeInstructorClick = {
+                                                mainViewModel.navigateTo(AppRoute.InstructorSubscription(route.session))
+                                            }
+                                        )
+                                    }
+
+                                    is AppRoute.InstructorSubscription -> {
+                                        InstructorSubscriptionRoute(
+                                            viewModel = instructorSubscriptionViewModel,
+                                            onBackClick = {
+                                                mainViewModel.navigateTo(AppRoute.Profile(route.session))
+                                            },
+                                            onSubscriptionSuccess = {
+                                                mainViewModel.checkSession()
                                             }
                                         )
                                     }

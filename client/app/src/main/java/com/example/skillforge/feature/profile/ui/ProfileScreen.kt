@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material3.*
@@ -43,6 +44,7 @@ fun ProfileScreen(
     viewModel: ProfileViewModel,
     onLogoutClick: () -> Unit,
     onNavigateToPurchaseHistory: () -> Unit = {},
+    onBecomeInstructorClick: () -> Unit = {},
     onBackClick: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -220,6 +222,19 @@ fun ProfileScreen(
                                 Icon(Icons.AutoMirrored.Filled.MenuBook, contentDescription = null)
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text("Purchase History")
+                            }
+
+                            if (successState.role.equals("STUDENT", ignoreCase = true)) {
+                                Button(
+                                    onClick = onBecomeInstructorClick,
+                                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                                    shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
+                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                                ) {
+                                    Icon(Icons.Default.School, contentDescription = null)
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("Become an Instructor")
+                                }
                             }
                         }
                     }
