@@ -19,6 +19,7 @@ import { ReviewModule } from './modules/review/reviews.module';
 import { CouponsModule } from './modules/coupons/coupons.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { AdminModule } from './modules/admin/admin.module';
+import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { AdminModule } from './modules/admin/admin.module';
     CouponsModule,
     NotificationsModule,
     AdminModule,
+    SubscriptionsModule,
   ],
   controllers: [],
   providers: [],
