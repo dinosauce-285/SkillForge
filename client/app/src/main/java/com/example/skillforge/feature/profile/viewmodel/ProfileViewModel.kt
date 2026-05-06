@@ -25,6 +25,7 @@ sealed class ProfileUiState {
         val learningGoals: String,
         val skills: List<String>,
         val avatarUrl: String?,
+        val role: String = "",
         val isUpdateSuccessful: Boolean = false
     ) : ProfileUiState()
     data class Error(val message: String) : ProfileUiState()
@@ -49,6 +50,7 @@ class ProfileViewModel(
     private var currentLearningGoals: String = ""
     private var currentSkills: List<String> = emptyList()
     private var currentAvatarUrl: String? = null
+    private var currentRole: String = "STUDENT"
 
     /**
      * Loads the user profile.
@@ -60,7 +62,8 @@ class ProfileViewModel(
             getProfileUseCase().fold(
                 onSuccess = { user ->
                     currentFullName = user.fullName
-                    currentHeadline = if (user.role.equals("INSTRUCTOR", ignoreCase = true)) "Instructor" else "Student"
+                    currentRole = user.role
+                    currentHeadline = if (currentRole.equals("INSTRUCTOR", ignoreCase = true)) "Instructor" else "Student"
                     currentLearningGoals = user.profile?.learningGoals ?: ""
                     currentSkills = user.profile?.skills ?: emptyList()
                     currentAvatarUrl = user.profile?.avatarUrl
@@ -70,7 +73,8 @@ class ProfileViewModel(
                         headline = currentHeadline,
                         learningGoals = currentLearningGoals,
                         skills = currentSkills,
-                        avatarUrl = currentAvatarUrl
+                        avatarUrl = currentAvatarUrl,
+                        role = currentRole
                     )
                 },
                 onFailure = { error ->
@@ -129,7 +133,8 @@ class ProfileViewModel(
             updateProfileUseCase(requestDTO).fold(
                 onSuccess = { updatedUser ->
                     currentFullName = updatedUser.fullName
-                    currentHeadline = if (updatedUser.role.equals("INSTRUCTOR", ignoreCase = true)) "Instructor" else "Student"
+                    currentRole = updatedUser.role
+                    currentHeadline = if (currentRole.equals("INSTRUCTOR", ignoreCase = true)) "Instructor" else "Student"
                     currentLearningGoals = updatedUser.profile?.learningGoals ?: ""
                     currentSkills = updatedUser.profile?.skills ?: emptyList()
                     currentAvatarUrl = updatedUser.profile?.avatarUrl
@@ -140,6 +145,7 @@ class ProfileViewModel(
                         learningGoals = currentLearningGoals,
                         skills = currentSkills,
                         avatarUrl = currentAvatarUrl,
+                        role = currentRole,
                         isUpdateSuccessful = true
                     )
                 },
@@ -180,7 +186,8 @@ class ProfileViewModel(
             headline = currentHeadline,
             learningGoals = currentLearningGoals,
             skills = currentSkills,
-            avatarUrl = currentAvatarUrl
+            avatarUrl = currentAvatarUrl,
+            role = currentRole
         )
     }
 }

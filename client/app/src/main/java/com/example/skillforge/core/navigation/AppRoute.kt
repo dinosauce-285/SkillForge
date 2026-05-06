@@ -52,6 +52,10 @@ sealed interface AppRoute {
     data class Profile(
         val session: AuthSession,
     ) : AppRoute
+
+    data class InstructorSubscription(
+        val session: AuthSession,
+    ) : AppRoute
   
     data class CourseForm(
         val session: AuthSession ,
