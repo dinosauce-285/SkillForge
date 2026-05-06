@@ -1,4 +1,12 @@
-import { IsBoolean, IsInt, IsNotEmpty, IsString, Max, Min } from 'class-validator';
+import {
+  IsBoolean,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  Max,
+  Min,
+} from 'class-validator';
 
 export class CreateCouponDto {
   @IsString()
@@ -10,6 +18,7 @@ export class CreateCouponDto {
   @Max(100)
   discountPercent: number;
 
+  @IsOptional()
   @IsBoolean()
-  isActive: boolean;
+  isActive?: boolean;
 }

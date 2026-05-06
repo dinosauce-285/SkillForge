@@ -2,8 +2,10 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateInstructorDto } from './dto/create-instructor.dto';
 import { ModerateCourseDto } from './dto/moderate-course.dto';
+import { CreateCouponDto } from '../coupons/dto/create-coupon.dto';
+import { UpdatePlatformCouponDto } from './dto/update-platform-coupon.dto';
 import * as bcrypt from 'bcrypt';
-import { Role, CourseStatus } from '@prisma/client';
+import { CouponScope, Prisma, Role, CourseStatus } from '@prisma/client';
 
 @Injectable()
 export class AdminService {
@@ -92,7 +94,7 @@ export class AdminService {
       throw new NotFoundException('Course not found');
     }
 
-    const dataToUpdate: any = { status: dto.status };
+    const dataToUpdate: Prisma.CourseUpdateInput = { status: dto.status };
     if (dto.level) {
       dataToUpdate.level = dto.level;
     }
@@ -135,5 +137,85 @@ export class AdminService {
       throw new NotFoundException('Course not found');
     }
     return course;
+  }
+
+  async createPlatformCoupon(dto: CreateCouponDto) {
+    const code = this.normalizeCouponCode(dto.code);
+    const existing = await this.prisma.coupon.findUnique({
+      where: { code },
+    });
+    if (existing) {
+      throw new BadRequestException('Coupon code already exists');
+    }
+
+    return this.prisma.coupon.create({
+      data: {
+        code,
+        discountPercent: dto.discountPercent,
+        isActive: dto.isActive ?? true,
+        scope: CouponScope.PLATFORM,
+      },
+    });
+  }
+
+  async getPlatformCoupons() {
+    return this.prisma.coupon.findMany({
+      where: { scope: CouponScope.PLATFORM },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async updatePlatformCoupon(id: string, dto: UpdatePlatformCouponDto) {
+    await this.getPlatformCouponOrThrow(id);
+
+    const data: Prisma.CouponUpdateInput = {};
+    if (dto.code !== undefined) {
+      const code = this.normalizeCouponCode(dto.code);
+      const existing = await this.prisma.coupon.findUnique({
+        where: { code },
+      });
+      if (existing && existing.id !== id) {
+        throw new BadRequestException('Coupon code already exists');
+      }
+      data.code = code;
+    }
+    if (dto.discountPercent !== undefined) {
+      data.discountPercent = dto.discountPercent;
+    }
+    if (dto.isActive !== undefined) {
+      data.isActive = dto.isActive;
+    }
+
+    return this.prisma.coupon.update({
+      where: { id },
+      data,
+    });
+  }
+
+  async deactivatePlatformCoupon(id: string) {
+    await this.getPlatformCouponOrThrow(id);
+
+    return this.prisma.coupon.update({
+      where: { id },
+      data: { isActive: false },
+    });
+  }
+
+  private normalizeCouponCode(code: string): string {
+    const normalizedCode = code.trim().toUpperCase();
+    if (!normalizedCode) {
+      throw new BadRequestException('Coupon code is required');
+    }
+
+    return normalizedCode;
+  }
+
+  private async getPlatformCouponOrThrow(id: string) {
+    const coupon = await this.prisma.coupon.findUnique({ where: { id } });
+    if (!coupon || coupon.scope !== CouponScope.PLATFORM) {
+      throw new NotFoundException('Platform coupon not found');
+    }
+
+    return coupon;
   }
 }
