@@ -570,6 +570,8 @@ enum PaymentGateway {
 enum CouponScope {
   INSTRUCTOR
   PLATFORM
+}
+
 enum InstructorSubscriptionStatus {
   ACTIVE
   EXPIRED
