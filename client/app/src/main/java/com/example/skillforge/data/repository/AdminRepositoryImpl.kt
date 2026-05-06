@@ -3,9 +3,14 @@ package com.example.skillforge.data.repository
 import com.example.skillforge.data.remote.AdminApi
 import com.example.skillforge.data.remote.AdminCoursePreviewDto
 import com.example.skillforge.data.remote.AdminCourseQueueDto
+import com.example.skillforge.data.remote.AdminFinanceSnapshotListDto
+import com.example.skillforge.data.remote.AdminFinanceSummaryDto
+import com.example.skillforge.data.remote.AdminPlatformCouponDto
 import com.example.skillforge.data.remote.AdminUserDto
+import com.example.skillforge.data.remote.CreatePlatformCouponRequest
 import com.example.skillforge.data.remote.CreateInstructorRequest
 import com.example.skillforge.data.remote.ModerateCourseRequest
+import com.example.skillforge.data.remote.UpdatePlatformCouponRequest
 import com.example.skillforge.domain.model.Category
 import com.example.skillforge.domain.model.Course
 import com.example.skillforge.domain.model.CourseChapter
@@ -138,6 +143,121 @@ class AdminRepositoryImpl(
             val response = api.moderateCourse("Bearer $token", id, ModerateCourseRequest(status, level))
             if (response.isSuccessful && response.body() != null) {
                 Result.success(response.body()!!.toDomain())
+            } else {
+                Result.failure(Exception("Error ${response.code()}: ${response.message()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun getPlatformCoupons(token: String): Result<List<AdminPlatformCouponDto>> {
+        return try {
+            val response = api.getPlatformCoupons("Bearer $token")
+            if (response.isSuccessful) {
+                Result.success(response.body() ?: emptyList())
+            } else {
+                Result.failure(Exception("Error ${response.code()}: ${response.message()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun createPlatformCoupon(
+        token: String,
+        code: String,
+        discountPercent: Int,
+        isActive: Boolean
+    ): Result<AdminPlatformCouponDto> {
+        return try {
+            val response = api.createPlatformCoupon(
+                "Bearer $token",
+                CreatePlatformCouponRequest(code, discountPercent, isActive)
+            )
+            if (response.isSuccessful && response.body() != null) {
+                Result.success(response.body()!!)
+            } else {
+                Result.failure(Exception("Error ${response.code()}: ${response.message()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun updatePlatformCoupon(
+        token: String,
+        id: String,
+        code: String?,
+        discountPercent: Int?,
+        isActive: Boolean?
+    ): Result<AdminPlatformCouponDto> {
+        return try {
+            val response = api.updatePlatformCoupon(
+                "Bearer $token",
+                id,
+                UpdatePlatformCouponRequest(code, discountPercent, isActive)
+            )
+            if (response.isSuccessful && response.body() != null) {
+                Result.success(response.body()!!)
+            } else {
+                Result.failure(Exception("Error ${response.code()}: ${response.message()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun deactivatePlatformCoupon(
+        token: String,
+        id: String
+    ): Result<AdminPlatformCouponDto> {
+        return try {
+            val response = api.deactivatePlatformCoupon("Bearer $token", id)
+            if (response.isSuccessful && response.body() != null) {
+                Result.success(response.body()!!)
+            } else {
+                Result.failure(Exception("Error ${response.code()}: ${response.message()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun getFinanceSummary(
+        token: String,
+        startDate: String?,
+        endDate: String?
+    ): Result<AdminFinanceSummaryDto> {
+        return try {
+            val response = api.getFinanceSummary("Bearer $token", startDate, endDate)
+            if (response.isSuccessful && response.body() != null) {
+                Result.success(response.body()!!)
+            } else {
+                Result.failure(Exception("Error ${response.code()}: ${response.message()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun getFinanceSnapshots(
+        token: String,
+        page: Int,
+        limit: Int,
+        startDate: String?,
+        endDate: String?
+    ): Result<AdminFinanceSnapshotListDto> {
+        return try {
+            val response = api.getFinanceSnapshots(
+                token = "Bearer $token",
+                page = page,
+                limit = limit,
+                startDate = startDate,
+                endDate = endDate
+            )
+            if (response.isSuccessful && response.body() != null) {
+                Result.success(response.body()!!)
             } else {
                 Result.failure(Exception("Error ${response.code()}: ${response.message()}"))
             }

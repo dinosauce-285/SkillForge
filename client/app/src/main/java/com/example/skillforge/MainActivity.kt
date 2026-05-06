@@ -134,7 +134,6 @@ class MainActivity : ComponentActivity() {
                         appContainer.logoutUseCase
                     )
                 )
-                
                 val adminViewModel: com.example.skillforge.feature.admin_portal.viewmodel.AdminViewModel = viewModel(
                     factory = com.example.skillforge.feature.admin_portal.viewmodel.AdminViewModelFactory(
                         appContainer.adminRepository
@@ -596,6 +595,12 @@ class MainActivity : ComponentActivity() {
                                             onNavigateToCourses = {
                                                 mainViewModel.navigateTo(AppRoute.AdminCoursesQueue(route.session))
                                             },
+                                            onNavigateToCoupons = {
+                                                mainViewModel.navigateTo(AppRoute.AdminPlatformCoupons(route.session))
+                                            },
+                                            onNavigateToFinance = {
+                                                mainViewModel.navigateTo(AppRoute.AdminFinance(route.session))
+                                            },
                                             onLogout = {
                                                 mainViewModel.logout()
                                                 loginViewModel.logout()
@@ -622,6 +627,26 @@ class MainActivity : ComponentActivity() {
                                             },
                                             onNavigateToPreview = { courseId ->
                                                 mainViewModel.navigateTo(AppRoute.AdminCoursePreview(route.session, courseId))
+                                            }
+                                        )
+                                    }
+
+                                    is AppRoute.AdminPlatformCoupons -> {
+                                        com.example.skillforge.feature.admin_portal.ui.AdminPlatformCouponsScreen(
+                                            token = route.session.accessToken,
+                                            viewModel = adminViewModel,
+                                            onBack = {
+                                                mainViewModel.navigateTo(AppRoute.AdminPortal(route.session))
+                                            }
+                                        )
+                                    }
+
+                                    is AppRoute.AdminFinance -> {
+                                        com.example.skillforge.feature.admin_portal.ui.AdminFinanceScreen(
+                                            token = route.session.accessToken,
+                                            viewModel = adminViewModel,
+                                            onBack = {
+                                                mainViewModel.navigateTo(AppRoute.AdminPortal(route.session))
                                             }
                                         )
                                     }
