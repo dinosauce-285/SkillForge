@@ -298,6 +298,8 @@ model Quiz {
   timeLimit          Int           @map("time_limit")
   passingScore       Float         @map("passing_score")
   randomizeQuestions Boolean       @default(false) @map("randomize_questions")
+  isEssay            Boolean       @default(false) @map("is_essay")
+  orderIndex         Int           @default(0) @map("order_index")
   questions          Question[]
   attempts           QuizAttempt[]
   chapter            Chapter       @relation(fields: [chapterId], references: [id], onDelete: Cascade)
@@ -311,6 +313,8 @@ model Question {
   content        String
   explanation    String?
   orderIndex     Int             @default(0) @map("order_index")
+  minWords       Int?            @map("min_words")
+  points         Int             @default(0)
   choices        AnswerChoice[]
   quiz           Quiz            @relation(fields: [quizId], references: [id], onDelete: Cascade)
   studentAnswers StudentAnswer[]

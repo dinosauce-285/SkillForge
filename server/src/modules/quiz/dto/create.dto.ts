@@ -4,6 +4,7 @@ import {
   IsPositive,
   IsBoolean,
   IsArray,
+  IsOptional,
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
@@ -26,6 +27,10 @@ export class CreateQuizDto {
 
   @IsBoolean()
   randomizeQuestions!: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  isEssay?: boolean;
 
   @IsArray()
   @ValidateNested({ each: true })

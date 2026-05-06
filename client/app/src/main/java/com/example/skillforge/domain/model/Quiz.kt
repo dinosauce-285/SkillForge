@@ -7,5 +7,6 @@ data class Quiz(
     val timeLimit: Int,
     val passingScore: Float,
     val randomizeQuestions: Boolean,
+    val isEssay: Boolean,
     val questions: List<Question>
 )

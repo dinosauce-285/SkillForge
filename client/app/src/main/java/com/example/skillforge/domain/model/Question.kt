@@ -6,5 +6,7 @@ data class Question(
     val content: String,
     val explanation: String?,
     val orderIndex: Int,
+    val minWords: Int?,
+    val points: Int,
     val choices: List<AnswerChoice>
 )
