@@ -479,6 +479,9 @@ class MainActivity : ComponentActivity() {
                                             },
                                             onNavigateToQuizBuilder = { courseId, chapterId, quizId ->
                                                 mainViewModel.navigateTo(AppRoute.QuizBuilder(route.session, courseId, chapterId, quizId))
+                                            },
+                                            onNavigateToEssayQuizBuilder = { courseId, chapterId, quizId ->
+                                                mainViewModel.navigateTo(AppRoute.EssayQuizBuilder(route.session, courseId, chapterId, quizId))
                                             }
                                         )
                                     }
@@ -501,6 +504,22 @@ class MainActivity : ComponentActivity() {
                                             },
                                             onNavigateToEditQuestion = { questionId ->
                                                 mainViewModel.navigateTo(AppRoute.EditQuestion(route.session, route.courseId, route.quizId, questionId))
+                                            }
+                                        )
+                                    }
+
+                                    is AppRoute.EssayQuizBuilder -> {
+                                        val quizBuilderViewModel: com.example.skillforge.feature.instructor_portal.viewmodel.QuizBuilderViewModel = viewModel(
+                                            factory = com.example.skillforge.feature.instructor_portal.viewmodel.QuizBuilderViewModel.provideFactory(appContainer.quizRepository)
+                                        )
+
+                                        com.example.skillforge.feature.instructor_portal.ui.EssayQuizBuilderScreen(
+                                            viewModel = quizBuilderViewModel,
+                                            courseId = route.courseId,
+                                            chapterId = route.chapterId,
+                                            quizId = route.quizId,
+                                            onBackClick = {
+                                                mainViewModel.navigateTo(AppRoute.CourseManager(route.session, route.courseId))
                                             }
                                         )
                                     }

@@ -17,6 +17,7 @@ class QuizRepositoryImpl(private val api: QuizApi) : QuizRepository {
             timeLimit = dto.timeLimit,
             passingScore = dto.passingScore,
             randomizeQuestions = dto.randomizeQuestions,
+            isEssay = dto.isEssay,
             questions = dto.questions?.map { mapQuestionDtoToModel(it) } ?: emptyList()
         )
     }
@@ -28,6 +29,8 @@ class QuizRepositoryImpl(private val api: QuizApi) : QuizRepository {
             content = dto.content,
             explanation = dto.explanation,
             orderIndex = dto.orderIndex,
+            minWords = dto.minWords,
+            points = dto.points,
             choices = dto.choices?.map { mapAnswerChoiceDtoToModel(it) } ?: emptyList()
         )
     }

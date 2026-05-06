@@ -47,7 +47,7 @@ class QuizBuilderViewModel(
         }
     }
 
-    fun createNewQuiz(chapterId: String, title: String, timeLimit: Int, passingScore: Float) {
+    fun createNewQuiz(chapterId: String, title: String, timeLimit: Int, passingScore: Float, isEssay: Boolean = false) {
         currentChapterId = chapterId
         viewModelScope.launch {
             _uiState.value = QuizUiState.Loading
@@ -58,6 +58,7 @@ class QuizBuilderViewModel(
                     timeLimit = timeLimit,
                     passingScore = passingScore,
                     randomizeQuestions = false,
+                    isEssay = isEssay,
                     questions = emptyList()
                 )
             )
@@ -132,6 +133,53 @@ class QuizBuilderViewModel(
                     loadQuiz(quizId)
                 }.onFailure {
                     _uiState.value = QuizUiState.Error("Failed to add question")
+                }
+            }
+        }
+    }
+
+    fun updateEssayQuestion(questionId: String, content: String, minWords: Int, points: Int) {
+        val quizId = currentQuizId ?: return
+        viewModelScope.launch {
+            _uiState.value = QuizUiState.Loading
+            val result = quizRepository.updateQuestion(
+                id = questionId,
+                request = UpdateQuestionRequest(
+                    content = content,
+                    minWords = minWords,
+                    points = points,
+                    choices = emptyList()
+                )
+            )
+            result.onSuccess {
+                loadQuiz(quizId)
+            }.onFailure {
+                _uiState.value = QuizUiState.Error("Failed to update question")
+            }
+        }
+    }
+
+    fun addEssayQuestion(content: String, minWords: Int, points: Int) {
+        val currentState = _uiState.value
+        val quizId = currentQuizId ?: return
+
+        if (currentState is QuizUiState.Success && currentState.quiz != null) {
+            viewModelScope.launch {
+                _uiState.value = QuizUiState.Loading
+
+                val questionRequest = CreateQuestionRequest(
+                    content = content,
+                    orderIndex = currentState.quiz.questions.size,
+                    minWords = minWords,
+                    points = points,
+                    choices = emptyList()
+                )
+
+                val result = quizRepository.createQuestion(quizId, listOf(questionRequest))
+                result.onSuccess {
+                    loadQuiz(quizId)
+                }.onFailure {
+                    _uiState.value = QuizUiState.Error("Failed to add essay question")
                 }
             }
         }

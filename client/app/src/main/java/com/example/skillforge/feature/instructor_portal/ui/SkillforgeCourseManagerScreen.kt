@@ -55,7 +55,8 @@ fun SkillforgeCourseManagerScreen(
     token: String,
     onBack: () -> Unit,
     onNavigateToUpload: (lessonId: String) -> Unit,
-    onNavigateToQuizBuilder: (courseId: String, chapterId: String, quizId: String?) -> Unit
+    onNavigateToQuizBuilder: (courseId: String, chapterId: String, quizId: String?) -> Unit,
+    onNavigateToEssayQuizBuilder: (courseId: String, chapterId: String, quizId: String?) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val studentsState by viewModel.studentsState.collectAsState()
@@ -64,6 +65,8 @@ fun SkillforgeCourseManagerScreen(
     var showAddLessonDialogForChapter by remember { mutableStateOf<String?>(null) }
     var newItemTitle by remember { mutableStateOf("") }
     var selectedTab by remember { mutableStateOf(ManagerTab.Curriculum) }
+    var showQuizTypeDialog by remember { mutableStateOf(false) }
+    var selectedChapterIdForQuiz by remember { mutableStateOf<String?>(null) }
 
     val context = LocalContext.current
 
@@ -124,6 +127,69 @@ fun SkillforgeCourseManagerScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showAddLessonDialogForChapter = null; newItemTitle = "" }, colors = ButtonDefaults.textButtonColors(contentColor = Color.Gray)) { Text("Cancel") }
+            }
+        )
+    }
+
+    if (showQuizTypeDialog) {
+        AlertDialog(
+            onDismissRequest = { showQuizTypeDialog = false },
+            title = { Text("Choose Quiz Type", fontWeight = FontWeight.Bold) },
+            text = {
+                Column {
+                    Text("Select the type of quiz you want to create for this chapter.")
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    OutlinedButton(
+                        onClick = {
+                            selectedChapterIdForQuiz?.let { chapterId ->
+                                onNavigateToQuizBuilder(courseId, chapterId, null)
+                            }
+                            showQuizTypeDialog = false
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = PrimaryOrange),
+                        border = BorderStroke(1.dp, PrimaryOrange)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 4.dp)) {
+                            Icon(Icons.Default.Quiz, contentDescription = null, modifier = Modifier.size(24.dp))
+                            Spacer(Modifier.width(12.dp))
+                            Column {
+                                Text("Multiple Choice", fontWeight = FontWeight.Bold)
+                                Text("Traditional Q&A with options", style = MaterialTheme.typography.bodySmall)
+                            }
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(12.dp))
+                    
+                    OutlinedButton(
+                        onClick = {
+                            selectedChapterIdForQuiz?.let { chapterId ->
+                                onNavigateToEssayQuizBuilder(courseId, chapterId, null)
+                            }
+                            showQuizTypeDialog = false
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF8F4C37)),
+                        border = BorderStroke(1.dp, Color(0xFF8F4C37))
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 4.dp)) {
+                            Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(24.dp))
+                            Spacer(Modifier.width(12.dp))
+                            Column {
+                                Text("Essay Quiz", fontWeight = FontWeight.Bold)
+                                Text("Open-ended critical thinking", style = MaterialTheme.typography.bodySmall)
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = { showQuizTypeDialog = false }) { Text("Cancel", color = Color.Gray) }
             }
         )
     }
@@ -367,7 +433,10 @@ fun SkillforgeCourseManagerScreen(
                                         }
 
                                         TextButton(
-                                            onClick = { onNavigateToQuizBuilder(courseId, chapter.id, null) },
+                                            onClick = { 
+                                                selectedChapterIdForQuiz = chapter.id
+                                                showQuizTypeDialog = true 
+                                            },
                                             modifier = Modifier.weight(1f),
                                             colors = ButtonDefaults.textButtonColors(contentColor = PrimaryOrange)
                                         ) {
@@ -383,7 +452,13 @@ fun SkillforgeCourseManagerScreen(
                                             Text("Quizzes", style = MaterialTheme.typography.titleSmall, color = PrimaryOrange, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 8.dp))
                                             chapter.quizzes?.forEach { quiz ->
                                                 Card(
-                                                    modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp).clickable { onNavigateToQuizBuilder(courseId, chapter.id, quiz.id) },
+                                                    modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp).clickable { 
+                                                        if (quiz.isEssay) {
+                                                            onNavigateToEssayQuizBuilder(courseId, chapter.id, quiz.id)
+                                                        } else {
+                                                            onNavigateToQuizBuilder(courseId, chapter.id, quiz.id)
+                                                        }
+                                                    },
                                                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
                                                     shape = RoundedCornerShape(12.dp)
                                                 ) {

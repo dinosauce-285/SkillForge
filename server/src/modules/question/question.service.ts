@@ -26,6 +26,8 @@ export class QuestionService {
             content: question.content,
             explanation: question?.explanation,
             orderIndex: question.orderIndex,
+            minWords: question.minWords,
+            points: question.points,
           },
         });
 

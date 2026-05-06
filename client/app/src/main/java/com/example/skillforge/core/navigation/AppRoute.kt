@@ -80,6 +80,13 @@ sealed interface AppRoute {
         val initialTab: Int = 0
     ) : AppRoute
 
+    data class EssayQuizBuilder(
+        val session: AuthSession,
+        val courseId: String,
+        val chapterId: String? = null,
+        val quizId: String? = null
+    ) : AppRoute
+
     data class AddQuestion(
         val session: AuthSession,
         val courseId: String,

@@ -30,6 +30,7 @@ export class QuizService {
           timeLimit: quiz.timeLimit,
           passingScore: quiz.passingScore,
           randomizeQuestions: quiz.randomizeQuestions,
+          isEssay: quiz.isEssay,
         },
       });
 

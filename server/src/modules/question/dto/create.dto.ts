@@ -22,8 +22,14 @@ export class CreateQuestionDto {
   explanation?: string;
 
   @IsInt()
-  @IsPositive()
   orderIndex!: number;
+
+  @IsOptional()
+  @IsInt()
+  minWords?: number;
+
+  @IsInt()
+  points!: number;
 
   @IsArray()
   @ValidateNested({ each: true })
