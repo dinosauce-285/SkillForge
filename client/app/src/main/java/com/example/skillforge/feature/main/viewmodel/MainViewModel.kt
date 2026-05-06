@@ -33,6 +33,9 @@ class MainViewModel(
                     role == "INSTRUCTOR" -> {
                         _uiState.value = AppRoute.InstructorPortal(session)
                     }
+                    role == "ADMIN" -> {
+                        _uiState.value = AppRoute.AdminPortal(session)
+                    }
                     else -> {
                         // If role is still UNKNOWN or unexpected (like "authenticated"), 
                         // stay on Login or show an error.

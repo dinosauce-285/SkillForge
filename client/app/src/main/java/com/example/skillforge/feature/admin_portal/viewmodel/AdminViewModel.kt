@@ -3,6 +3,9 @@ package com.example.skillforge.feature.admin_portal.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.example.skillforge.data.remote.AdminFinanceSnapshotDto
+import com.example.skillforge.data.remote.AdminFinanceSummaryDto
+import com.example.skillforge.data.remote.AdminPlatformCouponDto
 import com.example.skillforge.domain.model.Course
 import com.example.skillforge.domain.model.CourseStructure
 import com.example.skillforge.domain.model.User
@@ -24,6 +27,15 @@ class AdminViewModel(
 
     private val _coursePreview = MutableStateFlow<CourseStructure?>(null)
     val coursePreview: StateFlow<CourseStructure?> = _coursePreview.asStateFlow()
+
+    private val _platformCoupons = MutableStateFlow<List<AdminPlatformCouponDto>>(emptyList())
+    val platformCoupons: StateFlow<List<AdminPlatformCouponDto>> = _platformCoupons.asStateFlow()
+
+    private val _financeSummary = MutableStateFlow<AdminFinanceSummaryDto?>(null)
+    val financeSummary: StateFlow<AdminFinanceSummaryDto?> = _financeSummary.asStateFlow()
+
+    private val _financeSnapshots = MutableStateFlow<List<AdminFinanceSnapshotDto>>(emptyList())
+    val financeSnapshots: StateFlow<List<AdminFinanceSnapshotDto>> = _financeSnapshots.asStateFlow()
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
@@ -110,6 +122,121 @@ class AdminViewModel(
                 }
             } else {
                 _error.value = result.exceptionOrNull()?.message
+            }
+            _isLoading.value = false
+        }
+    }
+
+    fun fetchPlatformCoupons(token: String) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _error.value = null
+            val result = adminRepository.getPlatformCoupons(token)
+            result.onSuccess {
+                _platformCoupons.value = it
+            }.onFailure {
+                _error.value = it.message
+            }
+            _isLoading.value = false
+        }
+    }
+
+    fun createPlatformCoupon(
+        token: String,
+        code: String,
+        discountPercent: Int,
+        isActive: Boolean = true
+    ) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _error.value = null
+            val result = adminRepository.createPlatformCoupon(
+                token,
+                code,
+                discountPercent,
+                isActive
+            )
+            result.onSuccess {
+                fetchPlatformCoupons(token)
+            }.onFailure {
+                _error.value = it.message
+            }
+            _isLoading.value = false
+        }
+    }
+
+    fun updatePlatformCoupon(
+        token: String,
+        id: String,
+        code: String? = null,
+        discountPercent: Int? = null,
+        isActive: Boolean? = null
+    ) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _error.value = null
+            val result = adminRepository.updatePlatformCoupon(
+                token,
+                id,
+                code,
+                discountPercent,
+                isActive
+            )
+            result.onSuccess { updatedCoupon ->
+                _platformCoupons.value = _platformCoupons.value.map {
+                    if (it.id == updatedCoupon.id) updatedCoupon else it
+                }
+            }.onFailure {
+                _error.value = it.message
+            }
+            _isLoading.value = false
+        }
+    }
+
+    fun deactivatePlatformCoupon(token: String, id: String) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _error.value = null
+            val result = adminRepository.deactivatePlatformCoupon(token, id)
+            result.onSuccess { updatedCoupon ->
+                _platformCoupons.value = _platformCoupons.value.map {
+                    if (it.id == updatedCoupon.id) updatedCoupon else it
+                }
+            }.onFailure {
+                _error.value = it.message
+            }
+            _isLoading.value = false
+        }
+    }
+
+    fun fetchFinance(token: String) {
+        fetchFinanceSummary(token)
+        fetchFinanceSnapshots(token)
+    }
+
+    fun fetchFinanceSummary(token: String) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _error.value = null
+            val result = adminRepository.getFinanceSummary(token)
+            result.onSuccess {
+                _financeSummary.value = it
+            }.onFailure {
+                _error.value = it.message
+            }
+            _isLoading.value = false
+        }
+    }
+
+    fun fetchFinanceSnapshots(token: String, page: Int = 1, limit: Int = 20) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _error.value = null
+            val result = adminRepository.getFinanceSnapshots(token, page, limit)
+            result.onSuccess {
+                _financeSnapshots.value = it.data
+            }.onFailure {
+                _error.value = it.message
             }
             _isLoading.value = false
         }

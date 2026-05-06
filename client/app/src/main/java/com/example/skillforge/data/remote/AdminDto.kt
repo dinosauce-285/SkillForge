@@ -83,3 +83,72 @@ data class AdminQuizDto(
     val id: String,
     val title: String
 )
+
+// ---- Platform Coupon DTOs ----
+data class AdminPlatformCouponDto(
+    val id: String,
+    val code: String,
+    val discountPercent: Int,
+    val scope: String? = null,
+    val instructorId: String? = null,
+    val isActive: Boolean,
+    val createdAt: String? = null
+)
+
+data class CreatePlatformCouponRequest(
+    val code: String,
+    val discountPercent: Int,
+    val isActive: Boolean = true
+)
+
+data class UpdatePlatformCouponRequest(
+    val code: String? = null,
+    val discountPercent: Int? = null,
+    val isActive: Boolean? = null
+)
+
+// ---- Finance DTOs ----
+data class AdminFinanceSummaryDto(
+    val grossRevenue: Double,
+    val netPlatformRevenue: Double,
+    val pendingInstructorBalance: Double,
+    val availableInstructorBalance: Double
+)
+
+data class AdminFinanceSnapshotListDto(
+    val data: List<AdminFinanceSnapshotDto>,
+    val meta: AdminPaginationDto
+)
+
+data class AdminPaginationDto(
+    val page: Int,
+    val limit: Int,
+    val total: Int,
+    val totalPages: Int
+)
+
+data class AdminFinanceSnapshotDto(
+    val id: String,
+    val orderId: String,
+    val orderStatus: String,
+    val orderCreatedAt: String? = null,
+    val courseId: String,
+    val courseTitle: String,
+    val instructorId: String,
+    val originalCoursePrice: Double,
+    val customerPaidAmount: Double,
+    val couponId: String? = null,
+    val couponCode: String? = null,
+    val couponScope: String? = null,
+    val discountAmount: Double,
+    val discountAbsorbedByPlatform: Double,
+    val discountAbsorbedByInstructor: Double,
+    val platformShareRate: Int,
+    val instructorShareRate: Int,
+    val instructorGrossRevenue: Double,
+    val instructorNetRevenue: Double,
+    val platformGrossRevenue: Double,
+    val platformNetRevenue: Double,
+    val pendingReleaseDate: String? = null,
+    val createdAt: String? = null
+)
