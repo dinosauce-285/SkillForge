@@ -340,9 +340,10 @@ model QuizAttempt {
   quizId    String          @map("quiz_id")
   startTime DateTime        @default(now()) @map("start_time")
   endTime   DateTime?       @map("end_time")
-  score     Float?
-  isPassed  Boolean?        @map("is_passed")
-  status    AttemptStatus   @default(IN_PROGRESS)
+  score              Float?
+  isPassed           Boolean?        @map("is_passed")
+  instructorFeedback String?         @map("instructor_feedback") @db.Text
+  status             AttemptStatus   @default(IN_PROGRESS)
   quiz      Quiz            @relation(fields: [quizId], references: [id])
   student   User            @relation(fields: [studentId], references: [id])
   answers   StudentAnswer[]
@@ -356,6 +357,7 @@ model StudentAnswer {
   questionId       String        @map("question_id")
   selectedChoiceId String?       @map("selected_choice_id")
   essayAnswer      String?       @map("essay_answer") @db.Text
+  pointsAwarded    Float?        @map("points_awarded")
   attempt          QuizAttempt   @relation(fields: [attemptId], references: [id], onDelete: Cascade)
   question         Question      @relation(fields: [questionId], references: [id])
   choice           AnswerChoice? @relation(fields: [selectedChoiceId], references: [id])

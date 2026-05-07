@@ -111,6 +111,19 @@ export class QuizService {
       throw new NotFoundException(`Quiz with ID ${quizId} not found`);
     }
 
+    // Check if student already submitted this quiz
+    const existingAttempt = await this.prisma.quizAttempt.findFirst({
+      where: {
+        studentId: userId,
+        quizId: quiz.id,
+        status: { in: [AttemptStatus.SUBMITTED, AttemptStatus.GRADED] },
+      },
+    });
+
+    if (existingAttempt) {
+      throw new Error('You have already submitted this quiz.');
+    }
+
     let correctAnswers = 0;
     const totalQuestions = quiz.questions.length;
 
@@ -165,5 +178,108 @@ export class QuizService {
       correctAnswers: correctAnswers,
       totalQuestions: totalQuestions,
     };
+  }
+
+  async getEssaySubmissions(courseId: string, studentId: string) {
+    return this.prisma.quizAttempt.findMany({
+      where: {
+        studentId,
+        quiz: {
+          isEssay: true,
+          chapter: {
+            courseId,
+          },
+        },
+      },
+      include: {
+        quiz: {
+          select: {
+            title: true,
+          },
+        },
+      },
+      orderBy: {
+        endTime: 'desc',
+      },
+    });
+  }
+
+  async gradeEssayAttempt(attemptId: string, questionGrades: { questionId: string; points: number }[], feedback: string) {
+    const attempt = await this.prisma.quizAttempt.findUnique({
+      where: { id: attemptId },
+      include: {
+        quiz: {
+          include: {
+            questions: true,
+          },
+        },
+      },
+    });
+
+    if (!attempt) {
+      throw new Error('Attempt not found');
+    }
+
+    // Update or Create individual answers (in case student didn't answer some questions)
+    for (const qGrade of questionGrades) {
+      await this.prisma.studentAnswer.upsert({
+        where: {
+          attemptId_questionId: {
+            attemptId,
+            questionId: qGrade.questionId,
+          },
+        },
+        update: {
+          pointsAwarded: qGrade.points,
+        },
+        create: {
+          attemptId,
+          questionId: qGrade.questionId,
+          pointsAwarded: qGrade.points,
+          essayAnswer: "", // Empty answer if they didn't submit one
+        },
+      });
+    }
+
+    // Calculate total score based on teacher's points
+    const totalScorePoints = questionGrades.reduce((acc, curr) => acc + curr.points, 0);
+    const totalMaxPoints = attempt.quiz.questions.reduce((acc, curr) => acc + curr.points, 0);
+    
+    // Calculate percentage score
+    const scorePercentage = totalMaxPoints > 0 ? (totalScorePoints / totalMaxPoints) * 100 : 0;
+    const isPassed = scorePercentage >= attempt.quiz.passingScore;
+
+    return this.prisma.quizAttempt.update({
+      where: { id: attemptId },
+      data: {
+        score: Math.round(scorePercentage), // Store percentage as the score
+        instructorFeedback: feedback,
+        isPassed,
+        status: 'GRADED' as any,
+      },
+    });
+  }
+
+  async getSubmissionDetails(attemptId: string) {
+    return this.prisma.quizAttempt.findUnique({
+      where: { id: attemptId },
+      include: {
+        quiz: {
+          include: {
+            questions: true,
+          },
+        },
+        student: {
+          select: {
+            fullName: true,
+          },
+        },
+        answers: {
+          include: {
+            question: true,
+          },
+        },
+      },
+    });
   }
 }

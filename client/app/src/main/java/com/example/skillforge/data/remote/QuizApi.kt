@@ -55,4 +55,24 @@ interface QuizApi {
         @Path("questionId") questionId: String,
         @Body request: List<CreateAnswerChoiceRequest>
     ): Response<List<AnswerChoiceDto>>
+
+    @GET("quiz/submissions/{courseId}/{studentId}")
+    suspend fun getSubmissions(
+        @Path("courseId") courseId: String,
+        @Path("studentId") studentId: String,
+        @Header("Authorization") token: String
+    ): Response<List<QuizSubmissionDto>>
+
+    @GET("quiz/submission/{id}")
+    suspend fun getSubmissionDetails(
+        @Path("id") id: String,
+        @Header("Authorization") token: String
+    ): Response<QuizSubmissionDetailsDto>
+
+    @PATCH("quiz/attempt/{id}/grade")
+    suspend fun gradeAttempt(
+        @Path("id") id: String,
+        @Body request: GradeEssayRequest,
+        @Header("Authorization") token: String
+    ): Response<QuizSubmissionDetailsDto>
 }

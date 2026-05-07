@@ -115,11 +115,11 @@ export class ProgressService {
     const completedLessonIds = completedLessonsData.map((data) => data.lessonId);
     const completedLessonsCount = completedLessonIds.length;
 
-    // Get completed quizzes records
+    // Get completed quizzes records (MCQ submitted or Essay graded)
     const completedQuizzesData = await this.prisma.quizAttempt.findMany({
       where: {
         studentId: userId,
-        isPassed: true,
+        status: { in: ['SUBMITTED', 'GRADED'] },
         quiz: {
           chapter: {
             courseId: courseId,
@@ -129,8 +129,16 @@ export class ProgressService {
       distinct: ['quizId'],
       select: {
         quizId: true,
+        isPassed: true,
+        status: true,
       },
     });
+
+    const quizStatuses = completedQuizzesData.map((data) => ({
+      quizId: data.quizId,
+      isPassed: data.isPassed,
+      status: data.status,
+    }));
 
     const completedQuizIds = completedQuizzesData.map((data) => data.quizId);
     const completedQuizzesCount = completedQuizIds.length;
@@ -150,6 +158,7 @@ export class ProgressService {
       percentage,
       completedLessonIds,
       completedQuizIds,
+      quizStatuses,
     };
   }
 
@@ -226,7 +235,7 @@ export class ProgressService {
     const completedQuizzesData = await this.prisma.quizAttempt.findMany({
       where: {
         studentId: userId,
-        isPassed: true,
+        status: { in: ['SUBMITTED', 'GRADED'] },
         quiz: { chapter: { courseId: { in: courseIds } } },
       },
       distinct: ['quizId'],

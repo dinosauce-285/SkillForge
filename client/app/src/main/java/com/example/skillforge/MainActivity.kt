@@ -482,6 +482,9 @@ class MainActivity : ComponentActivity() {
                                             },
                                             onNavigateToEssayQuizBuilder = { courseId, chapterId, quizId ->
                                                 mainViewModel.navigateTo(AppRoute.EssayQuizBuilder(route.session, courseId, chapterId, quizId))
+                                            },
+                                            onNavigateToSubmissions = { courseId, studentId ->
+                                                mainViewModel.navigateTo(AppRoute.StudentSubmissions(route.session, courseId, studentId))
                                             }
                                         )
                                     }
@@ -705,7 +708,48 @@ class MainActivity : ComponentActivity() {
                                         )
                                     }
 
-                                    else -> {}
+                                    is AppRoute.StudentSubmissions -> {
+                                        val submissionsViewModel: com.example.skillforge.feature.instructor_portal.viewmodel.SubmissionsViewModel = viewModel(
+                                            key = "submissions_${route.courseId}_${route.studentId}",
+                                            factory = com.example.skillforge.feature.instructor_portal.viewmodel.SubmissionsViewModelFactory(
+                                                appContainer.quizRepository,
+                                                route.courseId,
+                                                route.studentId,
+                                                route.session.accessToken
+                                            )
+                                        )
+
+                                        com.example.skillforge.feature.instructor_portal.ui.SkillforgeSubmissionsScreen(
+                                            viewModel = submissionsViewModel,
+                                            onBack = {
+                                                mainViewModel.navigateTo(AppRoute.CourseManager(route.session, route.courseId))
+                                            },
+                                            onGrade = { submissionId ->
+                                                mainViewModel.navigateTo(AppRoute.Grading(route.session, submissionId, route.courseId, route.studentId))
+                                            }
+                                        )
+                                    }
+
+                                    is AppRoute.Grading -> {
+                                         val gradingViewModel: com.example.skillforge.feature.instructor_portal.viewmodel.GradingViewModel = viewModel(
+                                             key = "grading_${route.attemptId}",
+                                             factory = com.example.skillforge.feature.instructor_portal.viewmodel.GradingViewModelFactory(
+                                                 appContainer.quizRepository,
+                                                 route.attemptId,
+                                                 route.session.accessToken
+                                             )
+                                         )
+
+                                         com.example.skillforge.feature.instructor_portal.ui.SkillforgeGradingScreen(
+                                             viewModel = gradingViewModel,
+                                             onBack = {
+                                                 mainViewModel.navigateTo(AppRoute.StudentSubmissions(route.session, route.courseId, route.studentId))
+                                             },
+                                             onSubmitSuccess = {
+                                                 mainViewModel.navigateTo(AppRoute.StudentSubmissions(route.session, route.courseId, route.studentId))
+                                             }
+                                         )
+                                     }
                                 }
                             }
                         }

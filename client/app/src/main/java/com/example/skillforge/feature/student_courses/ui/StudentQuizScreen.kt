@@ -50,6 +50,7 @@ fun StudentQuizScreen(
     quiz: Quiz,
     questions: List<Question>,
     timeRemainingSeconds: Int,
+    isTimeUp: Boolean = false,
     onBack: () -> Unit,
     onSubmit: (Map<String, String>) -> Unit
 ) {
@@ -83,6 +84,40 @@ fun StudentQuizScreen(
             },
             shape = RoundedCornerShape(24.dp)
         )
+    }
+
+    if (isTimeUp) {
+        AlertDialog(
+            onDismissRequest = { },
+            title = { 
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.TimerOff, contentDescription = null, tint = AcademicPrimary)
+                    Spacer(Modifier.width(12.dp))
+                    Text("Time's Up!", fontWeight = FontWeight.Bold)
+                }
+            },
+            text = { Text("The time for this quiz has expired. Your current answers will be submitted automatically.") },
+            confirmButton = {
+                Button(
+                    onClick = { onSubmit(userAnswers) },
+                    colors = ButtonDefaults.buttonColors(containerColor = AcademicPrimary),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("Submit Now", fontWeight = FontWeight.Bold)
+                }
+            },
+            shape = RoundedCornerShape(24.dp),
+            properties = androidx.compose.ui.window.DialogProperties(
+                dismissOnBackPress = false,
+                dismissOnClickOutside = false
+            )
+        )
+        
+        // Auto-submit after a short delay if they don't click anything
+        LaunchedEffect(Unit) {
+            delay(3000)
+            onSubmit(userAnswers)
+        }
     }
 
     Scaffold(
@@ -473,6 +508,7 @@ fun StudentQuizRoute(
                     quiz = uiState.quiz!!,
                     questions = uiState.shuffledQuestions,
                     timeRemainingSeconds = uiState.timeRemainingSeconds,
+                    isTimeUp = uiState.isTimeUp,
                     onBack = onBack,
                     onSubmit = { answers ->
                         viewModel.submitQuiz(answers)

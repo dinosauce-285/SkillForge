@@ -33,6 +33,7 @@ data class StudentCourseDetailsUiState(
     val isEnrolled: Boolean = false,
     val completedLessonIds: List<String> = emptyList(),
     val completedQuizIds: List<String> = emptyList(),
+    val quizStatuses: List<com.example.skillforge.data.remote.QuizProgressDto> = emptyList(),
     val errorMessage: String? = null,
 )
 
@@ -188,11 +189,13 @@ class StudentCoursesViewModel(
                     
                     var completedLessons: List<String> = emptyList()
                     var completedQuizzes: List<String> = emptyList()
+                    var quizStatuses: List<com.example.skillforge.data.remote.QuizProgressDto> = emptyList()
                     if (userIsEnrolled) {
                         try {
                             val progress = progressRepository.getCourseProgress(courseId)
                             completedLessons = progress.completedLessonIds ?: emptyList()
                             completedQuizzes = progress.completedQuizIds ?: emptyList()
+                            quizStatuses = progress.quizStatuses ?: emptyList()
                         } catch (e: Exception) {
                             e.printStackTrace()
                         }
@@ -204,6 +207,7 @@ class StudentCoursesViewModel(
                         isEnrolled = userIsEnrolled,
                         completedLessonIds = completedLessons,
                         completedQuizIds = completedQuizzes,
+                        quizStatuses = quizStatuses,
                     )
                 },
                 onFailure = { error ->

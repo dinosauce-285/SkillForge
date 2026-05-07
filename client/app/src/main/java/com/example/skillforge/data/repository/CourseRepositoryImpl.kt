@@ -125,6 +125,7 @@ class CourseRepositoryImpl(
                                     com.example.skillforge.domain.model.CourseQuiz(
                                         id = quiz.id,
                                         title = quiz.title,
+                                        isEssay = quiz.isEssay,
                                     )
                                 } ?: emptyList(),
                             )
