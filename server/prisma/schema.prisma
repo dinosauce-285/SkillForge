@@ -498,6 +498,10 @@ model Coupon {
   id              String      @id @default(uuid())
   code            String      @unique
   discountPercent Int         @map("discount_percent")
+  description     String?     @db.Text
+  maxUses         Int?        @map("max_uses")
+  usedCount       Int         @default(0) @map("used_count")
+  expiresAt       DateTime?   @map("expires_at")
   scope           CouponScope @default(INSTRUCTOR)
   instructorId    String?     @map("instructor_id")
   isActive        Boolean     @default(true) @map("is_active")

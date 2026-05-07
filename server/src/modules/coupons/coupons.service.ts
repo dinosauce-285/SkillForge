@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, BadRequestException, ForbiddenException 
 import { Coupon, CouponScope } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCouponDto } from './dto/create-coupon.dto';
+import { UpdateCouponDto } from './dto/update-coupon.dto';
 
 @Injectable()
 export class CouponsService {
@@ -21,6 +22,9 @@ export class CouponsService {
       data: {
         code,
         discountPercent: createCouponDto.discountPercent,
+        description: createCouponDto.description,
+        maxUses: createCouponDto.maxUses,
+        expiresAt: createCouponDto.expiresAt ? new Date(createCouponDto.expiresAt) : null,
         isActive: createCouponDto.isActive ?? true,
         instructorId,
         scope: CouponScope.INSTRUCTOR,
@@ -70,6 +74,38 @@ export class CouponsService {
     if (coupon.instructorId !== instructorId) throw new ForbiddenException('Access denied');
 
     return this.prisma.coupon.delete({ where: { id } });
+  }
+
+  async updateCoupon(instructorId: string, id: string, dto: UpdateCouponDto) {
+    const coupon = await this.prisma.coupon.findUnique({ where: { id } });
+    if (!coupon) throw new NotFoundException('Coupon not found');
+    if (coupon.instructorId !== instructorId) throw new ForbiddenException('Access denied');
+
+    const updateData: Record<string, unknown> = {};
+    if (dto.code !== undefined) {
+      const normalized = this.normalizeCouponCode(dto.code);
+      const conflict = await this.prisma.coupon.findUnique({ where: { code: normalized } });
+      if (conflict && conflict.id !== id) throw new BadRequestException('Coupon code already exists');
+      updateData.code = normalized;
+    }
+    if (dto.discountPercent !== undefined) updateData.discountPercent = dto.discountPercent;
+    if (dto.description !== undefined) updateData.description = dto.description;
+    if (dto.maxUses !== undefined) updateData.maxUses = dto.maxUses;
+    if (dto.expiresAt !== undefined) updateData.expiresAt = dto.expiresAt ? new Date(dto.expiresAt) : null;
+    if (dto.isActive !== undefined) updateData.isActive = dto.isActive;
+
+    return this.prisma.coupon.update({ where: { id }, data: updateData });
+  }
+
+  async toggleCoupon(instructorId: string, id: string) {
+    const coupon = await this.prisma.coupon.findUnique({ where: { id } });
+    if (!coupon) throw new NotFoundException('Coupon not found');
+    if (coupon.instructorId !== instructorId) throw new ForbiddenException('Access denied');
+
+    return this.prisma.coupon.update({
+      where: { id },
+      data: { isActive: !coupon.isActive },
+    });
   }
 
   private normalizeCouponCode(code: string): string {

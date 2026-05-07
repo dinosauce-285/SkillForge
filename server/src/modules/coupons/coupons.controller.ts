@@ -1,6 +1,7 @@
-import { Controller, Get, Post, Body, Param, Query, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Body, Param, Query, Delete, UseGuards } from '@nestjs/common';
 import { CouponsService } from './coupons.service';
 import { CreateCouponDto } from './dto/create-coupon.dto';
+import { UpdateCouponDto } from './dto/update-coupon.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -33,6 +34,27 @@ export class CouponsController {
     @Query('courseId') courseId?: string
   ) {
     return this.couponsService.validateCoupon(code, courseId);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('INSTRUCTOR', 'ADMIN')
+  @Patch(':id')
+  updateCoupon(
+    @CurrentUser('id') instructorId: string,
+    @Param('id') id: string,
+    @Body() dto: UpdateCouponDto
+  ) {
+    return this.couponsService.updateCoupon(instructorId, id, dto);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('INSTRUCTOR', 'ADMIN')
+  @Patch(':id/toggle')
+  toggleCoupon(
+    @CurrentUser('id') instructorId: string,
+    @Param('id') id: string
+  ) {
+    return this.couponsService.toggleCoupon(instructorId, id);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
