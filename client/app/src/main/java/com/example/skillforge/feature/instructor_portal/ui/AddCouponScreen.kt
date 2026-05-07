@@ -404,7 +404,7 @@ private fun CouponInputLabel(label: String) {
 private fun AnimatedError(message: String?) {
     if (message != null) {
         Text(
-            text = "⚠ $message",
+            text = "$message",
             style = MaterialTheme.typography.labelSmall.copy(
                 color = ErrorColor,
                 fontWeight = FontWeight.Medium
