@@ -75,4 +75,10 @@ interface QuizApi {
         @Body request: GradeEssayRequest,
         @Header("Authorization") token: String
     ): Response<QuizSubmissionDetailsDto>
+
+    @GET("quiz/my-submission/{id}")
+    suspend fun getMySubmission(
+        @Path("id") id: String,
+        @Header("Authorization") token: String
+    ): Response<QuizSubmissionDetailsDto>
 }

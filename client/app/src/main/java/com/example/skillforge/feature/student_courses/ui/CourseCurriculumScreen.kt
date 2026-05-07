@@ -62,6 +62,7 @@ fun CourseCurriculumRoute(
     viewModel: StudentCoursesViewModel,
     onLessonSelected: (String) -> Unit,
     onQuizSelected: (String) -> Unit = {},
+    onViewResult: (String) -> Unit = {},
     onNavigateBack: () -> Unit,
 ) {
     val uiState by viewModel.courseDetailsState.collectAsState()
@@ -85,6 +86,8 @@ fun CourseCurriculumRoute(
         }
     }
 
+    val context = androidx.compose.ui.platform.LocalContext.current
+
     CourseCurriculumScreen(
         course = uiState.course,
         isLoading = uiState.isLoading,
@@ -94,11 +97,20 @@ fun CourseCurriculumRoute(
         quizStatuses = uiState.quizStatuses,
         onLessonSelected = onLessonSelected,
         onQuizSelected = { quizId ->
-            // Prevent retaking if already completed/submitted
-            if (quizId !in uiState.completedQuizIds) {
-                onQuizSelected(quizId)
+            val status = uiState.quizStatuses.find { it.quizId.equals(quizId, ignoreCase = true) }
+            val allQuizzes = uiState.course?.chapters?.flatMap { it.quizzes } ?: emptyList()
+            val quiz = allQuizzes.find { it.id.equals(quizId, ignoreCase = true) }
+            
+            if (status != null) {
+                val isGraded = status.status.trim().equals("GRADED", ignoreCase = true)
+                
+                if (isGraded) {
+                    onViewResult(status.attemptId)
+                } else {
+                    android.widget.Toast.makeText(context, "Quiz already completed (Status: ${status.status})", android.widget.Toast.LENGTH_SHORT).show()
+                }
             } else {
-                // Show a toast or message
+                onQuizSelected(quizId)
             }
         },
         onNavigateBack = onNavigateBack,
@@ -199,11 +211,7 @@ fun CourseCurriculumScreen(
                             },
                             onLessonSelected = onLessonSelected,
                             onQuizSelected = { quizId ->
-                                if (quizId in completedQuizIds) {
-                                    android.widget.Toast.makeText(context, "Quiz already completed", android.widget.Toast.LENGTH_SHORT).show()
-                                } else {
-                                    onQuizSelected(quizId)
-                                }
+                                onQuizSelected(quizId)
                             },
                         )
                     }
@@ -346,20 +354,21 @@ private fun CurriculumQuizRow(
                 ),
         )
         val quizIcon = when {
-            isGraded || !quiz.isEssay -> if (isPassed) Icons.Default.CheckCircle else Icons.Default.Cancel
-            isCompleted -> Icons.Default.CheckCircle // Essay submitted but not yet graded
-            else -> Icons.Default.Quiz
+            isGraded -> if (isPassed) Icons.Default.CheckCircle else Icons.Default.Cancel
+            isCompleted && quiz.isEssay -> Icons.Default.CheckCircle // Essay submitted but not yet graded
+            else -> null
         }
-        val iconColor = when {
-            isGraded || !quiz.isEssay -> if (isPassed) Color(0xFF4CAF50) else Color.Red
-            isCompleted -> Color.Gray // Essay submitted
-            else -> PrimaryOrange
+        
+        val iconTint = when {
+            isGraded -> if (isPassed) Color(0xFF006972) else MaterialTheme.colorScheme.error
+            isCompleted && quiz.isEssay -> Color.Gray
+            else -> Color.Transparent
         }
 
         Icon(
-            imageVector = quizIcon,
+            imageVector = quizIcon ?: Icons.Default.Quiz,
             contentDescription = null,
-            tint = iconColor,
+            tint = iconTint.takeIf { quizIcon != null } ?: PrimaryOrange,
             modifier = Modifier.size(18.dp),
         )
         Column(modifier = Modifier.weight(1f)) {

@@ -78,4 +78,13 @@ export class QuizController {
   ) {
     return this.quizService.gradeEssayAttempt(id, gradeEssayDto.questionGrades, gradeEssayDto.feedback);
   }
+
+  @Get('my-submission/:id')
+  @Roles(Role.STUDENT)
+  getMySubmission(
+    @Param('id') id: string,
+    @CurrentUser('id') userId: string
+  ) {
+    return this.quizService.getStudentSubmissionDetails(id, userId);
+  }
 }

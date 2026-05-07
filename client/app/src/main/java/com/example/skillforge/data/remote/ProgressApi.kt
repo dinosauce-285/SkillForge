@@ -6,6 +6,7 @@ import retrofit2.http.Path
 
 data class QuizProgressDto(
     val quizId: String,
+    val attemptId: String,
     val isPassed: Boolean,
     val status: String
 )

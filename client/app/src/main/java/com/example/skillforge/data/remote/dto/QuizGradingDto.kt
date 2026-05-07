@@ -24,7 +24,15 @@ data class QuizDetailsBriefDto(
 data class QuestionBriefDto(
     val id: String,
     val content: String,
-    val points: Int
+    val points: Int,
+    val choices: List<AnswerChoiceBriefDto>? = null
+)
+
+data class AnswerChoiceBriefDto(
+    val id: String,
+    val content: String,
+    val isCorrect: Boolean,
+    val orderIndex: Int
 )
 
 data class StudentBriefDto(
@@ -34,6 +42,7 @@ data class StudentBriefDto(
 data class StudentAnswerDetailsDto(
     val id: String,
     val essayAnswer: String?,
+    val selectedChoiceId: String?,
     val pointsAwarded: Float?,
     val question: QuestionBriefDto
 )

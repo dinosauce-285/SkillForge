@@ -286,6 +286,9 @@ class MainActivity : ComponentActivity() {
                                         onQuizSelected = { quizId ->
                                             mainViewModel.navigateTo(AppRoute.StudentQuiz(route.session, route.courseId, quizId))
                                         },
+                                        onViewResult = { attemptId ->
+                                            mainViewModel.navigateTo(AppRoute.StudentQuizResult(route.session, route.courseId, attemptId))
+                                        },
                                         onNavigateBack = {
                                             mainViewModel.navigateTo(AppRoute.StudentCourseDetails(route.session, route.courseId))
                                         }
@@ -750,6 +753,26 @@ class MainActivity : ComponentActivity() {
                                              }
                                          )
                                      }
+
+                                    is AppRoute.StudentQuizResult -> {
+                                         val resultViewModel: com.example.skillforge.feature.student_courses.viewmodel.StudentQuizResultViewModel = viewModel(
+                                             key = "quiz_result_${route.attemptId}",
+                                             factory = com.example.skillforge.feature.student_courses.viewmodel.StudentQuizResultViewModelFactory(
+                                                appContainer.quizRepository,
+                                                route.attemptId,
+                                                route.session.accessToken
+                                            )
+                                        )
+                                        com.example.skillforge.feature.student_courses.ui.StudentQuizResultScreen(
+                                            viewModel = resultViewModel,
+                                            onBack = {
+                                                mainViewModel.navigateTo(AppRoute.CourseCurriculum(route.session, route.courseId))
+                                            }
+                                        )
+                                    }
+                                    else -> {
+                                        // Handle other routes or show nothing
+                                    }
                                 }
                             }
                         }

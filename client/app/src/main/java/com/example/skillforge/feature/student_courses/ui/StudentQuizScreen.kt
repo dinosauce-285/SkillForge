@@ -468,6 +468,7 @@ fun StudentQuizRoute(
     val uiState by viewModel.uiState.collectAsState()
     val submissionResult by viewModel.submissionResult.collectAsState()
     val isSubmitting by viewModel.isSubmitting.collectAsState()
+    var userAnswersMap by remember { mutableStateOf<Map<String, String>?>(null) }
 
     LaunchedEffect(quizId) {
         viewModel.loadQuiz(quizId)
@@ -503,6 +504,33 @@ fun StudentQuizRoute(
                 }
             }
         } else {
+            var showSubmitConfirmation by remember { mutableStateOf(false) }
+
+            if (showSubmitConfirmation) {
+                AlertDialog(
+                    onDismissRequest = { showSubmitConfirmation = false },
+                    title = { Text("Submit Quiz?", fontWeight = FontWeight.Bold) },
+                    text = { Text("Are you sure you want to submit your answers? You won't be able to change them later.") },
+                    confirmButton = {
+                        Button(
+                            onClick = { 
+                                showSubmitConfirmation = false
+                                viewModel.submitQuiz(userAnswersMap ?: emptyMap()) 
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = AcademicPrimary)
+                        ) {
+                            Text("Submit", fontWeight = FontWeight.Bold)
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showSubmitConfirmation = false }) {
+                            Text("Cancel")
+                        }
+                    },
+                    shape = RoundedCornerShape(24.dp)
+                )
+            }
+
             Box(modifier = Modifier.fillMaxSize()) {
                 StudentQuizScreen(
                     quiz = uiState.quiz!!,
@@ -511,7 +539,8 @@ fun StudentQuizRoute(
                     isTimeUp = uiState.isTimeUp,
                     onBack = onBack,
                     onSubmit = { answers ->
-                        viewModel.submitQuiz(answers)
+                        userAnswersMap = answers
+                        showSubmitConfirmation = true
                     }
                 )
 
@@ -565,7 +594,7 @@ fun StudentQuizRoute(
                                     }
                                     if (!result.isPassed) {
                                         Spacer(Modifier.height(16.dp))
-                                        Text("You didn't meet the passing score. Would you like to try again or exit?", color = MaterialTheme.colorScheme.error)
+                                        Text("You didn't meet the passing score.", color = MaterialTheme.colorScheme.error)
                                     } else {
                                         Spacer(Modifier.height(16.dp))
                                         Text("Congratulations! This will be counted towards your course progress.", color = AcademicTertiary)
@@ -577,26 +606,12 @@ fun StudentQuizRoute(
                             Button(
                                 onClick = { 
                                     viewModel.resetSubmission()
-                                    if (result.isPassed || uiState.quiz?.isEssay == true) {
-                                        onSubmit(emptyMap()) // Trigger navigation back
-                                    } else {
-                                        viewModel.loadQuiz(quizId) // Reload quiz to try again
-                                    }
+                                    onSubmit(emptyMap()) // Always exit after submission
                                 },
                                 colors = ButtonDefaults.buttonColors(containerColor = AcademicPrimary),
                                 shape = RoundedCornerShape(12.dp)
                             ) {
-                                Text(if (result.isPassed || uiState.quiz?.isEssay == true) "Done" else "Try Again")
-                            }
-                        },
-                        dismissButton = {
-                            if (!result.isPassed && uiState.quiz?.isEssay == false) {
-                                TextButton(onClick = {
-                                    viewModel.resetSubmission()
-                                    onSubmit(emptyMap()) // Exit
-                                }) {
-                                    Text("Exit", color = Color.Gray)
-                                }
+                                Text("Done")
                             }
                         },
                         shape = RoundedCornerShape(28.dp),
