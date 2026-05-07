@@ -117,18 +117,27 @@ export class QuizService {
     const answerRecords: any[] = [];
 
     quiz.questions.forEach((question) => {
-      const selectedChoiceId = submitQuizDto.answers[question.id];
-      const correctChoice = question.choices.find((c) => c.isCorrect);
-
-      if (selectedChoiceId && correctChoice && selectedChoiceId === correctChoice.id) {
-        correctAnswers++;
-      }
-
-      if (selectedChoiceId) {
-        answerRecords.push({
-          questionId: question.id,
-          selectedChoiceId: selectedChoiceId,
-        });
+      const answerValue = submitQuizDto.answers[question.id];
+      
+      if (answerValue) {
+        if (quiz.isEssay) {
+          // Essay answer - store text
+          answerRecords.push({
+            questionId: question.id,
+            essayAnswer: answerValue,
+          });
+        } else {
+          // Multiple choice answer - store selected choice ID
+          const correctChoice = question.choices.find((c) => c.isCorrect);
+          if (correctChoice && answerValue === correctChoice.id) {
+            correctAnswers++;
+          }
+          
+          answerRecords.push({
+            questionId: question.id,
+            selectedChoiceId: answerValue,
+          });
+        }
       }
     });
 
