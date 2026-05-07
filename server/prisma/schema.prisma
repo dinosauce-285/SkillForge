@@ -355,6 +355,7 @@ model StudentAnswer {
   attemptId        String        @map("attempt_id")
   questionId       String        @map("question_id")
   selectedChoiceId String?       @map("selected_choice_id")
+  essayAnswer      String?       @map("essay_answer") @db.Text
   attempt          QuizAttempt   @relation(fields: [attemptId], references: [id], onDelete: Cascade)
   question         Question      @relation(fields: [questionId], references: [id])
   choice           AnswerChoice? @relation(fields: [selectedChoiceId], references: [id])
