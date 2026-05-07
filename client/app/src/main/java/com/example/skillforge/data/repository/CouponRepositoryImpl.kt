@@ -4,6 +4,7 @@ import com.example.skillforge.data.remote.CouponApi
 import com.example.skillforge.data.remote.CouponDto
 import com.example.skillforge.data.remote.CouponValidationResponse
 import com.example.skillforge.data.remote.CreateCouponRequest
+import com.example.skillforge.data.remote.UpdateCouponRequest
 import com.example.skillforge.domain.repository.CouponRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -12,24 +13,27 @@ import org.json.JSONObject
 class CouponRepositoryImpl(
     private val api: CouponApi
 ) : CouponRepository {
+
     override suspend fun createCoupon(
         code: String,
         discountPercent: Int,
+        description: String?,
+        maxUses: Int?,
+        expiresAt: String?,
         isActive: Boolean
     ): Result<CouponDto> = withContext(Dispatchers.IO) {
         try {
             val response = api.createCoupon(
-                token = "", // Token is injected via interceptor
-                request = CreateCouponRequest(code, discountPercent, isActive)
+                token = "",
+                request = CreateCouponRequest(code, discountPercent, description, maxUses, expiresAt, isActive)
             )
             if (response.isSuccessful && response.body() != null) {
                 Result.success(response.body()!!)
             } else {
-                val errorBody = response.errorBody()?.string()
-                val message = try {
-                    errorBody?.let { JSONObject(it).getString("message") }
-                } catch (e: Exception) { null } ?: "Failed to create coupon"
-                Result.failure(Exception(message))
+                val msg = response.errorBody()?.string()?.let {
+                    try { JSONObject(it).getString("message") } catch (e: Exception) { null }
+                } ?: "Failed to create coupon"
+                Result.failure(Exception(msg))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -38,7 +42,7 @@ class CouponRepositoryImpl(
 
     override suspend fun getInstructorCoupons(): Result<List<CouponDto>> = withContext(Dispatchers.IO) {
         try {
-            val response = api.getInstructorCoupons(token = "") // Token injected
+            val response = api.getInstructorCoupons(token = "")
             if (response.isSuccessful && response.body() != null) {
                 Result.success(response.body()!!)
             } else {
@@ -55,11 +59,39 @@ class CouponRepositoryImpl(
             if (response.isSuccessful && response.body() != null) {
                 Result.success(response.body()!!)
             } else {
-                val errorBody = response.errorBody()?.string()
-                val message = try {
-                    errorBody?.let { JSONObject(it).getString("message") }
-                } catch (e: Exception) { null } ?: "Invalid coupon"
-                Result.failure(Exception(message))
+                val msg = response.errorBody()?.string()?.let {
+                    try { JSONObject(it).getString("message") } catch (e: Exception) { null }
+                } ?: "Invalid coupon"
+                Result.failure(Exception(msg))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun updateCoupon(id: String, request: UpdateCouponRequest): Result<CouponDto> = withContext(Dispatchers.IO) {
+        try {
+            val response = api.updateCoupon(token = "", id = id, request = request)
+            if (response.isSuccessful && response.body() != null) {
+                Result.success(response.body()!!)
+            } else {
+                val msg = response.errorBody()?.string()?.let {
+                    try { JSONObject(it).getString("message") } catch (e: Exception) { null }
+                } ?: "Failed to update coupon"
+                Result.failure(Exception(msg))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun toggleCoupon(id: String): Result<CouponDto> = withContext(Dispatchers.IO) {
+        try {
+            val response = api.toggleCoupon(token = "", id = id)
+            if (response.isSuccessful && response.body() != null) {
+                Result.success(response.body()!!)
+            } else {
+                Result.failure(Exception("Failed to toggle coupon"))
             }
         } catch (e: Exception) {
             Result.failure(e)

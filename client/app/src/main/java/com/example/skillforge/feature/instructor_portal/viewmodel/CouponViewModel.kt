@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.skillforge.data.remote.CouponDto
+import com.example.skillforge.data.remote.UpdateCouponRequest
 import com.example.skillforge.domain.repository.CouponRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -11,6 +12,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class CouponViewModel(private val repository: CouponRepository) : ViewModel() {
+
     private val _coupons = MutableStateFlow<List<CouponDto>>(emptyList())
     val coupons: StateFlow<List<CouponDto>> = _coupons.asStateFlow()
 
@@ -21,21 +23,65 @@ class CouponViewModel(private val repository: CouponRepository) : ViewModel() {
         viewModelScope.launch {
             _isLoading.value = true
             val result = repository.getInstructorCoupons()
-            if (result.isSuccess) {
-                _coupons.value = result.getOrNull() ?: emptyList()
-            }
+            if (result.isSuccess) _coupons.value = result.getOrNull() ?: emptyList()
             _isLoading.value = false
         }
     }
 
-    fun createCoupon(code: String, discountPercent: Int, isActive: Boolean) {
+    fun createCoupon(
+        code: String,
+        discountPercent: Int,
+        description: String?,
+        maxUses: Int?,
+        expiresAt: String?,
+        isActive: Boolean
+    ) {
         viewModelScope.launch {
             _isLoading.value = true
-            val result = repository.createCoupon(code, discountPercent, isActive)
-            if (result.isSuccess) {
-                fetchCoupons()
-            }
+            val result = repository.createCoupon(code, discountPercent, description, maxUses, expiresAt, isActive)
+            if (result.isSuccess) fetchCoupons()
             _isLoading.value = false
+        }
+    }
+
+    fun updateCoupon(
+        id: String,
+        code: String,
+        discountPercent: Int,
+        description: String?,
+        maxUses: Int?,
+        expiresAt: String?
+    ) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            val result = repository.updateCoupon(
+                id,
+                UpdateCouponRequest(
+                    code = code,
+                    discountPercent = discountPercent,
+                    description = description,
+                    maxUses = maxUses,
+                    expiresAt = expiresAt
+                )
+            )
+            if (result.isSuccess) fetchCoupons()
+            _isLoading.value = false
+        }
+    }
+
+    fun toggleCoupon(id: String) {
+        viewModelScope.launch {
+            // Optimistic update: flip locally first
+            _coupons.value = _coupons.value.map {
+                if (it.id == id) it.copy(isActive = !it.isActive) else it
+            }
+            val result = repository.toggleCoupon(id)
+            if (result.isFailure) {
+                // Revert on failure
+                _coupons.value = _coupons.value.map {
+                    if (it.id == id) it.copy(isActive = !it.isActive) else it
+                }
+            }
         }
     }
 
@@ -43,9 +89,7 @@ class CouponViewModel(private val repository: CouponRepository) : ViewModel() {
         viewModelScope.launch {
             _isLoading.value = true
             val result = repository.deleteCoupon(id)
-            if (result.isSuccess) {
-                fetchCoupons()
-            }
+            if (result.isSuccess) fetchCoupons()
             _isLoading.value = false
         }
     }
