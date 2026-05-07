@@ -163,7 +163,7 @@ export class QuizService {
         quizId: quiz.id,
         score: score,
         isPassed: isPassed,
-        status: AttemptStatus.SUBMITTED,
+        status: quiz.isEssay ? AttemptStatus.SUBMITTED : AttemptStatus.GRADED,
         endTime: new Date(),
         answers: {
           create: answerRecords,
@@ -281,5 +281,43 @@ export class QuizService {
         },
       },
     });
+  }
+
+  async getStudentSubmissionDetails(attemptId: string, userId: string) {
+    const attempt = await this.prisma.quizAttempt.findUnique({
+      where: { id: attemptId },
+      include: {
+        quiz: {
+          include: {
+            questions: {
+              include: {
+                choices: true,
+              },
+            },
+          },
+        },
+        student: {
+          select: {
+            id: true,
+            fullName: true,
+          },
+        },
+        answers: {
+          include: {
+            question: {
+              include: {
+                choices: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!attempt || attempt.studentId !== userId) {
+      throw new Error('Submission not found or unauthorized');
+    }
+
+    return attempt;
   }
 }

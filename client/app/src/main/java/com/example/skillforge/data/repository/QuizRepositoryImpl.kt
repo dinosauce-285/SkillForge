@@ -260,4 +260,21 @@ class QuizRepositoryImpl(private val api: QuizApi) : QuizRepository {
             Result.failure(e)
         }
     }
+
+    override suspend fun getMySubmission(
+        attemptId: String,
+        token: String
+    ): Result<QuizSubmissionDetailsDto> {
+        return try {
+            val response = api.getMySubmission(attemptId, token)
+            if (response.isSuccessful && response.body() != null) {
+                Result.success(response.body()!!)
+            } else {
+                val errorMsg = response.errorBody()?.string() ?: response.message()
+                Result.failure(Exception(errorMsg))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

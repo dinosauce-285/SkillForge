@@ -126,8 +126,12 @@ export class ProgressService {
           },
         },
       },
+      orderBy: {
+        startTime: 'desc',
+      },
       distinct: ['quizId'],
       select: {
+        id: true,
         quizId: true,
         isPassed: true,
         status: true,
@@ -136,6 +140,7 @@ export class ProgressService {
 
     const quizStatuses = completedQuizzesData.map((data) => ({
       quizId: data.quizId,
+      attemptId: data.id,
       isPassed: data.isPassed,
       status: data.status,
     }));

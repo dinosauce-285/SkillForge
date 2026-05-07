@@ -21,4 +21,5 @@ interface QuizRepository {
     suspend fun getSubmissions(courseId: String, studentId: String, token: String): Result<List<com.example.skillforge.data.remote.dto.QuizSubmissionDto>>
     suspend fun getSubmissionDetails(attemptId: String, token: String): Result<com.example.skillforge.data.remote.dto.QuizSubmissionDetailsDto>
     suspend fun gradeAttempt(attemptId: String, questionGrades: List<com.example.skillforge.data.remote.dto.QuestionGradeDto>, feedback: String, token: String): Result<com.example.skillforge.data.remote.dto.QuizSubmissionDetailsDto>
+    suspend fun getMySubmission(attemptId: String, token: String): Result<com.example.skillforge.data.remote.dto.QuizSubmissionDetailsDto>
 }
