@@ -10,6 +10,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.PlayCircleOutline
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarBorder
@@ -55,13 +56,30 @@ sealed interface MyCoursesState {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyCoursesScreen(
-    token: String = "",
+     token: String = "",
     reviewViewModel: ReviewViewModel,
     onNavigateBack: () -> Unit,
     onCourseClick: (String) -> Unit,
 ) {
-
     val context = LocalContext.current
+
+    val onDownloadCertificate: (String) -> Unit = { courseId ->
+        val url = "http://10.0.2.2:3000/progress/certificate/$courseId"
+        val intent = android.content.Intent(android.content.Intent.ACTION_VIEW).apply {
+            data = android.net.Uri.parse(url)
+            // Add authorization header if possible, but ACTION_VIEW usually opens browser.
+            // For a real app, we might need a custom downloader or pass token in query if allowed.
+            // Here we'll just open the URL.
+            putExtra("Authorization", "Bearer $token")
+        }
+        // Since we can't easily set headers for ACTION_VIEW browser, 
+        // a better way is to use a download manager or just append token to URL if backend supports it.
+        // For simplicity, let's assume the backend can take token as query param or we use a simple URL.
+        val authenticatedUrl = "$url?token=$token"
+        val browserIntent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(authenticatedUrl))
+        context.startActivity(browserIntent)
+    }
+
     val appContainer = (context.applicationContext as? com.example.skillforge.SkillforgeApplication)?.container
 
     if (appContainer == null) {
@@ -203,7 +221,8 @@ fun MyCoursesScreen(
                                     } else {
                                         Toast.makeText(context, "You can only review after completing more than 20% of the course.", Toast.LENGTH_SHORT).show()
                                     }
-                                }
+                                },
+                                onDownloadCertificate = { onDownloadCertificate(course.courseId) }
                             )
                         }
                     }
@@ -219,6 +238,7 @@ fun MyCourseCard(
     course: ActiveCourse,
     onClick: () -> Unit,
     onRateClick: () -> Unit,
+    onDownloadCertificate: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     ElevatedCard(
@@ -313,7 +333,7 @@ fun MyCourseCard(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                IconButton(
+                 IconButton(
                     onClick = onRateClick,
                     modifier = Modifier.size(36.dp)
                 ) {
@@ -325,19 +345,38 @@ fun MyCourseCard(
                     )
                 }
 
-                Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.PlayCircleOutline,
-                        contentDescription = "Resume",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(24.dp)
-                    )
+                if (course.percentage == 100) {
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF4CAF50).copy(alpha = 0.1f))
+                            .clickable(onClick = onDownloadCertificate),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Download,
+                            contentDescription = "Download Certificate",
+                            tint = Color(0xFF4CAF50),
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
+                            .clickable(onClick = onClick),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.PlayCircleOutline,
+                            contentDescription = "Resume",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
                 }
             }
         }

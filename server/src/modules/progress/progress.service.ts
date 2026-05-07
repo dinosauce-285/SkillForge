@@ -1,5 +1,6 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { NotificationType } from '@prisma/client';
+import PDFDocument from 'pdfkit';
 import { NotificationsService } from '../notifications/notifications.service';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -345,5 +346,110 @@ export class ProgressService {
     } catch (error) {
       console.error('Failed to create course completion notification', error);
     }
+  }
+
+  async generateCertificate(userId: string, courseId: string): Promise<Buffer> {
+    const [user, course, progress] = await Promise.all([
+      this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { fullName: true },
+      }),
+      this.prisma.course.findUnique({
+        where: { id: courseId },
+        select: { title: true },
+      }),
+      this.getCourseProgress(userId, courseId),
+    ]);
+
+    if (!user || !course) {
+      throw new NotFoundException('User or Course not found');
+    }
+
+    if (progress.percentage < 100) {
+      throw new BadRequestException('Course must be 100% completed to receive a certificate.');
+    }
+
+    return new Promise((resolve, reject) => {
+      try {
+        const doc = new PDFDocument({
+          layout: 'landscape',
+          size: 'A4',
+          margin: 50,
+        });
+
+        const buffers: Buffer[] = [];
+        doc.on('data', (chunk) => buffers.push(chunk));
+        doc.on('end', () => resolve(Buffer.concat(buffers)));
+        doc.on('error', (err) => reject(err));
+
+        // --- Design ---
+        const pageWidth = doc.page.width;
+        const pageHeight = doc.page.height;
+
+        // Border
+        doc.rect(20, 20, pageWidth - 40, pageHeight - 40)
+           .lineWidth(5)
+           .strokeColor('#FF9800')
+           .stroke();
+
+        doc.rect(30, 30, pageWidth - 60, pageHeight - 60)
+           .lineWidth(1)
+           .strokeColor('#FFB74D')
+           .stroke();
+
+        // Logo / Title
+        doc.fillColor('#FF9800')
+           .fontSize(40)
+           .font('Helvetica-Bold')
+           .text('SkillForge', 0, 80, { align: 'center', width: pageWidth });
+
+        doc.fillColor('#333333')
+           .fontSize(20)
+           .font('Helvetica')
+           .text('CERTIFICATE OF COMPLETION', 0, 150, { align: 'center', width: pageWidth });
+
+        doc.fontSize(16)
+           .text('This is to certify that', 0, 210, { align: 'center', width: pageWidth });
+
+        // Student Name
+        doc.fillColor('#FF9800')
+           .fontSize(36)
+           .font('Helvetica-Bold')
+           .text(user.fullName, 0, 250, { align: 'center', width: pageWidth });
+
+        doc.fillColor('#333333')
+           .fontSize(16)
+           .font('Helvetica')
+           .text('has successfully completed the course', 0, 310, { align: 'center', width: pageWidth });
+
+        // Course Title
+        doc.fillColor('#000000')
+           .fontSize(24)
+           .font('Helvetica-Bold')
+           .text(course.title, 0, 350, { align: 'center', width: pageWidth });
+
+        // Date
+        const dateStr = new Date().toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        });
+        doc.fillColor('#666666')
+           .fontSize(14)
+           .font('Helvetica')
+           .text(`Issued on ${dateStr}`, 0, 420, { align: 'center', width: pageWidth });
+
+        // Signature area
+        doc.moveTo(pageWidth / 2 - 100, 500)
+           .lineTo(pageWidth / 2 + 100, 500)
+           .stroke();
+        doc.fontSize(12)
+           .text('SkillForge Team', 0, 510, { align: 'center', width: pageWidth });
+
+        doc.end();
+      } catch (err) {
+        reject(err);
+      }
+    });
   }
 }

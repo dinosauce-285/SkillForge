@@ -5,6 +5,7 @@ import {
   Param,
   ParseUUIDPipe,
   Post,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -37,5 +38,20 @@ export class ProgressController {
     @Param('courseId', new ParseUUIDPipe()) courseId: string,
   ) {
     return this.progressService.getCourseProgress(userId, courseId);
+  }
+
+  @Get('certificate/:courseId')
+  async getCertificate(
+    @CurrentUser('id') userId: string,
+    @Param('courseId', new ParseUUIDPipe()) courseId: string,
+    @Res() res: any,
+  ) {
+    const buffer = await this.progressService.generateCertificate(userId, courseId);
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename=certificate-${courseId}.pdf`,
+      'Content-Length': buffer.length,
+    });
+    res.end(buffer);
   }
 }
