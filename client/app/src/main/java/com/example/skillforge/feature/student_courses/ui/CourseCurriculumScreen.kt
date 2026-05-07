@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.PlayLesson
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Quiz
+import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -33,13 +34,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -70,8 +66,23 @@ fun CourseCurriculumRoute(
 ) {
     val uiState by viewModel.courseDetailsState.collectAsState()
 
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+
     LaunchedEffect(courseId, token) {
         viewModel.loadCourseDetails(courseId, token)
+    }
+    
+    // Refresh data when returning to this screen
+    DisposableEffect(lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                viewModel.loadCourseDetails(courseId, token, forceReload = true)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
     }
 
     CourseCurriculumScreen(
@@ -80,8 +91,16 @@ fun CourseCurriculumRoute(
         errorMessage = uiState.errorMessage,
         completedLessonIds = uiState.completedLessonIds,
         completedQuizIds = uiState.completedQuizIds,
+        quizStatuses = uiState.quizStatuses,
         onLessonSelected = onLessonSelected,
-        onQuizSelected = onQuizSelected,
+        onQuizSelected = { quizId ->
+            // Prevent retaking if already completed/submitted
+            if (quizId !in uiState.completedQuizIds) {
+                onQuizSelected(quizId)
+            } else {
+                // Show a toast or message
+            }
+        },
         onNavigateBack = onNavigateBack,
     )
 }
@@ -94,11 +113,14 @@ fun CourseCurriculumScreen(
     errorMessage: String?,
     completedLessonIds: List<String> = emptyList(),
     completedQuizIds: List<String> = emptyList(),
+    quizStatuses: List<com.example.skillforge.data.remote.QuizProgressDto> = emptyList(),
     onLessonSelected: (String) -> Unit,
     onQuizSelected: (String) -> Unit = {},
     onNavigateBack: () -> Unit,
 ) {
     var expandedChapterIds by rememberSaveable(course?.id) { mutableStateOf(setOf<String>()) }
+    
+    val context = androidx.compose.ui.platform.LocalContext.current
 
     LaunchedEffect(course?.id) {
         course?.let {
@@ -167,6 +189,7 @@ fun CourseCurriculumScreen(
                             expanded = chapter.id in expandedChapterIds,
                             completedLessonIds = completedLessonIds,
                             completedQuizIds = completedQuizIds,
+                            quizStatuses = quizStatuses,
                             onToggle = {
                                 expandedChapterIds = if (chapter.id in expandedChapterIds) {
                                     expandedChapterIds - chapter.id
@@ -175,7 +198,13 @@ fun CourseCurriculumScreen(
                                 }
                             },
                             onLessonSelected = onLessonSelected,
-                            onQuizSelected = onQuizSelected,
+                            onQuizSelected = { quizId ->
+                                if (quizId in completedQuizIds) {
+                                    android.widget.Toast.makeText(context, "Quiz already completed", android.widget.Toast.LENGTH_SHORT).show()
+                                } else {
+                                    onQuizSelected(quizId)
+                                }
+                            },
                         )
                     }
                 }
@@ -191,6 +220,7 @@ private fun CurriculumChapter(
     expanded: Boolean,
     completedLessonIds: List<String>,
     completedQuizIds: List<String>,
+    quizStatuses: List<com.example.skillforge.data.remote.QuizProgressDto>,
     onToggle: () -> Unit,
     onLessonSelected: (String) -> Unit,
     onQuizSelected: (String) -> Unit,
@@ -271,10 +301,13 @@ private fun CurriculumChapter(
                         )
                     }
                     chapter.quizzes.forEachIndexed { quizIndex, quiz ->
+                        val quizStatus = quizStatuses.find { it.quizId == quiz.id }
                         CurriculumQuizRow(
                             quiz = quiz,
                             quizNumber = quizIndex + 1,
                             isCompleted = quiz.id in completedQuizIds,
+                            isPassed = quizStatus?.isPassed == true,
+                            isGraded = quizStatus?.status == "GRADED",
                             onClick = { onQuizSelected(quiz.id) },
                         )
                     }
@@ -289,6 +322,8 @@ private fun CurriculumQuizRow(
     quiz: com.example.skillforge.domain.model.CourseQuiz,
     quizNumber: Int,
     isCompleted: Boolean = false,
+    isPassed: Boolean = false,
+    isGraded: Boolean = false,
     onClick: () -> Unit,
 ) {
     Row(
@@ -310,10 +345,21 @@ private fun CurriculumQuizRow(
                     shape = RoundedCornerShape(99.dp),
                 ),
         )
+        val quizIcon = when {
+            isGraded || !quiz.isEssay -> if (isPassed) Icons.Default.CheckCircle else Icons.Default.Cancel
+            isCompleted -> Icons.Default.CheckCircle // Essay submitted but not yet graded
+            else -> Icons.Default.Quiz
+        }
+        val iconColor = when {
+            isGraded || !quiz.isEssay -> if (isPassed) Color(0xFF4CAF50) else Color.Red
+            isCompleted -> Color.Gray // Essay submitted
+            else -> PrimaryOrange
+        }
+
         Icon(
-            imageVector = if (isCompleted) Icons.Default.CheckCircle else Icons.Default.Quiz, // Use a different icon for quiz if available
+            imageVector = quizIcon,
             contentDescription = null,
-            tint = if (isCompleted) Color(0xFF4CAF50) else PrimaryOrange,
+            tint = iconColor,
             modifier = Modifier.size(18.dp),
         )
         Column(modifier = Modifier.weight(1f)) {

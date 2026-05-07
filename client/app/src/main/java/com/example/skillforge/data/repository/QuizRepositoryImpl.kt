@@ -206,4 +206,58 @@ class QuizRepositoryImpl(private val api: QuizApi) : QuizRepository {
             Result.failure(e)
         }
     }
+
+    override suspend fun getSubmissions(
+        courseId: String,
+        studentId: String,
+        token: String
+    ): Result<List<QuizSubmissionDto>> {
+        return try {
+            val response = api.getSubmissions(courseId, studentId, token)
+            if (response.isSuccessful && response.body() != null) {
+                Result.success(response.body()!!)
+            } else {
+                val errorMsg = response.errorBody()?.string() ?: response.message()
+                Result.failure(Exception(errorMsg))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun getSubmissionDetails(
+        attemptId: String,
+        token: String
+    ): Result<QuizSubmissionDetailsDto> {
+        return try {
+            val response = api.getSubmissionDetails(attemptId, token)
+            if (response.isSuccessful && response.body() != null) {
+                Result.success(response.body()!!)
+            } else {
+                val errorMsg = response.errorBody()?.string() ?: response.message()
+                Result.failure(Exception(errorMsg))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun gradeAttempt(
+        attemptId: String,
+        questionGrades: List<com.example.skillforge.data.remote.dto.QuestionGradeDto>,
+        feedback: String,
+        token: String
+    ): Result<QuizSubmissionDetailsDto> {
+        return try {
+            val response = api.gradeAttempt(attemptId, GradeEssayRequest(questionGrades, feedback), token)
+            if (response.isSuccessful && response.body() != null) {
+                Result.success(response.body()!!)
+            } else {
+                val errorMsg = response.errorBody()?.string() ?: response.message()
+                Result.failure(Exception(errorMsg))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

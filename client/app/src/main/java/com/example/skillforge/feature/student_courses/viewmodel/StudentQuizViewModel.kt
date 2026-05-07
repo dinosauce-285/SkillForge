@@ -19,7 +19,8 @@ data class StudentQuizUiState(
     val shuffledQuestions: List<Question> = emptyList(),
     val errorMessage: String? = null,
     val timeRemainingSeconds: Int = 0,
-    val isTimerRunning: Boolean = false
+    val isTimerRunning: Boolean = false,
+    val isTimeUp: Boolean = false
 )
 
 class StudentQuizViewModel(
@@ -79,9 +80,10 @@ class StudentQuizViewModel(
                     timeRemainingSeconds = _uiState.value.timeRemainingSeconds - 1
                 )
             }
-            // Auto-submit when time is up? Or handle in UI.
-            // For now, just stop timer.
-            _uiState.value = _uiState.value.copy(isTimerRunning = false)
+            _uiState.value = _uiState.value.copy(
+                isTimerRunning = false,
+                isTimeUp = true
+            )
         }
     }
 

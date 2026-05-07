@@ -11,6 +11,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.InsertDriveFile
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Attachment
@@ -56,7 +57,8 @@ fun SkillforgeCourseManagerScreen(
     onBack: () -> Unit,
     onNavigateToUpload: (lessonId: String) -> Unit,
     onNavigateToQuizBuilder: (courseId: String, chapterId: String, quizId: String?) -> Unit,
-    onNavigateToEssayQuizBuilder: (courseId: String, chapterId: String, quizId: String?) -> Unit
+    onNavigateToEssayQuizBuilder: (courseId: String, chapterId: String, quizId: String?) -> Unit,
+    onNavigateToSubmissions: (courseId: String, studentId: String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val studentsState by viewModel.studentsState.collectAsState()
@@ -486,7 +488,12 @@ fun SkillforgeCourseManagerScreen(
                 } // closes when(uiState)
                 } // closes ManagerTab.Curriculum
                 ManagerTab.Students -> {
-                    CourseStudentsView(studentsState)
+                    CourseStudentsView(
+                        studentsList = studentsState,
+                        onViewSubmission = { studentId -> 
+                            onNavigateToSubmissions(courseId, studentId)
+                        }
+                    )
                 }
             }
             }
@@ -495,7 +502,10 @@ fun SkillforgeCourseManagerScreen(
 }
 
 @Composable
-fun CourseStudentsView(studentsList: List<com.example.skillforge.data.remote.CourseStudentDto>?) {
+fun CourseStudentsView(
+    studentsList: List<com.example.skillforge.data.remote.CourseStudentDto>?,
+    onViewSubmission: (String) -> Unit
+) {
     if (studentsList == null) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator(color = PrimaryOrange)
@@ -550,7 +560,7 @@ fun CourseStudentsView(studentsList: List<com.example.skillforge.data.remote.Cou
                     }
                     Spacer(modifier = Modifier.width(12.dp))
                     OutlinedButton(
-                        onClick = { /* TODO: View submissions */ },
+                        onClick = { onViewSubmission(student.studentId) },
                         border = BorderStroke(1.dp, PrimaryOrange),
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = PrimaryOrange),
                         shape = RoundedCornerShape(8.dp),
@@ -669,7 +679,7 @@ fun MaterialItemRow(
         val icon = when(material.type.name.uppercase()) {
             "VIDEO" -> Icons.Default.OndemandVideo
             "PDF", "DOCUMENT" -> Icons.Default.PictureAsPdf
-            else -> Icons.Default.InsertDriveFile
+            else -> Icons.AutoMirrored.Filled.InsertDriveFile
         }
 
         Icon(icon, contentDescription = null, tint = PrimaryOrange, modifier = Modifier.size(20.dp))

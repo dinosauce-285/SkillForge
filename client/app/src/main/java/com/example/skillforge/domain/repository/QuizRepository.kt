@@ -18,4 +18,7 @@ interface QuizRepository {
     suspend fun deleteQuestion(id: String): Result<Unit>
     suspend fun reorderQuestions(quizId: String, orderedQuestionIds: List<String>): Result<List<Question>>
     suspend fun submitQuiz(quizId: String, answers: Map<String, String>): Result<com.example.skillforge.domain.model.QuizSubmissionResult>
+    suspend fun getSubmissions(courseId: String, studentId: String, token: String): Result<List<com.example.skillforge.data.remote.dto.QuizSubmissionDto>>
+    suspend fun getSubmissionDetails(attemptId: String, token: String): Result<com.example.skillforge.data.remote.dto.QuizSubmissionDetailsDto>
+    suspend fun gradeAttempt(attemptId: String, questionGrades: List<com.example.skillforge.data.remote.dto.QuestionGradeDto>, feedback: String, token: String): Result<com.example.skillforge.data.remote.dto.QuizSubmissionDetailsDto>
 }

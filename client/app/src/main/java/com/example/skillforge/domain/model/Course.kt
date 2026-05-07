@@ -34,6 +34,7 @@ data class CourseLesson(
 data class CourseQuiz(
     val id: String,
     val title: String,
+    val isEssay: Boolean = false,
 )
 
 data class CourseDetails(

@@ -8,6 +8,7 @@ import { CreateQuizDto } from './dto/create.dto';
 import { UpdateQuizDto } from './dto/update.dto';
 import { SubmitQuizDto } from './dto/submit.dto';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { GradeEssayDto } from './dto/grade.dto';
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('quiz')
@@ -52,5 +53,29 @@ export class QuizController {
     @CurrentUser('id') userId: string
   ) {
     return this.quizService.submitQuiz(userId, id, submitQuizDto);
+  }
+
+  @Get('submissions/:courseId/:studentId')
+  @Roles(Role.INSTRUCTOR)
+  getSubmissions(
+    @Param('courseId') courseId: string,
+    @Param('studentId') studentId: string,
+  ) {
+    return this.quizService.getEssaySubmissions(courseId, studentId);
+  }
+
+  @Get('submission/:id')
+  @Roles(Role.INSTRUCTOR)
+  getSubmissionDetails(@Param('id') id: string) {
+    return this.quizService.getSubmissionDetails(id);
+  }
+
+  @Patch('attempt/:id/grade')
+  @Roles(Role.INSTRUCTOR)
+  gradeAttempt(
+    @Param('id') id: string,
+    @Body() gradeEssayDto: GradeEssayDto,
+  ) {
+    return this.quizService.gradeEssayAttempt(id, gradeEssayDto.questionGrades, gradeEssayDto.feedback);
   }
 }

@@ -4,13 +4,20 @@ import com.example.skillforge.domain.model.HomeDashboard
 import retrofit2.http.GET
 import retrofit2.http.Path
 
+data class QuizProgressDto(
+    val quizId: String,
+    val isPassed: Boolean,
+    val status: String
+)
+
 data class CourseProgressDto(
     val courseId: String,
     val totalLessons: Int,
     val completedLessons: Int,
     val percentage: Int,
     val completedLessonIds: List<String>?,
-    val completedQuizIds: List<String>? = emptyList()
+    val completedQuizIds: List<String>? = emptyList(),
+    val quizStatuses: List<QuizProgressDto>? = emptyList()
 )
 
 interface ProgressApi {
