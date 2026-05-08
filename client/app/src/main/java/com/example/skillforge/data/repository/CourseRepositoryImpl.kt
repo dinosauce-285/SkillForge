@@ -257,4 +257,18 @@ class CourseRepositoryImpl(
             Result.failure(Exception(e.message ?: "Failed to update course"))
         }
     }
+
+    override suspend fun deleteMaterial(token: String, materialId: String): Result<Unit> {
+        return try {
+            val bearerToken = if (token.startsWith("Bearer ")) token else "Bearer $token"
+            val response = api.deleteMaterial(materialId, bearerToken)
+            if (response.isSuccessful) {
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception("Failed to delete material: ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(Exception(e.message ?: "Failed to delete material"))
+        }
+    }
 }

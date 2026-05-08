@@ -434,6 +434,13 @@ class MainActivity : ComponentActivity() {
                                                 Toast.makeText(this@MainActivity, "Upload successful!", Toast.LENGTH_SHORT).show()
                                                 uploadViewModel.resetState()
                                                 mainViewModel.navigateTo(AppRoute.InstructorPortal(route.session))
+                                            } else if (uploadState is UploadState.Error) {
+                                                Toast.makeText(
+                                                    this@MainActivity,
+                                                    (uploadState as UploadState.Error).message,
+                                                    Toast.LENGTH_LONG
+                                                ).show()
+                                                uploadViewModel.resetState()
                                             }
                                         }
 
