@@ -136,7 +136,9 @@ class AuthRepositoryImpl(
 
     override suspend fun loginWithGoogle(): Result<AuthSession> {
         return try {
-            supabase.auth.signInWith(Google)
+            supabase.auth.signInWith(Google) {
+                queryParams["prompt"] = "select_account"
+            }
 
             val status = withTimeoutOrNull(5.minutes) {
                 supabase.auth.sessionStatus

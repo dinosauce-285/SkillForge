@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.PlayCircle
+import androidx.compose.material.icons.filled.UploadFile
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.getValue
@@ -43,16 +44,23 @@ fun SkillforgeMaterialUploadScreen(
 ) {
     val context = LocalContext.current
 
-    var selectedType by remember { mutableStateOf("Video") }
-    var selectedFileUri by remember { mutableStateOf<Uri?>(null) }
-    var selectedFileName by remember { mutableStateOf<String?>(null) }
+    var pendingUploadType by remember { mutableStateOf("VIDEO") }
+    var videoUri by remember { mutableStateOf<Uri?>(null) }
+    var videoFileName by remember { mutableStateOf<String?>(null) }
+    var materialUri by remember { mutableStateOf<Uri?>(null) }
+    var materialFileName by remember { mutableStateOf<String?>(null) }
 
     val filePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri: Uri? ->
-        selectedFileUri = uri
         uri?.let {
-            selectedFileName = getFileName(context, it)
+            if (pendingUploadType == "VIDEO") {
+                videoUri = it
+                videoFileName = getFileName(context, it)
+            } else {
+                materialUri = it
+                materialFileName = getFileName(context, it)
+            }
         }
     }
 
@@ -72,119 +80,111 @@ fun SkillforgeMaterialUploadScreen(
         bottomBar = {
             Surface(shadowElevation = 8.dp) {
                 Row(modifier = Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    OutlinedButton(onClick = onNavigateBack, modifier = Modifier.weight(1f), enabled = !isLoading) { Text("Cancel") }
-                    Button(
-                        onClick = { onUploadClick(selectedType, selectedFileUri) },
-                        modifier = Modifier.weight(1f),
-                        enabled = !isLoading && selectedFileUri != null
-                    ) {
-                        if (isLoading) CircularProgressIndicator(modifier = Modifier.size(24.dp), color = Color.White)
-                        else Text("Upload")
-                    }
+                    OutlinedButton(onClick = onNavigateBack, modifier = Modifier.fillMaxWidth(), enabled = !isLoading) { Text("Cancel") }
                 }
             }
         }
     ) { innerPadding ->
         Column(modifier = Modifier.padding(innerPadding).padding(16.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(20.dp)) {
-            // Material Type
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(
-                    "Material Type",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    MaterialTypeCard(
-                        title = "Video",
-                        icon = Icons.Default.PlayCircle,
-                        isSelected = selectedType == "Video",
-                        onClick = {
-                            if (!isLoading) {
-                                selectedType = "Video"
-                                selectedFileUri = null
-                                selectedFileName = null
-                            }
-                        },
-                        modifier = Modifier.weight(1f)
-                    )
-                    MaterialTypeCard(
-                        title = "Document",
-                        icon = Icons.Default.Description,
-                        isSelected = selectedType == "Document",
-                        onClick = {
-                            if (!isLoading) {
-                                selectedType = "Document"
-                                selectedFileUri = null
-                                selectedFileName = null
-                            }
-                        },
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-            }
+            UploadSection(
+                title = "Lesson Video",
+                subtitle = "One MP4 video only. Use web/mobile export: H.264/AAC, 720p or 1080p.",
+                icon = Icons.Default.PlayCircle,
+                selectedFileName = videoFileName,
+                pickLabel = "Choose video",
+                uploadLabel = "Upload Video",
+                enabled = !isLoading,
+                onPickFile = {
+                    pendingUploadType = "VIDEO"
+                    filePickerLauncher.launch(arrayOf("video/mp4"))
+                },
+                onUpload = { onUploadClick("VIDEO", videoUri) },
+                canUpload = videoUri != null
+            )
 
-            // translated comment
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(
-                    "Upload File",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp)
-                        .clip(RoundedCornerShape(16.dp))
-                        .clickable(enabled = !isLoading) {
-                            if (selectedType == "Video") filePickerLauncher.launch(arrayOf("video/*"))
-                            else filePickerLauncher.launch(arrayOf("application/pdf", "application/msword", "application/zip"))
-                        },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(
-                            imageVector = if (selectedFileUri == null) Icons.Default.CloudUpload else Icons.Default.CheckCircle,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                        Text(text = selectedFileName ?: "Tap to browse files", color = MaterialTheme.colorScheme.primary)
-                    }
-                }
-            }
+            UploadSection(
+                title = "Materials",
+                subtitle = "PDFs, documents, archives, source files, or any other attachment.",
+                icon = Icons.Default.Description,
+                selectedFileName = materialFileName,
+                pickLabel = "Choose material",
+                uploadLabel = "Upload Material",
+                enabled = !isLoading,
+                onPickFile = {
+                    pendingUploadType = "DOCUMENT"
+                    filePickerLauncher.launch(arrayOf("*/*"))
+                },
+                onUpload = { onUploadClick("DOCUMENT", materialUri) },
+                canUpload = materialUri != null
+            )
         }
     }
 }
 
 @Composable
-fun MaterialTypeCard(
+private fun UploadSection(
     title: String,
+    subtitle: String,
     icon: ImageVector,
-    isSelected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    selectedFileName: String?,
+    pickLabel: String,
+    uploadLabel: String,
+    enabled: Boolean,
+    onPickFile: () -> Unit,
+    onUpload: () -> Unit,
+    canUpload: Boolean
 ) {
-    val containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
-    val contentColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-    val borderColor = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent
-
     Card(
-        modifier = modifier
-            .clip(RoundedCornerShape(12.dp))
-            .border(2.dp, borderColor, RoundedCornerShape(12.dp))
-            .clickable(onClick = onClick),
-        colors = CardDefaults.cardColors(containerColor = containerColor)
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(
             modifier = Modifier.padding(16.dp).fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
+            verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            Icon(icon, contentDescription = null, tint = contentColor, modifier = Modifier.size(32.dp))
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(title, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = contentColor)
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(32.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(128.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(14.dp))
+                    .clickable(enabled = enabled, onClick = onPickFile),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Icon(
+                        imageVector = if (selectedFileName == null) Icons.Default.CloudUpload else Icons.Default.CheckCircle,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = selectedFileName ?: pickLabel,
+                        color = MaterialTheme.colorScheme.primary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(horizontal = 16.dp)
+                    )
+                }
+            }
+
+            Button(
+                onClick = onUpload,
+                enabled = enabled && canUpload,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(Icons.Default.UploadFile, contentDescription = null)
+                Spacer(Modifier.width(8.dp))
+                Text(uploadLabel)
+            }
         }
     }
 }

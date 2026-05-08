@@ -39,7 +39,12 @@ class MaterialRepositoryImpl(
             if (response.isSuccessful) {
                 Result.success(Unit) // <-- Updated to Unit
             } else {
-                Result.failure(Exception("Upload failed: Error ${response.code()}"))
+                val errorMessage = response.errorBody()?.string()
+                    ?.substringAfter("\"message\":\"", "")
+                    ?.substringBefore("\"", "")
+                    ?.ifBlank { null }
+                    ?: "Upload failed: Error ${response.code()}"
+                Result.failure(Exception(errorMessage))
             }
         } catch (e: Exception) {
             Result.failure(e)

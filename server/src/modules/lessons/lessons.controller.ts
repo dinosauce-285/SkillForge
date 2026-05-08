@@ -55,6 +55,15 @@ export class LessonsController {
     return this.lessonsService.remove(id, user);
   }
 
+  @Delete('materials/:materialId')
+  @Roles(Role.INSTRUCTOR)
+  removeMaterial(
+    @Param('materialId') materialId: string,
+    @CurrentUser() user: any,
+  ) {
+    return this.lessonsService.removeMaterial(materialId, user);
+  }
+
   @Post(':lessonId/materials')
   @Roles(Role.INSTRUCTOR)
   @UseInterceptors(

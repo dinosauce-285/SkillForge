@@ -32,4 +32,5 @@ interface CourseRepository {
     suspend fun getEnrollmentStatus(token: String, courseId: String): Result<Boolean>
     suspend fun getCourseStudents(token: String, courseId: String): Result<List<com.example.skillforge.data.remote.CourseStudentDto>>
     suspend fun updateCourse(token: String, courseId: String, status: String?, level: String?): Result<CourseSummaryDto>
+    suspend fun deleteMaterial(token: String, materialId: String): Result<Unit>
 }

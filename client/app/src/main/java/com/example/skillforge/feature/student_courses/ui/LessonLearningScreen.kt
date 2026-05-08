@@ -74,6 +74,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
+import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import com.example.skillforge.core.designsystem.PrimaryOrange
@@ -629,19 +630,37 @@ private fun LessonNavBar(course: CourseDetails, lessonId: String, onLessonSelect
 private fun VideoPlayer(url: String) {
     val context = LocalContext.current
     var playbackError by remember(url) { mutableStateOf<String?>(null) }
+    var isBuffering by remember(url) { mutableStateOf(true) }
     val player = remember(url) {
-        ExoPlayer.Builder(context).build().apply {
-            setMediaItem(MediaItem.fromUri(url))
-            prepare()
-            playWhenReady = false
-            addListener(
-                object : Player.Listener {
-                    override fun onPlayerError(error: PlaybackException) {
-                        playbackError = error.errorCodeName
-                    }
-                },
+        val loadControl = DefaultLoadControl.Builder()
+            .setBufferDurationsMs(
+                20_000,
+                60_000,
+                1_500,
+                3_000,
             )
-        }
+            .build()
+
+        ExoPlayer.Builder(context)
+            .setLoadControl(loadControl)
+            .build()
+            .apply {
+                setMediaItem(MediaItem.fromUri(url))
+                prepare()
+                playWhenReady = false
+                addListener(
+                    object : Player.Listener {
+                        override fun onPlaybackStateChanged(playbackState: Int) {
+                            isBuffering = playbackState == Player.STATE_BUFFERING
+                        }
+
+                        override fun onPlayerError(error: PlaybackException) {
+                            playbackError = error.errorCodeName
+                            isBuffering = false
+                        }
+                    },
+                )
+            }
     }
     DisposableEffect(player) { onDispose { player.release() } }
     Box(Modifier.fillMaxWidth().aspectRatio(16f / 9f).background(Color.Black)) {
@@ -655,6 +674,13 @@ private fun VideoPlayer(url: String) {
             },
             modifier = Modifier.fillMaxSize(),
         )
+
+        if (isBuffering && playbackError == null) {
+            CircularProgressIndicator(
+                color = PrimaryOrange,
+                modifier = Modifier.align(Alignment.Center),
+            )
+        }
 
         if (playbackError != null) {
             Column(
@@ -672,13 +698,23 @@ private fun VideoPlayer(url: String) {
                 )
                 Button(
                     onClick = {
+                        playbackError = null
+                        isBuffering = true
+                        player.prepare()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange),
+                ) {
+                    Text("Retry")
+                }
+                Button(
+                    onClick = {
                         try {
                             context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
                         } catch (_: Exception) {
                             // no-op: keep UI stable if no app can handle the URL
                         }
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.White.copy(alpha = 0.18f)),
                 ) {
                     Text("Open with another app")
                 }
