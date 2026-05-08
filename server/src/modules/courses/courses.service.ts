@@ -184,38 +184,96 @@ export class CoursesService {
     };
   }
 
-  async getSuggestions() {
-    return this.prisma.course.findMany({
-      where: {
-        status: CourseStatus.PUBLISHED,
-        deletedAt: null,
-      },
-      take: 5,
-      orderBy: { createdAt: 'desc' },
-      include: {
-        category: true,
-        instructor: {
-          select: {
-            id: true,
-            fullName: true,
-            profile: {
-              select: {
-                avatarUrl: true,
-                skills: true,
-              },
+  async getSuggestions(userId?: string) {
+    const defaultInclude = {
+      category: true,
+      instructor: {
+        select: {
+          id: true,
+          fullName: true,
+          profile: {
+            select: {
+              avatarUrl: true,
+              skills: true,
             },
           },
         },
-        tags: true,
-        _count: {
-          select: {
-            chapters: true,
-            enrollments: true,
-            reviews: true,
-          },
+      },
+      tags: true,
+      _count: {
+        select: {
+          chapters: true,
+          enrollments: true,
+          reviews: true,
         },
       },
+    };
+
+    const baseWhere = {
+      status: CourseStatus.PUBLISHED,
+      deletedAt: null,
+    };
+
+    // 1. Trending right now
+    const trending = await this.prisma.course.findMany({
+      where: baseWhere,
+      take: 5,
+      orderBy: [
+        { averageRating: 'desc' },
+        { createdAt: 'desc' },
+      ],
+      include: defaultInclude,
     });
+
+    // 2. Bestsellers (Most Popular)
+    const popular = await this.prisma.course.findMany({
+      where: baseWhere,
+      take: 5,
+      orderBy: {
+        enrollments: {
+          _count: 'desc'
+        }
+      },
+      include: defaultInclude,
+    });
+
+    // 3. Recommended For You
+    let recommended: any[] = [];
+
+    if (userId) {
+      const userEnrollments = await this.prisma.enrollment.findMany({
+        where: { userId },
+        include: { course: true }
+      });
+      const categoryIds = [...new Set(userEnrollments.map(e => e.course.categoryId))];
+      
+      if (categoryIds.length > 0) {
+        recommended = await this.prisma.course.findMany({
+          where: {
+            ...baseWhere,
+            categoryId: { in: categoryIds },
+            id: { notIn: userEnrollments.map(e => e.course.id) }
+          },
+          take: 5,
+          include: defaultInclude,
+        });
+      }
+    }
+
+    if (recommended.length === 0) {
+      recommended = await this.prisma.course.findMany({
+        where: baseWhere,
+        take: 5,
+        orderBy: { createdAt: 'desc' },
+        include: defaultInclude,
+      });
+    }
+
+    return {
+      recommendedForYou: recommended,
+      trendingRightNow: trending,
+      bestsellers: popular
+    };
   }
 
   async findOne(id: string) {

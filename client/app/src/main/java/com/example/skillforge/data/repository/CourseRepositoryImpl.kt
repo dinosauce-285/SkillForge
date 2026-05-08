@@ -6,6 +6,7 @@ import com.example.skillforge.domain.model.CourseChapter
 import com.example.skillforge.domain.model.CourseDetails
 import com.example.skillforge.domain.model.CourseLesson
 import com.example.skillforge.domain.model.CourseSummary
+import com.example.skillforge.domain.model.CourseRecommendations
 import com.example.skillforge.domain.repository.CourseRepository
 import com.example.skillforge.data.remote.CourseManagerDto
 import com.example.skillforge.data.remote.CourseSummaryDto
@@ -55,30 +56,39 @@ class CourseRepositoryImpl(
         }
     }
 
-    override suspend fun getCourseSuggestions(): Result<List<CourseSummary>> {
+    private fun mapDtoToSummary(dto: CourseSummaryDto): CourseSummary {
+        return CourseSummary(
+            id = dto.id,
+            title = dto.title,
+            subtitle = dto.subtitle,
+            summary = dto.summary,
+            thumbnailUrl = dto.thumbnailUrl,
+            categoryId = dto.category.id,
+            categoryName = dto.category.name,
+            instructorName = dto.instructor.fullName,
+            level = dto.level,
+            price = dto.price,
+            isFree = dto.isFree,
+            averageRating = dto.averageRating,
+            studentCount = dto.studentCount,
+            reviewCount = dto.counts.reviews,
+            chapterCount = dto.counts.chapters,
+            tags = dto.tags.map { it.name },
+        )
+    }
+
+    override suspend fun getCourseSuggestions(): Result<CourseRecommendations> {
         return try {
             val response = api.getCourseSuggestions()
             if (response.isSuccessful && response.body() != null) {
-                Result.success(response.body()!!.map { dto ->
-                    CourseSummary(
-                        id = dto.id,
-                        title = dto.title,
-                        subtitle = dto.subtitle,
-                        summary = dto.summary,
-                        thumbnailUrl = dto.thumbnailUrl,
-                        categoryId = dto.category.id,
-                        categoryName = dto.category.name,
-                        instructorName = dto.instructor.fullName,
-                        level = dto.level,
-                        price = dto.price,
-                        isFree = dto.isFree,
-                        averageRating = dto.averageRating,
-                        studentCount = dto.studentCount,
-                        reviewCount = dto.counts.reviews,
-                        chapterCount = dto.counts.chapters,
-                        tags = dto.tags.map { it.name },
+                val body = response.body()!!
+                Result.success(
+                    CourseRecommendations(
+                        recommendedForYou = body.recommendedForYou.map { mapDtoToSummary(it) },
+                        trendingRightNow = body.trendingRightNow.map { mapDtoToSummary(it) },
+                        bestsellers = body.bestsellers.map { mapDtoToSummary(it) }
                     )
-                })
+                )
             } else {
                 Result.failure(Exception("Failed to load suggestions"))
             }

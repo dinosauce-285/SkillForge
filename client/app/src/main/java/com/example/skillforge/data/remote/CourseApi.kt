@@ -20,6 +20,12 @@ data class CourseListResponse(
     val data: List<CourseSummaryDto>,
 )
 
+data class CourseRecommendationsResponse(
+    val recommendedForYou: List<CourseSummaryDto>,
+    val trendingRightNow: List<CourseSummaryDto>,
+    val bestsellers: List<CourseSummaryDto>
+)
+
 data class CourseSummaryDto(
     val id: String,
     val title: String,
@@ -126,7 +132,7 @@ interface CourseApi {
     ): Response<CourseListResponse>
 
     @GET("courses/suggested/recommendations")
-    suspend fun getCourseSuggestions(): Response<List<CourseSummaryDto>>
+    suspend fun getCourseSuggestions(): Response<CourseRecommendationsResponse>
 
     @GET("courses/{id}")
     suspend fun getCourseDetails(@Path("id") courseId: String): Response<CourseDetailsDto>

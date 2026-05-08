@@ -49,7 +49,7 @@ export class ProgressController {
     const buffer = await this.progressService.generateCertificate(userId, courseId);
     res.set({
       'Content-Type': 'application/pdf',
-      'Content-Disposition': `attachment; filename=certificate-${courseId}.pdf`,
+      'Content-Disposition': `inline; filename=certificate-${courseId}.pdf`,
       'Content-Length': buffer.length,
     });
     res.end(buffer);
