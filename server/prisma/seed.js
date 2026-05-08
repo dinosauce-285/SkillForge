@@ -27,6 +27,93 @@ const bcrypt = require('bcrypt');
 const prisma = new PrismaClient();
 const PASSWORD = '123456';
 const DEFAULT_DOC_SIZE = 1_250_000;
+const mockPdfMaterials = [
+  {
+    url: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/mock-pdfs/movers-2.pdf',
+    size: 6_307_561,
+  },
+  {
+    url: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/mock-pdfs/starters-1-sb.pdf',
+    size: 15_628_899,
+  },
+  {
+    url: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/mock-pdfs/starters-2-sb.pdf',
+    size: 30_212_281,
+  },
+  {
+    url: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/mock-pdfs/starters-3-sb.pdf',
+    size: 25_851_275,
+  },
+  {
+    url: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/mock-pdfs/starters-5-sb.pdf',
+    size: 13_745_229,
+  },
+  {
+    url: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/mock-pdfs/starters-6-sb.pdf',
+    size: 14_691_320,
+  },
+  {
+    url: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/mock-pdfs/starters-9.pdf',
+    size: 21_703_336,
+  },
+];
+const processedVideoMaterials = [
+  {
+    sourceName: '11274341-uhd_3840_2160_25fps.mp4',
+    url: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/11274341-uhd-3840-2160-25fps.mp4',
+    size: 5_013_657,
+  },
+  {
+    sourceName: '3982250-uhd_3840_2160_30fps.mp4',
+    url: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/3982250-uhd-3840-2160-30fps.mp4',
+    size: 4_596_166,
+  },
+  {
+    sourceName: '4298113-uhd_3840_2160_25fps.mp4',
+    url: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/4298113-uhd-3840-2160-25fps.mp4',
+    size: 3_252_525,
+  },
+  {
+    sourceName: '4494856-uhd_3840_2160_25fps.mp4',
+    url: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/4494856-uhd-3840-2160-25fps.mp4',
+    size: 1_589_070,
+  },
+  {
+    sourceName: '4974769-hd_1920_1080_25fps.mp4',
+    url: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/4974769-hd-1920-1080-25fps.mp4',
+    size: 2_950_550,
+  },
+  {
+    sourceName: '4974888-hd_1920_1080_25fps.mp4',
+    url: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/4974888-hd-1920-1080-25fps.mp4',
+    size: 2_624_552,
+  },
+  {
+    sourceName: '6672610-uhd_3840_2160_24fps.mp4',
+    url: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/6672610-uhd-3840-2160-24fps.mp4',
+    size: 1_597_603,
+  },
+  {
+    sourceName: '6985310-uhd_3840_2160_25fps.mp4',
+    url: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/6985310-uhd-3840-2160-25fps.mp4',
+    size: 2_824_167,
+  },
+  {
+    sourceName: '8088455-uhd_3840_2160_30fps.mp4',
+    url: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/8088455-uhd-3840-2160-30fps.mp4',
+    size: 3_545_424,
+  },
+  {
+    sourceName: '8088557-uhd_3840_2160_30fps.mp4',
+    url: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/8088557-uhd-3840-2160-30fps.mp4',
+    size: 4_806_747,
+  },
+  {
+    sourceName: '9198192-hd_1920_1080_25fps.mp4',
+    url: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/9198192-hd-1920-1080-25fps.mp4',
+    size: 6_809_696,
+  },
+];
 
 // === BLUEPRINTS ================================================================
 
@@ -40,12 +127,12 @@ const courseBlueprints = [
     level: CourseLevel.BEGINNER,
     price: 0, isFree: true,
     thumbnailUrl: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80',
-    promoVideoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/1777606563423-11274341-uhd_3840_2160_25fps.mp4',
+    promoVideoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/11274341-uhd-3840-2160-25fps.mp4',
     tagNames: ['HTML', 'CSS', 'Responsive Design'],
     chapters: [
-      { title: 'HTML Basics', docUrl: 'https://developer.mozilla.org/en-US/docs/Web/HTML', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/1777606596402-9198192-hd_1920_1080_25fps.mp4', videoSize: 41_000_000,
+      { title: 'HTML Basics', docUrl: 'https://developer.mozilla.org/en-US/docs/Web/HTML', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/9198192-hd-1920-1080-25fps.mp4', videoSize: 41_000_000,
         lessons: ['Document structure and semantic tags', 'Forms, tables, and accessibility'] },
-      { title: 'Modern CSS', docUrl: 'https://developer.mozilla.org/en-US/docs/Web/CSS', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/1777606563423-11274341-uhd_3840_2160_25fps.mp4', videoSize: 43_000_000,
+      { title: 'Modern CSS', docUrl: 'https://developer.mozilla.org/en-US/docs/Web/CSS', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/11274341-uhd-3840-2160-25fps.mp4', videoSize: 43_000_000,
         lessons: ['Box model and spacing', 'Flexbox and responsive layout'] },
     ],
   },
@@ -58,12 +145,12 @@ const courseBlueprints = [
     level: CourseLevel.BEGINNER,
     price: 19.99, isFree: false,
     thumbnailUrl: 'https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&w=1200&q=80',
-    promoVideoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/1777606567008-3982250-uhd_3840_2160_30fps.mp4',
+    promoVideoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/3982250-uhd-3840-2160-30fps.mp4',
     tagNames: ['JavaScript', 'Async', 'ES6'],
     chapters: [
-      { title: 'Language Essentials', docUrl: 'https://developer.mozilla.org/en-US/docs/Web/JavaScript', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/1777606567008-3982250-uhd_3840_2160_30fps.mp4', videoSize: 47_000_000,
+      { title: 'Language Essentials', docUrl: 'https://developer.mozilla.org/en-US/docs/Web/JavaScript', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/3982250-uhd-3840-2160-30fps.mp4', videoSize: 47_000_000,
         lessons: ['Syntax, types, and control flow', 'Arrays, objects, and loops'] },
-      { title: 'Async JavaScript', docUrl: 'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/1777606571767-4298113-uhd_3840_2160_25fps.mp4', videoSize: 50_000_000,
+      { title: 'Async JavaScript', docUrl: 'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/4298113-uhd-3840-2160-25fps.mp4', videoSize: 50_000_000,
         lessons: ['Functions and scope', 'Async/await and fetch'] },
     ],
   },
@@ -76,12 +163,12 @@ const courseBlueprints = [
     level: CourseLevel.INTERMEDIATE,
     price: 29.99, isFree: false,
     thumbnailUrl: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=1200&q=80',
-    promoVideoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/1777606571767-4298113-uhd_3840_2160_25fps.mp4',
+    promoVideoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/4298113-uhd-3840-2160-25fps.mp4',
     tagNames: ['React', 'UI', 'Hooks'],
     chapters: [
-      { title: 'Components and State', docUrl: 'https://react.dev/learn', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/1777606574913-4494856-uhd_3840_2160_25fps.mp4', videoSize: 52_000_000,
+      { title: 'Components and State', docUrl: 'https://react.dev/learn', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/4494856-uhd-3840-2160-25fps.mp4', videoSize: 52_000_000,
         lessons: ['Components and JSX', 'Props, state, and rendering'] },
-      { title: 'Data and Reusability', docUrl: 'https://react.dev/reference/react', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/1777606576887-4974769-hd_1920_1080_25fps.mp4', videoSize: 56_000_000,
+      { title: 'Data and Reusability', docUrl: 'https://react.dev/reference/react', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/4974769-hd-1920-1080-25fps.mp4', videoSize: 56_000_000,
         lessons: ['Hooks and component lifecycle thinking', 'Data fetching and reusable UI'] },
     ],
   },
@@ -94,12 +181,12 @@ const courseBlueprints = [
     level: CourseLevel.INTERMEDIATE,
     price: 34.99, isFree: false,
     thumbnailUrl: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=1200&q=80',
-    promoVideoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/1777606574913-4494856-uhd_3840_2160_25fps.mp4',
+    promoVideoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/4494856-uhd-3840-2160-25fps.mp4',
     tagNames: ['Node.js', 'Express', 'API'],
     chapters: [
-      { title: 'Runtime and Routing', docUrl: 'https://nodejs.org/en/learn/getting-started/introduction-to-nodejs', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/1777606578515-4974888-hd_1920_1080_25fps.mp4', videoSize: 58_000_000,
+      { title: 'Runtime and Routing', docUrl: 'https://nodejs.org/en/learn/getting-started/introduction-to-nodejs', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/4974888-hd-1920-1080-25fps.mp4', videoSize: 58_000_000,
         lessons: ['Node runtime and project setup', 'Express routing and middleware'] },
-      { title: 'Production Patterns', docUrl: 'https://expressjs.com/en/guide/routing.html', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/1777606580233-6672610-uhd_3840_2160_24fps.mp4', videoSize: 60_000_000,
+      { title: 'Production Patterns', docUrl: 'https://expressjs.com/en/guide/routing.html', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/6672610-uhd-3840-2160-24fps.mp4', videoSize: 60_000_000,
         lessons: ['Validation and error handling', 'Authentication and API hardening'] },
     ],
   },
@@ -112,12 +199,12 @@ const courseBlueprints = [
     level: CourseLevel.BEGINNER,
     price: 0, isFree: true,
     thumbnailUrl: 'https://images.unsplash.com/photo-1516321497487-e288fb19713f?auto=format&fit=crop&w=1200&q=80',
-    promoVideoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/1777606576887-4974769-hd_1920_1080_25fps.mp4',
+    promoVideoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/4974769-hd-1920-1080-25fps.mp4',
     tagNames: ['Git', 'GitHub', 'Collaboration'],
     chapters: [
-      { title: 'Version Control Basics', docUrl: 'https://git-scm.com/book/en/v2', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/1777606582479-6985310-uhd_3840_2160_25fps.mp4', videoSize: 42_000_000,
+      { title: 'Version Control Basics', docUrl: 'https://git-scm.com/book/en/v2', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/6985310-uhd-3840-2160-25fps.mp4', videoSize: 42_000_000,
         lessons: ['Git init, commit, and history', 'Branching and merge strategies'] },
-      { title: 'Team Workflow', docUrl: 'https://docs.github.com/en/get-started', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/1777606586644-8088455-uhd_3840_2160_30fps.mp4', videoSize: 44_000_000,
+      { title: 'Team Workflow', docUrl: 'https://docs.github.com/en/get-started', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/8088455-uhd-3840-2160-30fps.mp4', videoSize: 44_000_000,
         lessons: ['Pull requests and code review', 'Conflict resolution and release flow'] },
     ],
   },
@@ -130,12 +217,12 @@ const courseBlueprints = [
     level: CourseLevel.INTERMEDIATE,
     price: 24.99, isFree: false,
     thumbnailUrl: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80',
-    promoVideoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/1777606578515-4974888-hd_1920_1080_25fps.mp4',
+    promoVideoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/4974888-hd-1920-1080-25fps.mp4',
     tagNames: ['PostgreSQL', 'Prisma', 'SQL'],
     chapters: [
-      { title: 'Relational Design', docUrl: 'https://www.postgresql.org/docs/current/tutorial.html', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/1777606592016-8088557-uhd_3840_2160_30fps.mp4', videoSize: 53_000_000,
+      { title: 'Relational Design', docUrl: 'https://www.postgresql.org/docs/current/tutorial.html', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/8088557-uhd-3840-2160-30fps.mp4', videoSize: 53_000_000,
         lessons: ['Relational modeling and primary keys', 'Foreign keys and indexing'] },
-      { title: 'Prisma Workflow', docUrl: 'https://www.prisma.io/docs/getting-started', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/1777606596402-9198192-hd_1920_1080_25fps.mp4', videoSize: 55_000_000,
+      { title: 'Prisma Workflow', docUrl: 'https://www.prisma.io/docs/getting-started', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/9198192-hd-1920-1080-25fps.mp4', videoSize: 55_000_000,
         lessons: ['Prisma schema design', 'Querying and migrations'] },
     ],
   },
@@ -148,12 +235,12 @@ const courseBlueprints = [
     level: CourseLevel.BEGINNER,
     price: 39.99, isFree: false,
     thumbnailUrl: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=1200&q=80',
-    promoVideoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/1777606580233-6672610-uhd_3840_2160_24fps.mp4',
+    promoVideoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/6672610-uhd-3840-2160-24fps.mp4',
     tagNames: ['Python', 'Data Science', 'NumPy'],
     chapters: [
-      { title: 'Python Essentials', docUrl: 'https://docs.python.org/3/tutorial/', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/1777606563423-11274341-uhd_3840_2160_25fps.mp4', videoSize: 62_000_000,
+      { title: 'Python Essentials', docUrl: 'https://docs.python.org/3/tutorial/', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/11274341-uhd-3840-2160-25fps.mp4', videoSize: 62_000_000,
         lessons: ['Variables, lists, and loops', 'Functions and modules'] },
-      { title: 'Data Analysis', docUrl: 'https://pandas.pydata.org/docs/', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/1777606567008-3982250-uhd_3840_2160_30fps.mp4', videoSize: 65_000_000,
+      { title: 'Data Analysis', docUrl: 'https://pandas.pydata.org/docs/', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/3982250-uhd-3840-2160-30fps.mp4', videoSize: 65_000_000,
         lessons: ['NumPy arrays and operations', 'Pandas DataFrames and cleaning'] },
     ],
   },
@@ -166,12 +253,12 @@ const courseBlueprints = [
     level: CourseLevel.INTERMEDIATE,
     price: 49.99, isFree: false,
     thumbnailUrl: 'https://images.unsplash.com/photo-1509228468518-180dd4864904?auto=format&fit=crop&w=1200&q=80',
-    promoVideoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/1777606582479-6985310-uhd_3840_2160_25fps.mp4',
+    promoVideoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/6985310-uhd-3840-2160-25fps.mp4',
     tagNames: ['Python', 'Machine Learning', 'scikit-learn'],
     chapters: [
-      { title: 'Supervised Learning', docUrl: 'https://scikit-learn.org/stable/supervised_learning.html', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/1777606571767-4298113-uhd_3840_2160_25fps.mp4', videoSize: 68_000_000,
+      { title: 'Supervised Learning', docUrl: 'https://scikit-learn.org/stable/supervised_learning.html', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/4298113-uhd-3840-2160-25fps.mp4', videoSize: 68_000_000,
         lessons: ['Linear regression from scratch', 'Classification with decision trees'] },
-      { title: 'Model Evaluation', docUrl: 'https://scikit-learn.org/stable/model_selection.html', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/1777606574913-4494856-uhd_3840_2160_25fps.mp4', videoSize: 70_000_000,
+      { title: 'Model Evaluation', docUrl: 'https://scikit-learn.org/stable/model_selection.html', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/4494856-uhd-3840-2160-25fps.mp4', videoSize: 70_000_000,
         lessons: ['Train/test split and cross-validation', 'Precision, recall, and F1'] },
     ],
   },
@@ -184,12 +271,12 @@ const courseBlueprints = [
     level: CourseLevel.INTERMEDIATE,
     price: 44.99, isFree: false,
     thumbnailUrl: 'https://images.unsplash.com/photo-1667372393119-3d4c48d07fc9?auto=format&fit=crop&w=1200&q=80',
-    promoVideoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/1777606586644-8088455-uhd_3840_2160_30fps.mp4',
+    promoVideoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/8088455-uhd-3840-2160-30fps.mp4',
     tagNames: ['Docker', 'Kubernetes', 'DevOps'],
     chapters: [
-      { title: 'Containers with Docker', docUrl: 'https://docs.docker.com/get-started/', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/1777606576887-4974769-hd_1920_1080_25fps.mp4', videoSize: 72_000_000,
+      { title: 'Containers with Docker', docUrl: 'https://docs.docker.com/get-started/', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/4974769-hd-1920-1080-25fps.mp4', videoSize: 72_000_000,
         lessons: ['Dockerfile and image layers', 'Docker Compose for local development'] },
-      { title: 'Orchestration with Kubernetes', docUrl: 'https://kubernetes.io/docs/home/', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/1777606578515-4974888-hd_1920_1080_25fps.mp4', videoSize: 75_000_000,
+      { title: 'Orchestration with Kubernetes', docUrl: 'https://kubernetes.io/docs/home/', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/4974888-hd-1920-1080-25fps.mp4', videoSize: 75_000_000,
         lessons: ['Pods, deployments, and services', 'ConfigMaps, secrets, and rolling updates'] },
     ],
   },
@@ -202,12 +289,12 @@ const courseBlueprints = [
     level: CourseLevel.BEGINNER,
     price: 22.99, isFree: false,
     thumbnailUrl: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?auto=format&fit=crop&w=1200&q=80',
-    promoVideoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/1777606592016-8088557-uhd_3840_2160_30fps.mp4',
+    promoVideoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/8088557-uhd-3840-2160-30fps.mp4',
     tagNames: ['UI', 'UX', 'Figma'],
     chapters: [
-      { title: 'Design Principles', docUrl: 'https://www.nngroup.com/articles/ten-usability-heuristics/', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/1777606580233-6672610-uhd_3840_2160_24fps.mp4', videoSize: 58_000_000,
+      { title: 'Design Principles', docUrl: 'https://www.nngroup.com/articles/ten-usability-heuristics/', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/6672610-uhd-3840-2160-24fps.mp4', videoSize: 58_000_000,
         lessons: ['Typography and color theory', 'Gestalt principles and visual hierarchy'] },
-      { title: 'Prototyping', docUrl: 'https://help.figma.com/hc/en-us/articles/360040314193', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/1777606582479-6985310-uhd_3840_2160_25fps.mp4', videoSize: 60_000_000,
+      { title: 'Prototyping', docUrl: 'https://help.figma.com/hc/en-us/articles/360040314193', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/6985310-uhd-3840-2160-25fps.mp4', videoSize: 60_000_000,
         lessons: ['Wireframing with Figma', 'User testing and iterating on feedback'] },
     ],
   },
@@ -229,10 +316,44 @@ const allTags = ['HTML', 'CSS', 'Responsive Design', 'JavaScript', 'Async', 'ES6
 
 // === HELPERS ==================================================================
 
-function buildMaterials(docUrl, videoUrl, videoSize) {
+function applyMockPdfMaterials() {
+  let pdfIndex = 0;
+  for (const course of courseBlueprints) {
+    for (const chapter of course.chapters) {
+      const pdf = mockPdfMaterials[pdfIndex % mockPdfMaterials.length];
+      chapter.docUrl = pdf.url;
+      chapter.docSize = pdf.size;
+      pdfIndex += 1;
+    }
+  }
+}
+
+function findProcessedVideo(originalUrl) {
+  return processedVideoMaterials.find((video) =>
+    originalUrl === video.url || originalUrl?.endsWith(video.sourceName),
+  );
+}
+
+function applyProcessedVideoMaterials() {
+  for (const course of courseBlueprints) {
+    const promoVideo = findProcessedVideo(course.promoVideoUrl);
+    if (promoVideo) {
+      course.promoVideoUrl = promoVideo.url;
+    }
+
+    for (const chapter of course.chapters) {
+      const video = findProcessedVideo(chapter.videoUrl);
+      if (!video) continue;
+      chapter.videoUrl = video.url;
+      chapter.videoSize = video.size;
+    }
+  }
+}
+
+function buildMaterials(docUrl, videoUrl, videoSize, docSize = DEFAULT_DOC_SIZE) {
   return {
     create: [
-      { type: MaterialType.DOCUMENT, fileUrl: docUrl, fileSize: DEFAULT_DOC_SIZE, status: MaterialStatus.READY },
+      { type: MaterialType.DOCUMENT, fileUrl: docUrl, fileSize: docSize, status: MaterialStatus.READY },
       { type: MaterialType.VIDEO, fileUrl: videoUrl, fileSize: videoSize, status: MaterialStatus.READY },
     ],
   };
@@ -321,7 +442,7 @@ async function seedCourses(categoryMap, tagMap, userMap) {
             lessons: {
               create: ch.lessons.map((title, li) => ({
                 title, orderIndex: li,
-                materials: buildMaterials(ch.docUrl, ch.videoUrl, ch.videoSize),
+                materials: buildMaterials(ch.docUrl, ch.videoUrl, ch.videoSize, ch.docSize),
               })),
             },
           })),
@@ -424,6 +545,9 @@ async function seedCoupons(userMap) {
 
 async function main() {
   const passwordHash = await bcrypt.hash(PASSWORD, 10);
+  applyMockPdfMaterials();
+  applyProcessedVideoMaterials();
+  console.log(`[seed] Using ${processedVideoMaterials.length} processed video material URLs`);
 
   await clearAll();
   console.log('[seed] DB cleared');
