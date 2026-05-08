@@ -124,11 +124,6 @@ fun LessonLearningScreen(
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
-                actions = {
-                    IconButton(onClick = {}) {
-                        Icon(Icons.Default.Share, contentDescription = "Share")
-                    }
-                },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
             )
         },
