@@ -1,5 +1,11 @@
 package com.example.skillforge.domain.model
 
+data class CourseRecommendations(
+    val recommendedForYou: List<CourseSummary>,
+    val trendingRightNow: List<CourseSummary>,
+    val bestsellers: List<CourseSummary>
+)
+
 data class CourseSummary(
     val id: String,
     val title: String,

@@ -193,25 +193,76 @@ fun StudentCourseListingScreen(
                     )
                 }
 
-                if (uiState.suggestions.isNotEmpty() && uiState.searchQuery.isBlank() && uiState.selectedCategoryId == null && uiState.selectedLevel == null) {
-                    item {
-                        SectionHeader(
-                            title = "Recommended for You",
-                            actionLabel = "",
-                        )
+                if (uiState.suggestions != null && uiState.searchQuery.isBlank() && uiState.selectedCategoryId == null && uiState.selectedLevel == null) {
+                    if (uiState.suggestions.recommendedForYou.isNotEmpty()) {
+                        item {
+                            SectionHeader(
+                                title = "Recommended for You",
+                                actionLabel = "",
+                            )
+                        }
+                        item {
+                            LazyRow(
+                                horizontalArrangement = Arrangement.spacedBy(SkillforgeSpacing.medium),
+                                contentPadding = PaddingValues(horizontal = SkillforgeSpacing.small)
+                            ) {
+                                items(uiState.suggestions.recommendedForYou) { course ->
+                                    Box(modifier = Modifier.width(300.dp)) {
+                                        CourseDiscoveryCard(
+                                            course = course,
+                                            onClick = { onCourseSelected(course.id) }
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                        item { Spacer(modifier = Modifier.height(SkillforgeSpacing.medium)) }
                     }
 
-                    item {
-                        LazyRow(
-                            horizontalArrangement = Arrangement.spacedBy(SkillforgeSpacing.medium),
-                            contentPadding = PaddingValues(horizontal = SkillforgeSpacing.small)
-                        ) {
-                            items(uiState.suggestions) { course ->
-                                Box(modifier = Modifier.width(300.dp)) {
-                                    CourseDiscoveryCard(
-                                        course = course,
-                                        onClick = { onCourseSelected(course.id) }
-                                    )
+                    if (uiState.suggestions.trendingRightNow.isNotEmpty()) {
+                        item {
+                            SectionHeader(
+                                title = "Trending Right Now",
+                                actionLabel = "",
+                            )
+                        }
+                        item {
+                            LazyRow(
+                                horizontalArrangement = Arrangement.spacedBy(SkillforgeSpacing.medium),
+                                contentPadding = PaddingValues(horizontal = SkillforgeSpacing.small)
+                            ) {
+                                items(uiState.suggestions.trendingRightNow) { course ->
+                                    Box(modifier = Modifier.width(300.dp)) {
+                                        CourseDiscoveryCard(
+                                            course = course,
+                                            onClick = { onCourseSelected(course.id) }
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                        item { Spacer(modifier = Modifier.height(SkillforgeSpacing.medium)) }
+                    }
+
+                    if (uiState.suggestions.bestsellers.isNotEmpty()) {
+                        item {
+                            SectionHeader(
+                                title = "Bestsellers",
+                                actionLabel = "",
+                            )
+                        }
+                        item {
+                            LazyRow(
+                                horizontalArrangement = Arrangement.spacedBy(SkillforgeSpacing.medium),
+                                contentPadding = PaddingValues(horizontal = SkillforgeSpacing.small)
+                            ) {
+                                items(uiState.suggestions.bestsellers) { course ->
+                                    Box(modifier = Modifier.width(300.dp)) {
+                                        CourseDiscoveryCard(
+                                            course = course,
+                                            onClick = { onCourseSelected(course.id) }
+                                        )
+                                    }
                                 }
                             }
                         }

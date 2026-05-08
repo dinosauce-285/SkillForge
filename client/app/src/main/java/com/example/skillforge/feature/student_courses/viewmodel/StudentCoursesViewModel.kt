@@ -16,10 +16,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+import com.example.skillforge.domain.model.CourseRecommendations
+
 data class StudentCourseListUiState(
     val isLoading: Boolean = false,
     val courses: List<CourseSummary> = emptyList(),
-    val suggestions: List<CourseSummary> = emptyList(),
+    val suggestions: CourseRecommendations? = null,
     val categories: List<Category> = emptyList(),
     val searchQuery: String = "",
     val selectedCategoryId: String? = null,
@@ -86,7 +88,7 @@ class StudentCoursesViewModel(
             val suggestionsResult = suggestionsDeferred.await()
 
             val categories = categoriesResult.getOrDefault(currentState.categories)
-            val suggestions = suggestionsResult.getOrDefault(emptyList())
+            val suggestions = suggestionsResult.getOrNull()
 
             coursesResult.fold(
                 onSuccess = { courses ->

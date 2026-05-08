@@ -4,6 +4,7 @@ import com.example.skillforge.data.remote.CourseManagerDto
 import com.example.skillforge.data.remote.CourseSummaryDto
 import com.example.skillforge.domain.model.CourseDetails
 import com.example.skillforge.domain.model.CourseSummary
+import com.example.skillforge.domain.model.CourseRecommendations
 import java.io.File
 
 interface CourseRepository {
@@ -13,7 +14,7 @@ interface CourseRepository {
         level: String? = null,
     ): Result<List<CourseSummary>>
 
-    suspend fun getCourseSuggestions(): Result<List<CourseSummary>>
+    suspend fun getCourseSuggestions(): Result<CourseRecommendations>
 
     suspend fun getCourseDetails(courseId: String): Result<CourseDetails>
 
