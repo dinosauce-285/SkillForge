@@ -3,17 +3,28 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  HttpException,
   InternalServerErrorException,
 } from '@nestjs/common';
-import { Role } from '@prisma/client';
+import { MaterialType, Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateLessonDto } from './dto/create-lesson.dto';
 import { UpdateLessonDto } from './dto/update-lesson.dto';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
+import ffmpeg from 'fluent-ffmpeg';
+import * as ffmpegInstaller from '@ffmpeg-installer/ffmpeg';
+import * as ffprobeInstaller from '@ffprobe-installer/ffprobe';
+import * as fs from 'fs/promises';
+import { file as tmpFile } from 'tmp-promise';
+
+ffmpeg.setFfmpegPath(ffmpegInstaller.path);
+ffmpeg.setFfprobePath(ffprobeInstaller.path);
+
 @Injectable()
 export class LessonsService {
   private supabase: SupabaseClient;
+  private readonly maxMobileVideoBytes = 250 * 1024 * 1024;
 
   constructor(private readonly prisma: PrismaService) {
     this.supabase = createClient(
@@ -158,6 +169,49 @@ export class LessonsService {
     });
   }
 
+  async removeMaterial(materialId: string, user: { id: string; role: Role }) {
+    const material = await this.prisma.lessonMaterial.findUnique({
+      where: { id: materialId },
+      include: {
+        lesson: {
+          include: {
+            chapter: {
+              include: {
+                course: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!material || material.lesson.deletedAt) {
+      throw new NotFoundException(
+        `Material with id "${materialId}" not found`,
+      );
+    }
+
+    this.assertCanManage(material.lesson.chapter.course.instructorId, user);
+
+    await this.prisma.lessonMaterial.delete({
+      where: { id: materialId },
+    });
+
+    const storagePath = this.extractMaterialsStoragePath(material.fileUrl);
+    const uploadedLessonPrefix = `lesson_${material.lessonId}/`;
+    if (storagePath?.startsWith(uploadedLessonPrefix)) {
+      const { error } = await this.supabase.storage
+        .from('materials')
+        .remove([storagePath]);
+
+      if (error) {
+        console.error('Supabase delete error:', error);
+      }
+    }
+
+    return { message: 'Material deleted successfully' };
+  }
+
   private async assertChapterOwnership(
     chapterId: string,
     user: { id: string; role: Role },
@@ -246,16 +300,73 @@ export class LessonsService {
         );
       }
 
-      const fileExt = file.originalname.split('.').pop();
-      const fileName = `${Date.now()}-${Math.floor(Math.random() * 10000)}.${fileExt}`;
+      let materialType: MaterialType = MaterialType.DOCUMENT;
+      if (type.toUpperCase() === MaterialType.VIDEO) {
+        materialType = MaterialType.VIDEO;
+      }
+
+      if (materialType === MaterialType.VIDEO) {
+        const existingVideo = await this.prisma.lessonMaterial.findFirst({
+          where: {
+            lessonId,
+            type: MaterialType.VIDEO,
+          },
+        });
+
+        if (existingVideo) {
+          throw new BadRequestException('Each lesson can only have one video.');
+        }
+      }
+
+      let uploadBuffer = file.buffer;
+      const fileExt = file.originalname.split('.').pop() || '';
+      let fileName = `${Date.now()}-${Math.floor(Math.random() * 10000)}.${fileExt}`;
+      let contentType = file.mimetype;
+
+      if (materialType === MaterialType.VIDEO) {
+        // Transcode video using ffmpeg
+        const { path: inputPath, cleanup: cleanupInput } = await tmpFile({ postfix: '.' + fileExt });
+        const { path: outputPath, cleanup: cleanupOutput } = await tmpFile({ postfix: '.mp4' });
+
+        try {
+          await fs.writeFile(inputPath, file.buffer);
+          
+          await new Promise<void>((resolve, reject) => {
+            ffmpeg(inputPath)
+              .outputOptions([
+                "-vf scale=-2:'min(1080,ih)'",
+                '-preset medium',
+                '-crf 23',
+                '-pix_fmt yuv420p',
+                '-profile:v high',
+                '-level 4.1',
+                '-movflags +faststart',
+              ])
+              .videoCodec('libx264')
+              .audioCodec('aac')
+              .audioBitrate('128k')
+              .format('mp4')
+              .on('end', () => resolve())
+              .on('error', (err) => reject(new InternalServerErrorException('Video encoding failed: ' + err.message)))
+              .save(outputPath);
+          });
+
+          uploadBuffer = await fs.readFile(outputPath);
+          contentType = 'video/mp4';
+          fileName = `${Date.now()}-${Math.floor(Math.random() * 10000)}.mp4`;
+        } finally {
+          cleanupInput();
+          cleanupOutput();
+        }
+      }
 
       const filePath = `lesson_${lessonId}/${fileName}`;
 
       const { data: uploadData, error: uploadError } =
         await this.supabase.storage
           .from('materials')
-          .upload(filePath, file.buffer, {
-            contentType: file.mimetype,
+          .upload(filePath, uploadBuffer, {
+            contentType: contentType,
             upsert: false,
           });
 
@@ -271,10 +382,6 @@ export class LessonsService {
         .getPublicUrl(filePath);
 
       const fileUrl = publicUrlData.publicUrl;
-
-      let materialType: 'VIDEO' | 'DOCUMENT' | 'LINK' | 'SOURCE_CODE' =
-        'DOCUMENT';
-      if (type.toUpperCase() === 'VIDEO') materialType = 'VIDEO';
 
       const newMaterial = await this.prisma.lessonMaterial.create({
         data: {
@@ -292,8 +399,31 @@ export class LessonsService {
       };
     } catch (error) {
       console.error(error);
+      if (error instanceof HttpException) {
+        throw error;
+      }
       throw new InternalServerErrorException(
         'System error while processing material.',
+      );
+    }
+  }
+
+  private assertMobilePlayableVideo(file: Express.Multer.File) {
+    const extension = file.originalname.split('.').pop()?.toLowerCase();
+    const isMp4 =
+      extension === 'mp4' ||
+      file.mimetype === 'video/mp4' ||
+      file.mimetype === 'application/mp4';
+
+    if (!isMp4) {
+      throw new BadRequestException(
+        'Lesson videos must be MP4 files for reliable mobile playback. Export as MP4 with H.264 video and AAC audio.',
+      );
+    }
+
+    if (file.size > this.maxMobileVideoBytes) {
+      throw new BadRequestException(
+        'Video is too large for direct mobile streaming. Please upload an MP4 encoded for web/mobile, ideally 720p or 1080p H.264/AAC under 250MB.',
       );
     }
   }
