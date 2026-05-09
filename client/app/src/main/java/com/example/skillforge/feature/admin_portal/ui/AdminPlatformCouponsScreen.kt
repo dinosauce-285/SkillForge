@@ -1,11 +1,13 @@
 package com.example.skillforge.feature.admin_portal.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -15,26 +17,19 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -44,18 +39,31 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.example.skillforge.core.designsystem.SkillforgeLayout
+import com.example.skillforge.core.designsystem.SkillforgeShapes
+import com.example.skillforge.core.designsystem.SkillforgeSpacing
+import com.example.skillforge.core.designsystem.components.SafeFlowRow
+import com.example.skillforge.core.designsystem.components.SkillforgeCard
 import com.example.skillforge.data.remote.AdminPlatformCouponDto
 import com.example.skillforge.feature.admin_portal.viewmodel.AdminViewModel
+import java.text.SimpleDateFormat
+import java.util.Locale
+import java.util.TimeZone
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminPlatformCouponsScreen(
     token: String,
     viewModel: AdminViewModel,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onNavigateToDashboard: () -> Unit,
+    onNavigateToUsers: () -> Unit,
+    onNavigateToQueue: () -> Unit,
+    onNavigateToCoupons: () -> Unit,
+    onNavigateToFinance: () -> Unit
 ) {
     val coupons by viewModel.platformCoupons.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
@@ -67,17 +75,15 @@ fun AdminPlatformCouponsScreen(
         viewModel.fetchPlatformCoupons(token)
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Platform Coupons") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                    }
-                }
-            )
-        }
+    AdminScaffold(
+        title = "Platform Coupons",
+        selectedTab = AdminTab.Coupons,
+        onNavigateToDashboard = onNavigateToDashboard,
+        onNavigateToUsers = onNavigateToUsers,
+        onNavigateToQueue = onNavigateToQueue,
+        onNavigateToCoupons = onNavigateToCoupons,
+        onNavigateToFinance = onNavigateToFinance,
+        onBack = onBack
     ) { padding ->
         Box(
             modifier = Modifier
@@ -86,40 +92,48 @@ fun AdminPlatformCouponsScreen(
         ) {
             when {
                 isLoading && coupons.isEmpty() -> {
-                    LoadingStateCard(
-                        message = "Loading platform coupons",
-                        modifier = Modifier.align(Alignment.Center)
+                    CouponLoadingCard(modifier = Modifier.align(Alignment.Center))
+                }
+
+                !error.isNullOrBlank() && coupons.isEmpty() -> {
+                    CouponMessageCard(
+                        title = "Unable to load coupons",
+                        message = error.orEmpty(),
+                        isError = true,
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .padding(SkillforgeLayout.screenHorizontalPadding)
                     )
                 }
 
                 else -> {
                     LazyColumn(
-                        contentPadding = PaddingValues(20.dp),
-                        verticalArrangement = Arrangement.spacedBy(14.dp)
+                        contentPadding = PaddingValues(
+                            horizontal = SkillforgeLayout.screenHorizontalPadding,
+                            vertical = SkillforgeLayout.screenVerticalPadding
+                        ),
+                        verticalArrangement = Arrangement.spacedBy(SkillforgeLayout.listItemGap)
                     ) {
                         item {
-                            CouponPageHeader(
+                            CouponHeaderCard(
+                                coupons = coupons,
                                 onCreateClick = { showCreateDialog = true }
                             )
                         }
 
-                        item {
-                            CouponSummarySection(coupons = coupons)
-                        }
-
                         if (!error.isNullOrBlank()) {
                             item {
-                                MessageCard(
-                                    title = "Unable to load coupons",
+                                CouponMessageCard(
+                                    title = "Some coupon data may be outdated",
                                     message = error.orEmpty(),
                                     isError = true
                                 )
                             }
                         }
 
-                        if (coupons.isEmpty() && error.isNullOrBlank()) {
+                        if (coupons.isEmpty()) {
                             item {
-                                MessageCard(
+                                CouponMessageCard(
                                     title = "No platform coupons yet",
                                     message = "Create a coupon to make an admin-owned discount available across paid courses.",
                                     isError = false
@@ -130,9 +144,11 @@ fun AdminPlatformCouponsScreen(
                                 Text(
                                     text = "Coupons",
                                     style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.SemiBold
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onBackground
                                 )
                             }
+
                             items(coupons, key = { it.id }) { coupon ->
                                 PlatformCouponCard(
                                     coupon = coupon,
@@ -190,67 +206,100 @@ fun AdminPlatformCouponsScreen(
 }
 
 @Composable
-private fun CouponPageHeader(onCreateClick: () -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(
-                text = "Coupon management",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                text = "Create and manage platform-wide admin coupons.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-        Button(
-            onClick = onCreateClick,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("Create Coupon")
-        }
-    }
-}
-
-@Composable
-private fun CouponSummarySection(coupons: List<AdminPlatformCouponDto>) {
+private fun CouponHeaderCard(
+    coupons: List<AdminPlatformCouponDto>,
+    onCreateClick: () -> Unit
+) {
     val activeCount = coupons.count { it.isActive }
     val inactiveCount = coupons.size - activeCount
 
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        CouponSummaryCard(label = "Total", value = coupons.size.toString())
-        CouponSummaryCard(label = "Active", value = activeCount.toString())
-        CouponSummaryCard(label = "Inactive", value = inactiveCount.toString())
+    SkillforgeCard(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(SkillforgeLayout.cardContentPadding),
+            verticalArrangement = Arrangement.spacedBy(SkillforgeSpacing.medium)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(SkillforgeShapes.large)
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+                Spacer(modifier = Modifier.width(SkillforgeSpacing.medium))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Coupon management",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = "Create and manage platform-wide admin coupons.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            SafeFlowRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalSpacing = SkillforgeSpacing.small,
+                verticalSpacing = SkillforgeSpacing.small
+            ) {
+                CouponMetricPill(label = "Total", value = coupons.size.toString())
+                CouponMetricPill(label = "Active", value = activeCount.toString())
+                CouponMetricPill(label = "Inactive", value = inactiveCount.toString())
+            }
+
+            Button(
+                onClick = onCreateClick,
+                modifier = Modifier.fillMaxWidth(),
+                shape = SkillforgeShapes.button
+            ) {
+                Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(modifier = Modifier.width(SkillforgeSpacing.small))
+                Text("Create Coupon")
+            }
+        }
     }
 }
 
 @Composable
-private fun CouponSummaryCard(label: String, value: String) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.32f)
-        )
+private fun CouponMetricPill(label: String, value: String) {
+    Surface(
+        modifier = Modifier.defaultMinSize(minWidth = 124.dp),
+        shape = SkillforgeShapes.medium,
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.36f)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier.padding(
+                horizontal = SkillforgeSpacing.medium,
+                vertical = SkillforgeSpacing.small
+            ),
+            verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
             Text(
                 text = label,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
                 text = value,
                 style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
             )
         }
     }
@@ -263,29 +312,26 @@ private fun PlatformCouponCard(
     onDeactivate: () -> Unit,
     onActivate: () -> Unit
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-    ) {
+    SkillforgeCard(modifier = Modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+                .padding(SkillforgeLayout.cardContentPadding),
+            verticalArrangement = Arrangement.spacedBy(SkillforgeSpacing.medium)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Top
             ) {
                 Column(
                     modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                    verticalArrangement = Arrangement.spacedBy(SkillforgeSpacing.xSmall)
                 ) {
                     Text(
                         text = coupon.code,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -295,35 +341,42 @@ private fun PlatformCouponCard(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
+                Spacer(modifier = Modifier.width(SkillforgeSpacing.small))
                 CouponStatusBadge(isActive = coupon.isActive)
             }
 
             Surface(
-                shape = MaterialTheme.shapes.medium,
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.40f)
+                modifier = Modifier.fillMaxWidth(),
+                shape = SkillforgeShapes.medium,
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.28f)
             ) {
                 Column(
-                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
-                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                    modifier = Modifier.padding(SkillforgeSpacing.medium),
+                    verticalArrangement = Arrangement.spacedBy(SkillforgeSpacing.xSmall)
                 ) {
                     Text(
                         text = "${coupon.discountPercent}% off",
-                        style = MaterialTheme.typography.titleMedium,
+                        style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
                     )
                     Text(
                         text = "Discount applied at checkout",
-                        style = MaterialTheme.typography.bodySmall,
+                        style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
 
-            Row(
+            Column(verticalArrangement = Arrangement.spacedBy(SkillforgeSpacing.small)) {
+                CouponMetadataRow(label = "Scope", value = coupon.scope?.toDisplayLabel() ?: "Platform")
+                CouponMetadataRow(label = "Created", value = formatCouponDateTime(coupon.createdAt))
+            }
+
+            SafeFlowRow(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End,
-                verticalAlignment = Alignment.CenterVertically
+                horizontalSpacing = SkillforgeSpacing.small,
+                verticalSpacing = SkillforgeSpacing.small
             ) {
                 TextButton(onClick = onEdit) {
                     Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(18.dp))
@@ -335,12 +388,16 @@ private fun PlatformCouponCard(
                         onClick = onDeactivate,
                         colors = ButtonDefaults.outlinedButtonColors(
                             contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        ),
+                        shape = SkillforgeShapes.button
                     ) {
                         Text("Deactivate")
                     }
                 } else {
-                    Button(onClick = onActivate) {
+                    Button(
+                        onClick = onActivate,
+                        shape = SkillforgeShapes.button
+                    ) {
                         Text("Activate")
                     }
                 }
@@ -350,13 +407,38 @@ private fun PlatformCouponCard(
 }
 
 @Composable
+private fun CouponMetadataRow(label: String, value: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.Top
+    ) {
+        Text(
+            text = label,
+            modifier = Modifier.weight(0.35f),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Text(
+            text = value,
+            modifier = Modifier.weight(0.65f),
+            style = MaterialTheme.typography.bodySmall,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
+
+@Composable
 private fun CouponStatusBadge(isActive: Boolean) {
     Surface(
-        shape = MaterialTheme.shapes.small,
+        shape = SkillforgeShapes.chip,
         color = if (isActive) {
-            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f)
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
         } else {
-            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
+            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f)
         }
     ) {
         Text(
@@ -367,7 +449,9 @@ private fun CouponStatusBadge(isActive: Boolean) {
                 MaterialTheme.colorScheme.primary
             } else {
                 MaterialTheme.colorScheme.onSurfaceVariant
-            }
+            },
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
     }
 }
@@ -390,41 +474,69 @@ private fun PlatformCouponDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(title) },
+        title = {
+            Column(verticalArrangement = Arrangement.spacedBy(SkillforgeSpacing.xSmall)) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "Platform coupons are owned by admins and apply during checkout.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(SkillforgeSpacing.medium)
+            ) {
                 OutlinedTextField(
                     value = code,
                     onValueChange = { code = it },
-                    label = { Text("Coupon Code") },
+                    label = { Text("Coupon code") },
+                    placeholder = { Text("SUMMER25") },
                     supportingText = { Text("Codes are normalized by the server.") },
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = SkillforgeShapes.input
                 )
                 OutlinedTextField(
                     value = discountPercent,
                     onValueChange = { discountPercent = it },
-                    label = { Text("Discount Percent") },
+                    label = { Text("Discount percent") },
+                    trailingIcon = {
+                        Text(
+                            text = "%",
+                            modifier = Modifier.padding(end = SkillforgeSpacing.medium),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    },
                     supportingText = { Text("Enter a whole number from 1 to 100.") },
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = SkillforgeShapes.input
                 )
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = MaterialTheme.shapes.medium,
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.32f)
+                    shape = SkillforgeShapes.medium,
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.28f)
                 ) {
                     Row(
-                        modifier = Modifier.padding(12.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(SkillforgeSpacing.medium),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Switch(checked = isActive, onCheckedChange = { isActive = it })
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Column {
+                        Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = if (isActive) "Active" else "Inactive",
                                 style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.SemiBold
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
                                 text = "Inactive coupons cannot be applied at checkout.",
@@ -432,6 +544,8 @@ private fun PlatformCouponDialog(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
+                        Spacer(modifier = Modifier.width(SkillforgeSpacing.small))
+                        Switch(checked = isActive, onCheckedChange = { isActive = it })
                     }
                 }
             }
@@ -443,7 +557,8 @@ private fun PlatformCouponDialog(
                     parsedDiscount?.let { discount ->
                         onConfirm(code, discount, isActive)
                     }
-                }
+                },
+                shape = SkillforgeShapes.button
             ) {
                 Text(actionLabel)
             }
@@ -452,29 +567,25 @@ private fun PlatformCouponDialog(
             TextButton(onClick = onDismiss) {
                 Text("Cancel")
             }
-        }
+        },
+        shape = SkillforgeShapes.large,
+        containerColor = MaterialTheme.colorScheme.surface
     )
 }
 
 @Composable
-private fun MessageCard(
+private fun CouponMessageCard(
     title: String,
     message: String,
-    isError: Boolean
+    isError: Boolean,
+    modifier: Modifier = Modifier
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isError) {
-                MaterialTheme.colorScheme.surface
-            } else {
-                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.32f)
-            }
-        )
-    ) {
+    SkillforgeCard(modifier = modifier.fillMaxWidth()) {
         Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(SkillforgeLayout.cardContentPadding),
+            verticalArrangement = Arrangement.spacedBy(SkillforgeSpacing.small)
         ) {
             Text(
                 text = title,
@@ -489,32 +600,75 @@ private fun MessageCard(
             Text(
                 text = message,
                 style = MaterialTheme.typography.bodyMedium,
-                color = if (isError) {
-                    MaterialTheme.colorScheme.onSurfaceVariant
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant
-                }
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
 }
 
 @Composable
-private fun LoadingStateCard(
-    message: String,
-    modifier: Modifier = Modifier
-) {
-    Card(modifier = modifier.padding(20.dp)) {
+private fun CouponLoadingCard(modifier: Modifier = Modifier) {
+    SkillforgeCard(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(SkillforgeLayout.screenHorizontalPadding)
+    ) {
         Row(
-            modifier = Modifier.padding(18.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(SkillforgeLayout.cardContentPadding),
             verticalAlignment = Alignment.CenterVertically
         ) {
             CircularProgressIndicator(modifier = Modifier.size(28.dp))
-            Spacer(modifier = Modifier.width(12.dp))
-            Text(
-                text = message,
-                style = MaterialTheme.typography.bodyMedium
-            )
+            Spacer(modifier = Modifier.width(SkillforgeSpacing.medium))
+            Column {
+                Text(
+                    text = "Loading coupons",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text(
+                    text = "Fetching platform discount settings.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
     }
+}
+
+private fun String.toDisplayLabel(): String {
+    return lowercase()
+        .split("_", "-", " ")
+        .filter { it.isNotBlank() }
+        .joinToString(" ") { part ->
+            part.replaceFirstChar { char -> char.uppercase() }
+        }
+}
+
+private fun formatCouponDateTime(value: String?): String {
+    val rawValue = value?.trim().orEmpty()
+    if (rawValue.isBlank()) return "Not available"
+
+    val inputFormats = listOf(
+        SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).apply {
+            timeZone = TimeZone.getTimeZone("UTC")
+        },
+        SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US).apply {
+            timeZone = TimeZone.getTimeZone("UTC")
+        },
+        SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX", Locale.US),
+        SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX", Locale.US),
+        SimpleDateFormat("yyyy-MM-dd", Locale.US)
+    )
+    val parsedDate = inputFormats.firstNotNullOfOrNull { format ->
+        runCatching { format.parse(rawValue) }.getOrNull()
+    } ?: return rawValue
+
+    val outputPattern = if (rawValue.contains("T")) {
+        "dd/MM/yyyy, HH:mm"
+    } else {
+        "dd/MM/yyyy"
+    }
+    return SimpleDateFormat(outputPattern, Locale.getDefault()).format(parsedDate)
 }

@@ -4,8 +4,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,6 +19,11 @@ fun AdminCoursesQueueScreen(
     token: String,
     viewModel: AdminViewModel,
     onBack: () -> Unit,
+    onNavigateToDashboard: () -> Unit,
+    onNavigateToUsers: () -> Unit,
+    onNavigateToQueue: () -> Unit,
+    onNavigateToCoupons: () -> Unit,
+    onNavigateToFinance: () -> Unit,
     onNavigateToPreview: (String) -> Unit
 ) {
     val queue by viewModel.courseQueue.collectAsState()
@@ -31,17 +34,15 @@ fun AdminCoursesQueueScreen(
         viewModel.fetchCourseQueue(token)
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Course Queue") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, "Back")
-                    }
-                }
-            )
-        }
+    AdminScaffold(
+        title = "Course Queue",
+        selectedTab = AdminTab.Queue,
+        onNavigateToDashboard = onNavigateToDashboard,
+        onNavigateToUsers = onNavigateToUsers,
+        onNavigateToQueue = onNavigateToQueue,
+        onNavigateToCoupons = onNavigateToCoupons,
+        onNavigateToFinance = onNavigateToFinance,
+        onBack = onBack
     ) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding)) {
             if (isLoading) {

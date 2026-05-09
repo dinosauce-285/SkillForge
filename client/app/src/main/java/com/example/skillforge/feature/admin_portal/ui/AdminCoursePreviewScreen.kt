@@ -3,8 +3,6 @@ package com.example.skillforge.feature.admin_portal.ui
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -39,17 +37,9 @@ fun AdminCoursePreviewScreen(
         }
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Course Preview") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, "Back")
-                    }
-                }
-            )
-        }
+    AdminDetailScaffold(
+        title = "Course Preview",
+        onBack = onBack
     ) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding)) {
             when {
