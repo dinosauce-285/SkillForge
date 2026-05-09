@@ -98,17 +98,11 @@ fun CourseCurriculumRoute(
         onLessonSelected = onLessonSelected,
         onQuizSelected = { quizId ->
             val status = uiState.quizStatuses.find { it.quizId.equals(quizId, ignoreCase = true) }
-            val allQuizzes = uiState.course?.chapters?.flatMap { it.quizzes } ?: emptyList()
-            val quiz = allQuizzes.find { it.id.equals(quizId, ignoreCase = true) }
             
             if (status != null) {
-                val isGraded = status.status.trim().equals("GRADED", ignoreCase = true)
-                
-                if (isGraded) {
-                    onViewResult(status.attemptId)
-                } else {
-                    android.widget.Toast.makeText(context, "Quiz already completed (Status: ${status.status})", android.widget.Toast.LENGTH_SHORT).show()
-                }
+                // If already taken, we go to result screen. 
+                // From there, the user can choose to retake.
+                onViewResult(status.attemptId)
             } else {
                 onQuizSelected(quizId)
             }
@@ -340,7 +334,7 @@ private fun CurriculumQuizRow(
             .clickable(onClick = onClick)
             .clip(RoundedCornerShape(12.dp))
             .background(Color.Transparent)
-            .padding(horizontal = 12.dp, vertical = 12.dp),
+            .padding(start = 32.dp, end = 12.dp, top = 12.dp, bottom = 12.dp),
         horizontalArrangement = Arrangement.spacedBy(SkillforgeSpacing.small),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -364,7 +358,7 @@ private fun CurriculumQuizRow(
             isCompleted && quiz.isEssay -> Color.Gray
             else -> Color.Transparent
         }
-
+ 
         Icon(
             imageVector = quizIcon ?: Icons.Default.Quiz,
             contentDescription = null,

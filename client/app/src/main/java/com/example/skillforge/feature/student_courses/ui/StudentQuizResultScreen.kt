@@ -31,7 +31,8 @@ import com.example.skillforge.feature.student_courses.viewmodel.StudentQuizResul
 @Composable
 fun StudentQuizResultScreen(
     viewModel: StudentQuizResultViewModel,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onRetake: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -295,6 +296,31 @@ fun StudentQuizResultScreen(
                         }
                         
                         Spacer(modifier = Modifier.height(32.dp))
+
+                        // Action Buttons
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            OutlinedButton(
+                                onClick = onBack,
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Text("Back to Course")
+                            }
+                            
+                            Button(
+                                onClick = { onRetake(details.quizId) },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange)
+                            ) {
+                                Text("Retake Quiz")
+                            }
+                        }
+                        
+                        Spacer(modifier = Modifier.height(48.dp))
                     }
                 }
             }
