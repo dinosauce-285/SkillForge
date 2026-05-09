@@ -1,5 +1,10 @@
 package com.example.skillforge.feature.auth.ui
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -18,6 +23,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
@@ -72,6 +78,7 @@ fun LoginScreen(
     val loginState by viewModel.loginState.collectAsState()
     val defaultPadding = 16.dp
     val cardPadding = 24.dp
+    val errorMessage = (loginState as? LoginState.Error)?.message
 
     Box(
         modifier = Modifier
@@ -177,28 +184,29 @@ fun LoginScreen(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
                 )
 
-                TextButton(
-                    onClick = {},
+                Row(
                     modifier = Modifier
-                        .align(Alignment.End)
-                        .padding(top = 8.dp, bottom = 24.dp)
+                        .fillMaxWidth()
+                        .padding(top = 8.dp, bottom = 12.dp),
+                    horizontalArrangement = Arrangement.End
                 ) {
-                    Text(
-                        text = "Forgot password?",
-                        style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Medium),
-                        color = PrimaryOrangeLight
-                    )
+                    TextButton(onClick = {}) {
+                        Text(
+                            text = "Forgot password?",
+                            style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Medium),
+                            color = PrimaryOrangeLight
+                        )
+                    }
                 }
 
-                if (loginState is LoginState.Error) {
-                    Text(
-                        text = (loginState as LoginState.Error).message,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 8.dp),
-                        textAlign = TextAlign.Start
+                AnimatedVisibility(
+                    visible = errorMessage != null,
+                    enter = fadeIn() + expandVertically(),
+                    exit = fadeOut() + shrinkVertically()
+                ) {
+                    LoginErrorBanner(
+                        message = errorMessage.orEmpty(),
+                        modifier = Modifier.padding(bottom = 16.dp)
                     )
                 }
 
@@ -277,6 +285,78 @@ fun LoginScreen(
         if (currentState is LoginState.Success) {
             onLoginSuccess(currentState.session)
         }
+    }
+}
+
+@Composable
+private fun LoginErrorBanner(
+    message: String,
+    modifier: Modifier = Modifier
+) {
+    val (title, detail) = remember(message) { splitLoginErrorMessage(message) }
+    val errorColor = MaterialTheme.colorScheme.error
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(
+                color = errorColor.copy(alpha = 0.08f),
+                shape = RoundedCornerShape(12.dp)
+            )
+            .border(
+                width = 1.dp,
+                color = errorColor.copy(alpha = 0.18f),
+                shape = RoundedCornerShape(12.dp)
+            )
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.Top
+    ) {
+        Box(
+            modifier = Modifier
+                .size(28.dp)
+                .background(
+                    color = PrimaryOrangeLight.copy(alpha = 0.12f),
+                    shape = RoundedCornerShape(8.dp)
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Error,
+                contentDescription = null,
+                tint = errorColor,
+                modifier = Modifier.size(18.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.width(10.dp))
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                color = errorColor
+            )
+            if (detail != null) {
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = detail,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
+}
+
+private fun splitLoginErrorMessage(message: String): Pair<String, String?> {
+    val trimmedMessage = message.trim()
+    val sentenceBreakIndex = trimmedMessage.indexOf(". ")
+
+    return if (sentenceBreakIndex in 1 until trimmedMessage.lastIndex) {
+        val titleEnd = sentenceBreakIndex + 1
+        trimmedMessage.substring(0, titleEnd) to trimmedMessage.substring(titleEnd + 1)
+    } else {
+        trimmedMessage to null
     }
 }
 
