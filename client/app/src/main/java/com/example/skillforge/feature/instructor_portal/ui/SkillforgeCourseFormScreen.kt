@@ -50,7 +50,7 @@ fun SkillforgeCourseFormScreen(
     var courseSummary by remember { mutableStateOf("") }
     var coursePrice by remember { mutableStateOf("") }
     var selectedCategoryId by remember { mutableStateOf("") }
-    var selectedStatus by remember { mutableStateOf("DRAFT") }
+    var selectedStatus by remember { mutableStateOf("UNDER_REVIEW") }
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
 
     var showSuccessDialog by remember { mutableStateOf(false) }
@@ -75,7 +75,7 @@ fun SkillforgeCourseFormScreen(
         AlertDialog(
             onDismissRequest = { /* Keep open until user confirms */ },
             title = { Text("Success!", fontWeight = FontWeight.Bold) },
-            text = { Text("Your course has been published successfully.") },
+            text = { Text("Your course has been submitted for review.") },
             confirmButton = {
                 Button(
                     onClick = {
@@ -149,7 +149,7 @@ fun SkillforgeCourseFormScreen(
                                     strokeWidth = 2.dp
                                 )
                             } else {
-                                Text(if (isEditMode) "Save Changes" else "Publish Course")
+                                Text(if (isEditMode) "Save Changes" else "Submit for Review")
                             }
                         }
                     }
@@ -254,27 +254,6 @@ fun SkillforgeCourseFormScreen(
                 }
             }
 
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Status", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    val statuses = listOf("DRAFT" to "Draft", "PUBLISHED" to "Publish immediately")
-                    statuses.forEach { (statusValue, label) ->
-                        FilterChip(
-                            selected = selectedStatus == statusValue,
-                            enabled = !isLoading,
-                            onClick = { selectedStatus = statusValue },
-                            label = { Text(label) },
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                                selectedLabelColor = MaterialTheme.colorScheme.primary
-                            )
-                        )
-                    }
-                }
-            }
             Spacer(modifier = Modifier.height(24.dp))
         }
     }
