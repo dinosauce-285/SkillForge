@@ -26,55 +26,61 @@ fun ProfileSkillsCard(
     isEditMode: Boolean,
     modifier: Modifier = Modifier
 ) {
-    ElevatedCard(
-        modifier = modifier.fillMaxWidth(),
-        shape = SkillforgeShapes.card,
-        colors = skillforgeElevatedCardColors()
+    Column(
+        modifier = modifier.fillMaxWidth()
     ) {
-        Column(
-            modifier = Modifier.padding(SkillforgeSpacing.medium)
+        Text(
+            text = "Skills",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+
+        AnimatedVisibility(
+            visible = isEditMode,
+            enter = expandVertically(),
+            exit = shrinkVertically()
         ) {
-            Text(
-                text = "Skills",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-
-            AnimatedVisibility(
-                visible = isEditMode,
-                enter = expandVertically(),
-                exit = shrinkVertically()
-            ) {
-                Column {
-                    Spacer(modifier = Modifier.height(SkillforgeSpacing.medium))
-                    OutlinedTextField(
-                        value = newSkillText,
-                        onValueChange = onNewSkillChange,
-                        placeholder = { Text("Add a new skill (e.g., Figma)...") },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = SkillforgeShapes.input,
-                        colors = OutlinedTextFieldDefaults.colors(
-                            unfocusedContainerColor = TextFieldBackgroundColor,
-                            focusedContainerColor = TextFieldBackgroundColor,
-                            focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
-                        ),
-                        trailingIcon = {
-                            IconButton(onClick = onAddSkillClick) {
-                                Icon(
-                                    imageVector = Icons.Default.Add,
-                                    contentDescription = "Add Skill",
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-                            }
+            Column {
+                Spacer(modifier = Modifier.height(SkillforgeSpacing.medium))
+                OutlinedTextField(
+                    value = newSkillText,
+                    onValueChange = onNewSkillChange,
+                    placeholder = { Text("Add a new skill (e.g., Figma)...") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = SkillforgeShapes.input,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        unfocusedContainerColor = TextFieldBackgroundColor,
+                        focusedContainerColor = TextFieldBackgroundColor,
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                    ),
+                    trailingIcon = {
+                        IconButton(onClick = onAddSkillClick) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = "Add Skill",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
                         }
-                    )
-                }
+                    }
+                )
             }
+        }
 
-            Spacer(modifier = Modifier.height(SkillforgeSpacing.medium))
+        Spacer(modifier = Modifier.height(SkillforgeSpacing.medium))
 
+        if (skills.isEmpty()) {
+            Text(
+                text = if (isEditMode) {
+                    "Add skills to help personalize your profile."
+                } else {
+                    "No skills added yet."
+                },
+                style = MaterialTheme.typography.bodyMedium,
+                color = TextSecondaryColor
+            )
+        } else {
             SafeFlowRow(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalSpacing = SkillforgeSpacing.small,

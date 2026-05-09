@@ -7,6 +7,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
@@ -20,13 +21,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.skillforge.core.designsystem.BackgroundColor
 import com.example.skillforge.core.designsystem.SkillforgeLayout
+import com.example.skillforge.core.designsystem.SkillforgeShapes
 import com.example.skillforge.core.designsystem.SkillforgeSpacing
 import com.example.skillforge.core.designsystem.SurfaceColor
 import com.example.skillforge.core.designsystem.components.SkillforgePrimaryButton
@@ -49,10 +50,12 @@ fun ProfileScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    var isEditMode by remember { mutableStateOf(false) }
     var showDropdownMenu by remember { mutableStateOf(false) }
     var newSkillText by remember { mutableStateOf("") }
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
+    val successState = uiState as? ProfileUiState.Success
+    val isEditing = successState?.isEditing == true
+    val isBusy = successState?.isSaving == true || successState?.isUploadingAvatar == true
 
     val context = LocalContext.current
     val contentResolver = context.contentResolver
@@ -80,13 +83,30 @@ fun ProfileScreen(
         containerColor = BackgroundColor,
         topBar = {
             TopAppBar(
-                title = { Text("Profile", fontWeight = FontWeight.Bold) },
+                title = {
+                    Text(
+                        text = if (isEditing) "Edit Profile" else "Profile",
+                        fontWeight = FontWeight.Bold
+                    )
+                },
                 actions = {
-                    IconButton(onClick = { isEditMode = !isEditMode }) {
-                        Icon(
-                            imageVector = if (isEditMode) Icons.Default.Close else Icons.Default.Edit,
-                            contentDescription = if (isEditMode) "Cancel Edit" else "Edit Profile"
-                        )
+                    if (successState != null) {
+                        IconButton(
+                            onClick = {
+                                if (isEditing) {
+                                    viewModel.cancelEditing()
+                                    newSkillText = ""
+                                } else {
+                                    viewModel.startEditing()
+                                }
+                            },
+                            enabled = !isBusy
+                        ) {
+                            Icon(
+                                imageVector = if (isEditing) Icons.Default.Close else Icons.Default.Edit,
+                                contentDescription = if (isEditing) "Cancel Edit" else "Edit Profile"
+                            )
+                        }
                     }
                     Box {
                         IconButton(onClick = { showDropdownMenu = true }) {
@@ -115,17 +135,17 @@ fun ProfileScreen(
                 },
                 scrollBehavior = scrollBehavior,
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent,
-                    scrolledContainerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = Color.White,
-                    actionIconContentColor = Color.White
+                    containerColor = SurfaceColor,
+                    scrolledContainerColor = SurfaceColor,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface,
+                    actionIconContentColor = MaterialTheme.colorScheme.onSurface
                 )
             )
         },
         bottomBar = {
             Column {
                 AnimatedVisibility(
-                    visible = isEditMode,
+                    visible = successState?.isEditing == true,
                     enter = fadeIn(),
                     exit = fadeOut()
                 ) {
@@ -138,13 +158,22 @@ fun ProfileScreen(
                                 .fillMaxWidth()
                                 .padding(SkillforgeSpacing.medium)
                         ) {
-                            SkillforgePrimaryButton(
-                                text = "Save Changes",
-                                onClick = {
-                                    viewModel.updateProfile()
-                                    isEditMode = false
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(SkillforgeSpacing.small)
+                            ) {
+                                successState?.inlineErrorMessage?.let { message ->
+                                    Text(
+                                        text = message,
+                                        color = MaterialTheme.colorScheme.error,
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
                                 }
-                            )
+                                SkillforgePrimaryButton(
+                                    text = if (successState?.isSaving == true) "Saving..." else "Save Changes",
+                                    onClick = { viewModel.saveChanges() },
+                                    enabled = !isBusy
+                                )
+                            }
                         }
                     }
                 }
@@ -154,27 +183,36 @@ fun ProfileScreen(
         when (uiState) {
             is ProfileUiState.Loading -> {
                 Box(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
                     contentAlignment = Alignment.Center
                 ) {
                     CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                 }
             }
             is ProfileUiState.Success -> {
-                val successState = uiState as ProfileUiState.Success
+                val state = uiState as ProfileUiState.Success
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(bottom = paddingValues.calculateBottomPadding()),
+                        .padding(
+                            top = paddingValues.calculateTopPadding(),
+                            bottom = paddingValues.calculateBottomPadding()
+                        ),
                     verticalArrangement = Arrangement.spacedBy(SkillforgeLayout.sectionGap),
                     contentPadding = PaddingValues(bottom = SkillforgeSpacing.xxLarge)
                 ) {
                     item {
                         ProfileAvatarHeader(
-                            fullName = successState.fullName,
-                            headline = successState.headline,
-                            avatarUrl = successState.avatarUrl,
-                            isEditMode = isEditMode,
+                            fullName = state.fullName,
+                            headline = state.headline,
+                            role = state.role,
+                            avatarUrl = state.avatarUrl,
+                            skillsCount = state.skills.size,
+                            hasLearningGoals = state.learningGoals.isNotBlank(),
+                            isEditMode = state.isEditing,
+                            isUploadingAvatar = state.isUploadingAvatar,
                             onEditAvatarClick = {
                                 photoPickerLauncher.launch(
                                     PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
@@ -189,69 +227,143 @@ fun ProfileScreen(
                                 .padding(horizontal = SkillforgeLayout.screenHorizontalPadding),
                             verticalArrangement = Arrangement.spacedBy(SkillforgeLayout.listItemGap)
                         ) {
-                            ProfileBasicInfoCard(
-                                fullName = successState.fullName,
-                                onFullNameChange = { viewModel.onFullNameChange(it) },
-                                isEditMode = isEditMode
-                            )
-
-                            ProfileSkillsCard(
-                                skills = successState.skills,
-                                newSkillText = newSkillText,
-                                onNewSkillChange = { newSkillText = it },
-                                onAddSkillClick = {
-                                    viewModel.addSkill(newSkillText)
-                                    newSkillText = ""
-                                },
-                                onRemoveSkillClick = { viewModel.removeSkill(it) },
-                                isEditMode = isEditMode
-                            )
-
-                            ProfileGoalsCard(
-                                learningGoals = successState.learningGoals,
-                                onLearningGoalsChange = { viewModel.onLearningGoalsChange(it) },
-                                isEditMode = isEditMode
-                            )
-
-                            OutlinedButton(
-                                onClick = onNavigateToPurchaseHistory,
-                                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-                                shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
-                                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary)
+                            Surface(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = SkillforgeShapes.extraLarge,
+                                color = SurfaceColor,
+                                tonalElevation = 1.dp
                             ) {
-                                Icon(Icons.AutoMirrored.Filled.MenuBook, contentDescription = null)
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text("Purchase History")
-                            }
-
-                            if (successState.role.equals("STUDENT", ignoreCase = true)) {
-                                Button(
-                                    onClick = onBecomeInstructorClick,
-                                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-                                    shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
-                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                                Column(
+                                    modifier = Modifier.padding(SkillforgeSpacing.large)
                                 ) {
-                                    Icon(Icons.Default.School, contentDescription = null)
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text("Become an Instructor")
+                                    ProfileBasicInfoCard(
+                                        fullName = state.fullName,
+                                        headline = state.headline,
+                                        onFullNameChange = { viewModel.onFullNameChange(it) },
+                                        isEditMode = state.isEditing
+                                    )
+                                    HorizontalDivider(modifier = Modifier.padding(vertical = SkillforgeSpacing.large))
+                                    ProfileSkillsCard(
+                                        skills = state.skills,
+                                        newSkillText = newSkillText,
+                                        onNewSkillChange = { newSkillText = it },
+                                        onAddSkillClick = {
+                                            viewModel.addSkill(newSkillText)
+                                            newSkillText = ""
+                                        },
+                                        onRemoveSkillClick = { viewModel.removeSkill(it) },
+                                        isEditMode = state.isEditing
+                                    )
+                                    HorizontalDivider(modifier = Modifier.padding(vertical = SkillforgeSpacing.large))
+                                    ProfileGoalsCard(
+                                        learningGoals = state.learningGoals,
+                                        onLearningGoalsChange = { viewModel.onLearningGoalsChange(it) },
+                                        isEditMode = state.isEditing
+                                    )
                                 }
                             }
+
+                            AccountActionsSection(
+                                role = state.role,
+                                enabled = !state.isSaving,
+                                onNavigateToPurchaseHistory = onNavigateToPurchaseHistory,
+                                onBecomeInstructorClick = onBecomeInstructorClick
+                            )
                         }
                     }
                 }
             }
             is ProfileUiState.Error -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = (uiState as ProfileUiState.Error).message,
-                        color = MaterialTheme.colorScheme.error
-                    )
-                }
+                InitialProfileError(
+                    message = (uiState as ProfileUiState.Error).message,
+                    onRetryClick = viewModel::retryLoadProfile,
+                    modifier = Modifier.padding(paddingValues)
+                )
             }
             else -> {}
+        }
+    }
+}
+
+@Composable
+private fun AccountActionsSection(
+    role: String,
+    enabled: Boolean,
+    onNavigateToPurchaseHistory: () -> Unit,
+    onBecomeInstructorClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = SkillforgeShapes.extraLarge,
+        color = SurfaceColor,
+        tonalElevation = 1.dp
+    ) {
+        Column(
+            modifier = Modifier.padding(SkillforgeSpacing.large),
+            verticalArrangement = Arrangement.spacedBy(SkillforgeSpacing.medium)
+        ) {
+            Text(
+                text = "Account Actions",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+
+            OutlinedButton(
+                onClick = onNavigateToPurchaseHistory,
+                enabled = enabled,
+                modifier = Modifier.fillMaxWidth(),
+                shape = SkillforgeShapes.button,
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary)
+            ) {
+                Icon(Icons.AutoMirrored.Filled.MenuBook, contentDescription = null)
+                Spacer(modifier = Modifier.width(SkillforgeSpacing.small))
+                Text("Purchase History")
+            }
+
+            if (role.equals("STUDENT", ignoreCase = true)) {
+                Button(
+                    onClick = onBecomeInstructorClick,
+                    enabled = enabled,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = SkillforgeShapes.button,
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                ) {
+                    Icon(Icons.Default.School, contentDescription = null)
+                    Spacer(modifier = Modifier.width(SkillforgeSpacing.small))
+                    Text("Become an Instructor")
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun InitialProfileError(
+    message: String,
+    onRetryClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            modifier = Modifier.padding(SkillforgeLayout.screenHorizontalPadding),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(SkillforgeSpacing.medium)
+        ) {
+            Text(
+                text = message,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodyMedium
+            )
+            OutlinedButton(
+                onClick = onRetryClick,
+                shape = SkillforgeShapes.button
+            ) {
+                Text("Retry")
+            }
         }
     }
 }

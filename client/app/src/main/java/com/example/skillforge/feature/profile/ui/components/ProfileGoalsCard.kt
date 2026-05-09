@@ -8,8 +8,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.skillforge.core.designsystem.SkillforgeShapes
 import com.example.skillforge.core.designsystem.SkillforgeSpacing
+import com.example.skillforge.core.designsystem.TextSecondaryColor
 import com.example.skillforge.core.designsystem.TextFieldBackgroundColor
-import com.example.skillforge.core.designsystem.skillforgeElevatedCardColors
 
 @Composable
 fun ProfileGoalsCard(
@@ -18,23 +18,19 @@ fun ProfileGoalsCard(
     isEditMode: Boolean,
     modifier: Modifier = Modifier
 ) {
-    ElevatedCard(
-        modifier = modifier.fillMaxWidth(),
-        shape = SkillforgeShapes.card,
-        colors = skillforgeElevatedCardColors()
+    Column(
+        modifier = modifier.fillMaxWidth()
     ) {
-        Column(
-            modifier = Modifier.padding(SkillforgeSpacing.medium)
-        ) {
-            Text(
-                text = "Learning Goals",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
+        Text(
+            text = "Learning Goals",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
 
-            Spacer(modifier = Modifier.height(SkillforgeSpacing.medium))
+        Spacer(modifier = Modifier.height(SkillforgeSpacing.medium))
 
+        if (isEditMode) {
             OutlinedTextField(
                 value = learningGoals,
                 onValueChange = onLearningGoalsChange,
@@ -43,7 +39,6 @@ fun ProfileGoalsCard(
                     .fillMaxWidth()
                     .heightIn(min = 140.dp),
                 maxLines = 5,
-                readOnly = !isEditMode,
                 shape = SkillforgeShapes.input,
                 colors = OutlinedTextFieldDefaults.colors(
                     unfocusedContainerColor = TextFieldBackgroundColor,
@@ -51,6 +46,16 @@ fun ProfileGoalsCard(
                     focusedBorderColor = MaterialTheme.colorScheme.primary,
                     unfocusedBorderColor = MaterialTheme.colorScheme.outline
                 )
+            )
+        } else {
+            Text(
+                text = learningGoals.ifBlank { "No learning goals added yet." },
+                style = MaterialTheme.typography.bodyLarge,
+                color = if (learningGoals.isBlank()) {
+                    TextSecondaryColor
+                } else {
+                    MaterialTheme.colorScheme.onSurface
+                }
             )
         }
     }
