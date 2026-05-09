@@ -50,7 +50,6 @@ fun SkillforgeCourseFormScreen(
     var courseSummary by remember { mutableStateOf("") }
     var coursePrice by remember { mutableStateOf("") }
     var selectedCategoryId by remember { mutableStateOf("") }
-    var selectedStatus by remember { mutableStateOf("UNDER_REVIEW") }
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
 
     var showSuccessDialog by remember { mutableStateOf(false) }
@@ -75,7 +74,7 @@ fun SkillforgeCourseFormScreen(
         AlertDialog(
             onDismissRequest = { /* Keep open until user confirms */ },
             title = { Text("Success!", fontWeight = FontWeight.Bold) },
-            text = { Text("Your course has been submitted for review.") },
+            text = { Text("Your course has been successfully created and saved as a Draft.") },
             confirmButton = {
                 Button(
                     onClick = {
@@ -133,7 +132,7 @@ fun SkillforgeCourseFormScreen(
                                 val imageFile = selectedImageUri?.let { uri ->
                                     FileUtil.uriToFile(context, uri)
                                 }
-                                onSaveClick(courseTitle, courseSummary, coursePrice, selectedCategoryId, selectedStatus, imageFile)
+                                onSaveClick(courseTitle, courseSummary, coursePrice, selectedCategoryId, "DRAFT", imageFile)
                             },
                             modifier = Modifier.weight(1f),
                             enabled = !isLoading && courseTitle.isNotBlank() && coursePrice.isNotBlank() && selectedCategoryId.isNotBlank(),
@@ -149,7 +148,7 @@ fun SkillforgeCourseFormScreen(
                                     strokeWidth = 2.dp
                                 )
                             } else {
-                                Text(if (isEditMode) "Save Changes" else "Submit for Review")
+                                Text(if (isEditMode) "Save Changes" else "Create Course")
                             }
                         }
                     }
