@@ -680,6 +680,21 @@ class MainActivity : ComponentActivity() {
                                             viewModel = adminViewModel,
                                             onBack = {
                                                 mainViewModel.navigateTo(AppRoute.AdminPortal(route.session))
+                                            },
+                                            onNavigateToDashboard = {
+                                                mainViewModel.navigateTo(AppRoute.AdminPortal(route.session))
+                                            },
+                                            onNavigateToUsers = {
+                                                mainViewModel.navigateTo(AppRoute.AdminUsers(route.session))
+                                            },
+                                            onNavigateToQueue = {
+                                                mainViewModel.navigateTo(AppRoute.AdminCoursesQueue(route.session))
+                                            },
+                                            onNavigateToCoupons = {
+                                                mainViewModel.navigateTo(AppRoute.AdminPlatformCoupons(route.session))
+                                            },
+                                            onNavigateToFinance = {
+                                                mainViewModel.navigateTo(AppRoute.AdminFinance(route.session))
                                             }
                                         )
                                     }
@@ -690,6 +705,21 @@ class MainActivity : ComponentActivity() {
                                             viewModel = adminViewModel,
                                             onBack = {
                                                 mainViewModel.navigateTo(AppRoute.AdminPortal(route.session))
+                                            },
+                                            onNavigateToDashboard = {
+                                                mainViewModel.navigateTo(AppRoute.AdminPortal(route.session))
+                                            },
+                                            onNavigateToUsers = {
+                                                mainViewModel.navigateTo(AppRoute.AdminUsers(route.session))
+                                            },
+                                            onNavigateToQueue = {
+                                                mainViewModel.navigateTo(AppRoute.AdminCoursesQueue(route.session))
+                                            },
+                                            onNavigateToCoupons = {
+                                                mainViewModel.navigateTo(AppRoute.AdminPlatformCoupons(route.session))
+                                            },
+                                            onNavigateToFinance = {
+                                                mainViewModel.navigateTo(AppRoute.AdminFinance(route.session))
                                             },
                                             onNavigateToPreview = { courseId ->
                                                 mainViewModel.navigateTo(AppRoute.AdminCoursePreview(route.session, courseId))
@@ -703,6 +733,21 @@ class MainActivity : ComponentActivity() {
                                             viewModel = adminViewModel,
                                             onBack = {
                                                 mainViewModel.navigateTo(AppRoute.AdminPortal(route.session))
+                                            },
+                                            onNavigateToDashboard = {
+                                                mainViewModel.navigateTo(AppRoute.AdminPortal(route.session))
+                                            },
+                                            onNavigateToUsers = {
+                                                mainViewModel.navigateTo(AppRoute.AdminUsers(route.session))
+                                            },
+                                            onNavigateToQueue = {
+                                                mainViewModel.navigateTo(AppRoute.AdminCoursesQueue(route.session))
+                                            },
+                                            onNavigateToCoupons = {
+                                                mainViewModel.navigateTo(AppRoute.AdminPlatformCoupons(route.session))
+                                            },
+                                            onNavigateToFinance = {
+                                                mainViewModel.navigateTo(AppRoute.AdminFinance(route.session))
                                             }
                                         )
                                     }
@@ -713,6 +758,21 @@ class MainActivity : ComponentActivity() {
                                             viewModel = adminViewModel,
                                             onBack = {
                                                 mainViewModel.navigateTo(AppRoute.AdminPortal(route.session))
+                                            },
+                                            onNavigateToDashboard = {
+                                                mainViewModel.navigateTo(AppRoute.AdminPortal(route.session))
+                                            },
+                                            onNavigateToUsers = {
+                                                mainViewModel.navigateTo(AppRoute.AdminUsers(route.session))
+                                            },
+                                            onNavigateToQueue = {
+                                                mainViewModel.navigateTo(AppRoute.AdminCoursesQueue(route.session))
+                                            },
+                                            onNavigateToCoupons = {
+                                                mainViewModel.navigateTo(AppRoute.AdminPlatformCoupons(route.session))
+                                            },
+                                            onNavigateToFinance = {
+                                                mainViewModel.navigateTo(AppRoute.AdminFinance(route.session))
                                             }
                                         )
                                     }
