@@ -4,7 +4,9 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -50,11 +52,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.skillforge.core.designsystem.*
+import com.example.skillforge.core.designsystem.components.SkillforgeHeader
 import com.example.skillforge.data.remote.CourseSummaryDto
 import com.example.skillforge.data.remote.InstructorDashboardDto
 import com.example.skillforge.data.remote.InstructorAnalyticsDto
 import com.example.skillforge.feature.profile.viewmodel.ProfileViewModel
 import com.example.skillforge.feature.profile.ui.ProfileScreen
+import com.example.skillforge.feature.notifications.viewmodel.NotificationViewModel
+import com.example.skillforge.feature.home.ui.components.NotificationBottomSheet
 
 enum class SkillforgeInstructorRoute(val title: String, val icon: ImageVector) {
     Dashboard("Dashboard", Icons.Default.Home),
@@ -73,6 +78,7 @@ fun SkillforgeInstructorDashboardScreen(
     token: String,
     profileViewModel: ProfileViewModel,
     qnaViewModel: com.example.skillforge.feature.instructor_portal.viewmodel.InstructorQnAViewModel,
+    notificationViewModel: NotificationViewModel,
     dashboardData: InstructorDashboardDto? = null,
     isLoading: Boolean = false,
     onNavigateToCreateCourse: () -> Unit = {},
@@ -81,6 +87,8 @@ fun SkillforgeInstructorDashboardScreen(
     onLogout: () -> Unit = {}
 ) {
     val profileState by profileViewModel.uiState.collectAsState()
+    val notificationState by notificationViewModel.notificationState.collectAsState()
+    var showNotifications by remember { mutableStateOf(false) }
     var selectedRoute by remember { mutableStateOf(SkillforgeInstructorRoute.Dashboard) }
 
     Scaffold(
@@ -92,10 +100,16 @@ fun SkillforgeInstructorDashboardScreen(
                     avatarToPass = (profileState as com.example.skillforge.feature.profile.viewmodel.ProfileUiState.Success).avatarUrl
                     nameToPass = (profileState as com.example.skillforge.feature.profile.viewmodel.ProfileUiState.Success).fullName
                 }
-                SkillforgeInstructorTopBar(
+                SkillforgeHeader(
+                    name = nameToPass,
                     avatarUrl = avatarToPass,
-                    fullName = nameToPass
-                ) 
+                    subtitle = "INSTRUCTOR PORTAL",
+                    unreadCount = notificationState.unreadCount,
+                    onNotificationClick = {
+                        showNotifications = true
+                        notificationViewModel.fetchNotifications()
+                    }
+                )
             }
         },
         bottomBar = {
@@ -146,6 +160,18 @@ fun SkillforgeInstructorDashboardScreen(
             }
         }
     }
+
+    if (showNotifications) {
+        NotificationBottomSheet(
+            notifications = notificationState.notifications,
+            unreadCount = notificationState.unreadCount,
+            isNotificationLoading = notificationState.isNotificationLoading,
+            errorMessage = notificationState.errorMessage,
+            onNotificationClick = { notification -> notificationViewModel.markAsRead(notification.id) },
+            onMarkAllAsRead = { notificationViewModel.markAllAsRead() },
+            onDismiss = { showNotifications = false },
+        )
+    }
 }
 
 // ... inside InstructorPortalScreen.kt
@@ -173,8 +199,7 @@ fun DashboardTabContent(
     ) {
         item {
             Spacer(modifier = Modifier.height(16.dp))
-            Text("INSTRUCTOR PORTAL", fontSize = 12.sp, color = PrimaryOrange, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
-            Text("Welcome back", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.ExtraBold, color = TextPrimaryColor)
+            Text("Overview", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.ExtraBold, color = TextPrimaryColor)
             Spacer(modifier = Modifier.height(16.dp))
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -282,7 +307,7 @@ fun CourseListTabContent(
 ) {
     var searchQuery by remember { mutableStateOf("") }
     var selectedFilter by remember { mutableStateOf("All Courses") }
-    val filters = listOf("All Courses", "Published", "Drafts", "Under Review")
+    val filters = listOf("All Courses", "Published", "Drafts", "Reviewing")
 
     Column(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
         Spacer(modifier = Modifier.height(16.dp))
@@ -308,7 +333,12 @@ fun CourseListTabContent(
         )
         Spacer(modifier = Modifier.height(12.dp))
 
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
             filters.forEach { filter ->
                 FilterChip(
                     selected = selectedFilter == filter,
@@ -336,7 +366,7 @@ fun CourseListTabContent(
                     val matchesFilter = when (selectedFilter) {
                         "Published" -> course.status == "PUBLISHED"
                         "Drafts" -> course.status == "DRAFT"
-                        "Under Review" -> course.status == "PENDING"
+                        "Reviewing" -> course.status == "PENDING"
                         else -> true // "All Courses"
                     }
                     matchesSearch && matchesFilter
@@ -640,41 +670,6 @@ fun AnalyticsMetricCard(title: String, value: String, growth: String, progressCo
     }
 }
 
-@Composable
-fun SkillforgeInstructorTopBar(
-    avatarUrl: String? = null,
-    fullName: String = "Instructor"
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 20.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            if (avatarUrl != null) {
-                AsyncImage(
-                    model = avatarUrl,
-                    contentDescription = "Profile",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.size(48.dp).clip(CircleShape)
-                )
-            } else {
-                Image(
-                    imageVector = Icons.Default.AccountCircle,
-                    contentDescription = "Profile",
-                    modifier = Modifier.size(48.dp).clip(CircleShape)
-                )
-            }
-            Spacer(modifier = Modifier.width(12.dp))
-            Column {
-                Text(text = "Welcome back,", fontSize = 12.sp, color = TextSecondaryColor)
-                Text(text = fullName, fontWeight = FontWeight.Bold, fontSize = 20.sp, color = TextPrimaryColor)
-            }
-        }
-        
-        Surface { Icon(Icons.Default.Notifications, contentDescription = "Notifications", tint = TextPrimaryColor) }
-    }
-}
 
 @Composable
 fun SkillforgeInstructorBottomBar(selectedRoute: SkillforgeInstructorRoute, onRouteSelected: (SkillforgeInstructorRoute) -> Unit) {
