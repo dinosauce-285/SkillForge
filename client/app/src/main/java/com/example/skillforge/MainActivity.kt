@@ -58,6 +58,8 @@ import com.example.skillforge.feature.main.viewmodel.MainViewModelFactory
 import com.example.skillforge.feature.transaction.ui.TransactionScreenRoute
 import com.example.skillforge.feature.transaction.viewmodel.TransactionViewModel
 import com.example.skillforge.feature.transaction.viewmodel.TransactionViewModelFactory
+import com.example.skillforge.feature.notifications.viewmodel.NotificationViewModel
+import com.example.skillforge.feature.notifications.viewmodel.NotificationViewModelFactory
 import com.example.skillforge.feature.transaction.viewmodel.TransactionHistoryViewModel
 import com.example.skillforge.feature.transaction.viewmodel.TransactionHistoryViewModelFactory
 import androidx.compose.foundation.layout.padding
@@ -149,6 +151,13 @@ class MainActivity : ComponentActivity() {
                     )
                 )
 
+                val notificationViewModel: NotificationViewModel = viewModel(
+                    factory = NotificationViewModelFactory(
+                        appContainer.notificationRepository,
+                        appContainer.notificationHelper
+                    )
+                )
+
                 val currentRoute by mainViewModel.uiState.collectAsState()
 
                 LaunchedEffect(Unit) {
@@ -225,14 +234,14 @@ class MainActivity : ComponentActivity() {
 
                                         val homeViewModel: HomeViewModel = viewModel(
                                             factory = HomeViewModelFactory(
-                                                appContainer.progressRepository,
-                                                appContainer.notificationRepository
+                                                appContainer.progressRepository
                                             )
                                         )
 
                                         HomeScreen(
                                             token = token,
                                             viewModel = homeViewModel,
+                                            notificationViewModel = notificationViewModel,
                                             onNavigateToMyCourses = {
                                                 mainViewModel.navigateTo(AppRoute.MyCourses(session))
                                             },
@@ -366,6 +375,7 @@ class MainActivity : ComponentActivity() {
                                             isLoading = isLoading,
                                             dashboardData = dashboardData,
                                             qnaViewModel = qnaViewModel,
+                                            notificationViewModel = notificationViewModel,
                                             onNavigateToCreateCourse = {
                                                 mainViewModel.navigateTo(AppRoute.CourseForm(route.session))
                                             },
@@ -774,6 +784,9 @@ class MainActivity : ComponentActivity() {
                                             viewModel = resultViewModel,
                                             onBack = {
                                                 mainViewModel.navigateTo(AppRoute.CourseCurriculum(route.session, route.courseId))
+                                            },
+                                            onRetake = { quizId ->
+                                                mainViewModel.navigateTo(AppRoute.StudentQuiz(route.session, route.courseId, quizId))
                                             }
                                         )
                                     }

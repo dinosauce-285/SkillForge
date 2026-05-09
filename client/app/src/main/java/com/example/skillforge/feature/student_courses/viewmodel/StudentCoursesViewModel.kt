@@ -288,4 +288,18 @@ class StudentCoursesViewModel(
             )
         }
     }
+
+    fun markLessonAsCompleted(token: String, courseId: String, lessonId: String) {
+        viewModelScope.launch {
+            progressRepository.markLessonCompleted(lessonId, true).fold(
+                onSuccess = {
+                    // Refresh progress data in course details
+                    loadCourseDetails(courseId, token, forceReload = true)
+                },
+                onFailure = { error ->
+                    error.printStackTrace()
+                }
+            )
+        }
+    }
 }

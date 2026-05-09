@@ -20,4 +20,17 @@ class ProgressRepositoryImpl(
     override suspend fun getCourseProgress(courseId: String): com.example.skillforge.data.remote.CourseProgressDto {
         return progressApi.getCourseProgress(courseId)
     }
+
+    override suspend fun markLessonCompleted(lessonId: String, isCompleted: Boolean): Result<Unit> {
+        return try {
+            val response = progressApi.markLessonCompleted(lessonId, com.example.skillforge.data.remote.MarkLessonRequest(isCompleted))
+            if (response.isSuccessful) {
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception("Failed to mark lesson: ${response.message()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

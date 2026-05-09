@@ -139,6 +139,7 @@ class AppContainer(private val context: Context) {
     val orderRepository: OrderRepository = OrderRepositoryImpl(orderApi)
     val progressRepository: ProgressRepository = ProgressRepositoryImpl(progressApi)
     val notificationRepository: NotificationRepository = NotificationRepositoryImpl(notificationApi)
+    val notificationHelper = com.example.skillforge.core.notifications.NotificationHelper(context)
     val reviewRepository: ReviewRepository = ReviewRepositoryImpl(reviewApi)
     val dashboardRepository: DashboardRepository = DashboardRepositoryImpl(dashboardApi)
     val couponRepository: CouponRepository = CouponRepositoryImpl(couponApi)
