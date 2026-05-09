@@ -6,4 +6,5 @@ import com.example.skillforge.data.remote.CourseProgressDto
 interface ProgressRepository {
     suspend fun getDashboardProgress(token: String): HomeDashboard
     suspend fun getCourseProgress(courseId: String): CourseProgressDto
+    suspend fun markLessonCompleted(lessonId: String, isCompleted: Boolean = true): Result<Unit>
 }

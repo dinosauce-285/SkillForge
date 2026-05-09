@@ -30,6 +30,39 @@ export class DashboardService {
         select: { enrolledAt: true },
       });
 
+      // 2.5 Fetch all financial snapshots for the last 6 months for chart revenue
+      const recentFinancials = await this.prisma.orderFinancialSnapshot.findMany({
+        where: {
+          order: { course: { instructorId: instructorId } },
+          createdAt: { gte: sixMonthsAgo },
+        },
+        select: { createdAt: true, instructorNetRevenue: true },
+      });
+
+      // 2.6 Fetch lifetime earnings
+      const lifetimeFinancials = await this.prisma.orderFinancialSnapshot.aggregate({
+        where: { order: { course: { instructorId: instructorId } } },
+        _sum: { instructorNetRevenue: true },
+      });
+      const lifetimeEarnings = lifetimeFinancials._sum?.instructorNetRevenue?.toNumber() || 0;
+
+      // 2.7 Fetch Quiz Attempts to calculate pass/fail rate
+      const quizAttempts = await this.prisma.quizAttempt.findMany({
+        where: {
+          quiz: { chapter: { course: { instructorId: instructorId } } },
+          status: 'GRADED',
+        },
+        select: { isPassed: true },
+      });
+
+      let passRate = 0;
+      let failRate = 0;
+      if (quizAttempts.length > 0) {
+        const passedCount = quizAttempts.filter((a) => a.isPassed).length;
+        passRate = Math.round((passedCount / quizAttempts.length) * 100);
+        failRate = 100 - passRate;
+      }
+
       // 3. Initialize an empty array with explicit TypeScript types to fix the 'never[]' error
       const monthNames = [
         'Jan',
@@ -45,7 +78,7 @@ export class DashboardService {
         'Nov',
         'Dec',
       ];
-      const chartDataRaw: { month: string; year: number; count: number }[] = [];
+      const chartDataRaw: { month: string; year: number; count: number; revenue: number }[] = [];
 
       for (let i = 5; i >= 0; i--) {
         const d = new Date();
@@ -55,6 +88,7 @@ export class DashboardService {
           month: monthNames[d.getMonth()],
           year: d.getFullYear(),
           count: 0,
+          revenue: 0,
         });
       }
 
@@ -71,14 +105,25 @@ export class DashboardService {
         }
       });
 
+      // 4.5 Populate the array with actual revenue
+      recentFinancials.forEach((financial) => {
+        const monthStr = monthNames[financial.createdAt.getMonth()];
+        const yearNum = financial.createdAt.getFullYear();
+
+        const targetMonth = chartDataRaw.find(
+          (c) => c.month === monthStr && c.year === yearNum,
+        );
+        if (targetMonth) {
+          targetMonth.revenue += financial.instructorNetRevenue.toNumber();
+        }
+      });
+
       // 5. Format to match the DTO expected by Android
       const chartData = chartDataRaw.map((c) => {
-        // Generate mock revenue based on count
-        const fakeRevenue = c.count === 0 ? Math.random() * 50 : c.count * (100 + Math.random() * 50);
         return {
           month: c.month,
           count: c.count,
-          revenue: parseFloat(fakeRevenue.toFixed(2))
+          revenue: parseFloat(c.revenue.toFixed(2))
         }
       });
 
@@ -86,9 +131,9 @@ export class DashboardService {
         stats: {
           totalStudents,
           activeCourses,
-          totalEarnings: chartData.reduce((acc, obj) => acc + obj.revenue, 0),
-          passRate: 75,
-          failRate: 25
+          totalEarnings: lifetimeEarnings,
+          passRate: passRate,
+          failRate: failRate
         },
         chartData,
       };

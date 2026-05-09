@@ -91,8 +91,7 @@ fun MyCoursesScreen(
 
     val homeViewModel: HomeViewModel = viewModel(
         factory = HomeViewModelFactory(
-            appContainer.progressRepository,
-            appContainer.notificationRepository
+            appContainer.progressRepository
         )
     )
     val homeUiState by homeViewModel.uiState.collectAsState()

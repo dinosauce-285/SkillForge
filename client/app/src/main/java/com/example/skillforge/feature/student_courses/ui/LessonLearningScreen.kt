@@ -140,6 +140,7 @@ fun LessonLearningScreen(
             course != null -> LessonBody(
                 course = course,
                 lessonId = lessonId,
+                completedLessonIds = courseUiState.completedLessonIds,
                 lesson = lessonUiState.lesson,
                 discussions = lessonUiState.discussions,
                 lessonLoading = lessonUiState.isLoading,
@@ -147,6 +148,9 @@ fun LessonLearningScreen(
                 onLessonSelected = onLessonSelected,
                 onPostComment = { content, parentId ->
                     viewModel.postDiscussion(sessionToken, lessonId, content, parentId)
+                },
+                onLessonComplete = {
+                    viewModel.markLessonAsCompleted(sessionToken, courseId, lessonId)
                 },
                 modifier = Modifier.padding(padding),
             )
@@ -160,12 +164,14 @@ private enum class Tab(val label: String) { CONTENT("Lesson Content"), CURRICULU
 private fun LessonBody(
     course: CourseDetails,
     lessonId: String,
+    completedLessonIds: List<String>,
     lesson: LessonContent?,
     discussions: List<DiscussionDto>,
     lessonLoading: Boolean,
     lessonError: String?,
     onLessonSelected: (String) -> Unit,
     onPostComment: (String, String?) -> Unit,
+    onLessonComplete: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     var selectedTab by rememberSaveable { mutableStateOf(Tab.CONTENT) }
@@ -176,7 +182,7 @@ private fun LessonBody(
     }
 
     LazyColumn(modifier = modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 16.dp)) {
-        item { VideoArea(lesson, lessonLoading, lessonError) }
+        item { VideoArea(lesson, lessonLoading, lessonError, onLessonComplete) }
         item { lesson?.let { LessonInfo(it) } }
         item { Tabs(selectedTab) { selectedTab = it } }
         item {
@@ -185,8 +191,14 @@ private fun LessonBody(
                 verticalArrangement = Arrangement.spacedBy(SkillforgeSpacing.large),
             ) {
                 when (selectedTab) {
-                    Tab.CONTENT -> LessonContentPane(lesson, lessonLoading, lessonError)
-                    Tab.CURRICULUM -> CurriculumPane(course, lessonId, expandedIds, { id ->
+                    Tab.CONTENT -> LessonContentPane(
+                        lesson = lesson, 
+                        loading = lessonLoading, 
+                        error = lessonError,
+                        isCompleted = lessonId in completedLessonIds,
+                        onComplete = onLessonComplete
+                    )
+                    Tab.CURRICULUM -> CurriculumPane(course, lessonId, completedLessonIds, expandedIds, { id ->
                         expandedIds = if (id in expandedIds) expandedIds - id else expandedIds + id
                     }, onLessonSelected)
                     Tab.DISCUSSION -> DiscussionPane(
@@ -201,7 +213,7 @@ private fun LessonBody(
 }
 
 @Composable
-private fun VideoArea(lesson: LessonContent?, loading: Boolean, error: String?) {
+private fun VideoArea(lesson: LessonContent?, loading: Boolean, error: String?, onVideoEnd: () -> Unit = {}) {
     val video = lesson?.materials?.firstOrNull {
         it.type.equals("VIDEO", ignoreCase = true) ||
             it.fileUrl.substringBefore('?').lowercase().endsWith(".mp4") ||
@@ -210,8 +222,8 @@ private fun VideoArea(lesson: LessonContent?, loading: Boolean, error: String?) 
     when {
         loading && lesson == null -> LoadingState(Modifier.fillMaxWidth().height(240.dp))
         error != null && lesson == null -> ErrorState(error, Modifier.padding(16.dp))
-        video != null && isYouTubeUrl(video.fileUrl) -> ExternalVideoCard(video.fileUrl)
-        video != null -> VideoPlayer(video.fileUrl)
+        video != null && isYouTubeUrl(video.fileUrl) -> ExternalVideoCard(video.fileUrl, onVideoEnd)
+        video != null -> VideoPlayer(video.fileUrl, onVideoEnd)
         else -> Box(Modifier.fillMaxWidth().aspectRatio(16f / 9f).background(Color.Black), contentAlignment = Alignment.Center) {
             Text("This lesson has no video", color = Color.White.copy(alpha = 0.85f))
         }
@@ -219,7 +231,7 @@ private fun VideoArea(lesson: LessonContent?, loading: Boolean, error: String?) 
 }
 
 @Composable
-private fun ExternalVideoCard(url: String) {
+private fun ExternalVideoCard(url: String, onVideoEnd: () -> Unit = {}) {
     val context = LocalContext.current
     Column(
         modifier = Modifier
@@ -254,9 +266,11 @@ private fun ExternalVideoCard(url: String) {
 
                 try {
                     context.startActivity(appIntent)
+                    onVideoEnd()
                 } catch (_: Exception) {
                     try {
                         context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                        onVideoEnd()
                     } catch (_: Exception) {
                         // no-op: keep UI stable if no app can handle the URL
                     }
@@ -303,7 +317,7 @@ private fun Tabs(selected: Tab, onSelect: (Tab) -> Unit) {
 }
 
 @Composable
-private fun LessonContentPane(lesson: LessonContent?, loading: Boolean, error: String?) {
+private fun LessonContentPane(lesson: LessonContent?, loading: Boolean, error: String?, isCompleted: Boolean = false, onComplete: () -> Unit = {}) {
     when {
         loading && lesson == null -> LoadingState()
         error != null && lesson == null -> ErrorState(error)
@@ -324,6 +338,27 @@ private fun LessonContentPane(lesson: LessonContent?, loading: Boolean, error: S
                 lesson.materials.filter { it.type != "VIDEO" }.ifEmpty { emptyList() }.forEach { ResourceCard(it) }
                 if (lesson.materials.none { it.type != "VIDEO" }) {
                     Text("No additional resources for this lesson yet.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+
+                Spacer(modifier = Modifier.height(SkillforgeSpacing.medium))
+                
+                Button(
+                    onClick = onComplete,
+                    enabled = !isCompleted,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (isCompleted) Color(0xFF4CAF50) else PrimaryOrange,
+                        contentColor = Color.White
+                    )
+                ) {
+                    if (isCompleted) {
+                        Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text("Completed")
+                    } else {
+                        Text("Mark as Completed")
+                    }
                 }
             }
         }
@@ -365,18 +400,18 @@ private fun ResourceCard(material: LessonMaterial) {
 }
 
 @Composable
-private fun CurriculumPane(course: CourseDetails, lessonId: String, expandedIds: Set<String>, onToggle: (String) -> Unit, onLessonSelected: (String) -> Unit) {
+private fun CurriculumPane(course: CourseDetails, lessonId: String, completedLessonIds: List<String>, expandedIds: Set<String>, onToggle: (String) -> Unit, onLessonSelected: (String) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Text("Course Outline", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         Text("${course.chapters.size} chapters • ${course.chapters.sumOf { it.lessons.size }} lessons", color = MaterialTheme.colorScheme.onSurfaceVariant)
         course.chapters.forEachIndexed { index, chapter ->
-            ChapterBlock(chapter, index + 1, lessonId, chapter.id in expandedIds, { onToggle(chapter.id) }, onLessonSelected)
+            ChapterBlock(chapter, index + 1, lessonId, completedLessonIds, chapter.id in expandedIds, { onToggle(chapter.id) }, onLessonSelected)
         }
     }
 }
 
 @Composable
-private fun ChapterBlock(chapter: CourseChapter, number: Int, lessonId: String, expanded: Boolean, onToggle: () -> Unit, onLessonSelected: (String) -> Unit) {
+private fun ChapterBlock(chapter: CourseChapter, number: Int, lessonId: String, completedLessonIds: List<String>, expanded: Boolean, onToggle: () -> Unit, onLessonSelected: (String) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(Modifier.fillMaxWidth().clickable(onClick = onToggle).padding(vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Top) {
             Box(Modifier.padding(top = 6.dp).size(10.dp).background(PrimaryOrange, RoundedCornerShape(99.dp)))
@@ -391,7 +426,16 @@ private fun ChapterBlock(chapter: CourseChapter, number: Int, lessonId: String, 
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
                 Box(Modifier.padding(start = 4.dp).width(2.dp).height((chapter.lessons.size * 58).dp).background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f)))
                 Column(Modifier.padding(start = 22.dp).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    chapter.lessons.forEachIndexed { idx, lesson -> LessonRow(lesson, idx + 1, lesson.id == lessonId) { onLessonSelected(lesson.id) } }
+                    chapter.lessons.forEachIndexed { idx, lesson -> 
+                        LessonRow(
+                            lesson = lesson, 
+                            number = idx + 1, 
+                            selected = lesson.id == lessonId,
+                            isCompleted = lesson.id in completedLessonIds
+                        ) { 
+                            onLessonSelected(lesson.id) 
+                        } 
+                    }
                 }
             }
         }
@@ -399,14 +443,26 @@ private fun ChapterBlock(chapter: CourseChapter, number: Int, lessonId: String, 
 }
 
 @Composable
-private fun LessonRow(lesson: CourseLesson, number: Int, selected: Boolean, onClick: () -> Unit) {
+private fun LessonRow(lesson: CourseLesson, number: Int, selected: Boolean, isCompleted: Boolean = false, onClick: () -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth().clickable(onClick = onClick).clip(RoundedCornerShape(12.dp)).background(if (selected) PrimaryOrange.copy(alpha = 0.1f) else Color.Transparent).padding(horizontal = 12.dp, vertical = 12.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(Modifier.width(12.dp).height(2.dp).background(if (selected) PrimaryOrange else MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(99.dp)))
-        Icon(Icons.Default.PlayLesson, contentDescription = null, tint = if (selected) PrimaryOrange else MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
+        
+        val icon = when {
+            isCompleted -> Icons.Default.CheckCircle
+            selected -> Icons.Default.PlayLesson
+            else -> Icons.Default.PlayLesson
+        }
+        val iconTint = when {
+            isCompleted -> Color(0xFF4CAF50) // Green for completion
+            selected -> PrimaryOrange
+            else -> MaterialTheme.colorScheme.onSurfaceVariant
+        }
+
+        Icon(icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(18.dp))
         Column(Modifier.weight(1f)) {
             Text("Lesson $number", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelMedium)
             Text(lesson.title, fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium)
@@ -622,7 +678,7 @@ private fun LessonNavBar(course: CourseDetails, lessonId: String, onLessonSelect
 }
 
 @Composable
-private fun VideoPlayer(url: String) {
+private fun VideoPlayer(url: String, onVideoEnd: () -> Unit = {}) {
     val context = LocalContext.current
     var playbackError by remember(url) { mutableStateOf<String?>(null) }
     var isBuffering by remember(url) { mutableStateOf(true) }
@@ -647,6 +703,9 @@ private fun VideoPlayer(url: String) {
                     object : Player.Listener {
                         override fun onPlaybackStateChanged(playbackState: Int) {
                             isBuffering = playbackState == Player.STATE_BUFFERING
+                            if (playbackState == Player.STATE_ENDED) {
+                                onVideoEnd()
+                            }
                         }
 
                         override fun onPlayerError(error: PlaybackException) {
@@ -766,6 +825,7 @@ private fun LessonLearningPreview() {
         LessonBody(
             course = StudentCourseMockData.courseDetails,
             lessonId = "lesson-1",
+            completedLessonIds = emptyList(),
             lesson = LessonContent(
                 id = "lesson-1",
                 title = "Advanced Component Layouts",

@@ -31,4 +31,14 @@ interface ProgressApi {
 
     @GET("progress/courses/{courseId}")
     suspend fun getCourseProgress(@Path("courseId") courseId: String): CourseProgressDto
+
+    @retrofit2.http.POST("progress/lessons/{lessonId}/mark")
+    suspend fun markLessonCompleted(
+        @Path("lessonId") lessonId: String,
+        @retrofit2.http.Body request: MarkLessonRequest
+    ): retrofit2.Response<Unit>
 }
+
+data class MarkLessonRequest(
+    val isCompleted: Boolean = true
+)

@@ -21,27 +21,30 @@ import com.example.skillforge.domain.model.HomeDashboard
 import com.example.skillforge.feature.home.ui.components.ActiveCourseList
 import com.example.skillforge.feature.home.ui.components.ContinueLearningCard
 import com.example.skillforge.feature.home.ui.components.EmptyDashboardState
-import com.example.skillforge.feature.home.ui.components.HomeWelcomeHeader
+import com.example.skillforge.core.designsystem.components.SkillforgeHeader
 import com.example.skillforge.feature.home.ui.components.NotificationBottomSheet
 import com.example.skillforge.feature.home.ui.components.StudentStatsRow
 import com.example.skillforge.feature.home.viewmodel.HomeUiState
 import com.example.skillforge.feature.home.viewmodel.HomeViewModel
 
+import com.example.skillforge.feature.notifications.viewmodel.NotificationViewModel
+
 @Composable
 fun HomeScreen(
     token: String, // Kept for repository compatibility if needed
     viewModel: HomeViewModel,
+    notificationViewModel: NotificationViewModel,
     onNavigateToMyCourses: () -> Unit = {},
     onNavigateToDiscovery: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val notificationState by viewModel.notificationState.collectAsState()
+    val notificationState by notificationViewModel.notificationState.collectAsState()
     var showNotifications by remember { mutableStateOf(false) }
 
     // Fetch dashboard data whenever the token changes or on initial composition
     LaunchedEffect(token) {
         viewModel.fetchDashboard(token)
-        viewModel.fetchNotifications()
+        notificationViewModel.fetchNotifications()
     }
 
     HomeScreenContent(
@@ -51,7 +54,7 @@ fun HomeScreen(
         onNavigateToDiscovery = onNavigateToDiscovery,
         onNotificationClick = {
             showNotifications = true
-            viewModel.fetchNotifications()
+            notificationViewModel.fetchNotifications()
         },
         onRetry = { viewModel.fetchDashboard(token) }
     )
@@ -62,8 +65,8 @@ fun HomeScreen(
             unreadCount = notificationState.unreadCount,
             isNotificationLoading = notificationState.isNotificationLoading,
             errorMessage = notificationState.errorMessage,
-            onNotificationClick = { notification -> viewModel.markAsRead(notification.id) },
-            onMarkAllAsRead = { viewModel.markAllAsRead() },
+            onNotificationClick = { notification -> notificationViewModel.markAsRead(notification.id) },
+            onMarkAllAsRead = { notificationViewModel.markAllAsRead() },
             onDismiss = { showNotifications = false },
         ) 
     }
@@ -119,10 +122,11 @@ fun HomeScreenContent(
                             .fillMaxSize()
                             .verticalScroll(rememberScrollState())
                     ) {
-                        HomeWelcomeHeader(
-                            studentName = dashboard.studentName,
-                            onNotificationClick = onNotificationClick,
+                        SkillforgeHeader(
+                            name = dashboard.studentName,
+                            subtitle = "Let's continue your journey.",
                             unreadCount = unreadCount,
+                            onNotificationClick = onNotificationClick
                         )
 
                         Spacer(modifier = Modifier.height(SkillforgeSpacing.large))
