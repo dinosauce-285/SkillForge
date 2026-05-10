@@ -27,7 +27,7 @@ export class CouponsService {
         expiresAt: createCouponDto.expiresAt ? new Date(createCouponDto.expiresAt) : null,
         isActive: createCouponDto.isActive ?? true,
         instructorId,
-        scope: CouponScope.INSTRUCTOR,
+        scope: createCouponDto.scope ?? CouponScope.INSTRUCTOR,
       },
     });
   }
@@ -166,7 +166,7 @@ export class CouponsService {
     }
 
     if (course.instructorId !== coupon.instructorId) {
-      throw new BadRequestException('This coupon cannot be applied to this course');
+      throw new NotFoundException('Coupon not found');
     }
   }
 }

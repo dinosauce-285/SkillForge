@@ -229,15 +229,34 @@ fun TransactionScreen(
                                     )
                                 }
                                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                    Text(
-                                        course.title,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 14.sp,
-                                        lineHeight = 18.sp,
-                                        maxLines = 2
-                                    )
+                                    Text(course.title, fontWeight = FontWeight.Bold, fontSize = 14.sp, lineHeight = 18.sp, maxLines = 2)
                                     Text("Instructor: ${course.instructorName}", fontSize = 12.sp, color = Color.Gray)
-                                    Text(formatPrice(course.price), fontWeight = FontWeight.Bold, color = PrimaryOrange, fontSize = 14.sp)
+                                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                        if (uiState.discountPercent > 0) {
+                                            Text(
+                                                formatPrice(course.price),
+                                                style = MaterialTheme.typography.bodySmall.copy(
+                                                    color = Color.Gray,
+                                                    textDecoration = androidx.compose.ui.text.style.TextDecoration.LineThrough
+                                                ),
+                                                fontSize = 12.sp
+                                            )
+                                            val discountedPrice = course.price * (1 - (uiState.discountPercent / 100.0))
+                                            Text(
+                                                formatPrice(discountedPrice),
+                                                fontWeight = FontWeight.Bold,
+                                                color = PrimaryOrange,
+                                                fontSize = 14.sp
+                                            )
+                                        } else {
+                                            Text(
+                                                formatPrice(course.price),
+                                                fontWeight = FontWeight.Bold,
+                                                color = PrimaryOrange,
+                                                fontSize = 14.sp
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }

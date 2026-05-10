@@ -34,4 +34,8 @@ export class CreateCouponDto {
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
+
+  @IsOptional()
+  @IsString()
+  scope?: import('@prisma/client').CouponScope;
 }
