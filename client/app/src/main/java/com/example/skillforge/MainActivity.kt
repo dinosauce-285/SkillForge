@@ -106,6 +106,7 @@ class MainActivity : ComponentActivity() {
                         appContainer.lessonRepository,
                         appContainer.progressRepository,
                         appContainer.reviewRepository,
+                        appContainer.favoriteRepository,
                     )
                 )
                 val transactionViewModel: TransactionViewModel = viewModel(
@@ -278,8 +279,8 @@ class MainActivity : ComponentActivity() {
                                         onOpenCurriculum = { courseId ->
                                             mainViewModel.navigateTo(AppRoute.CourseCurriculum(route.session, courseId))
                                         },
-                                        onCheckoutSelected = { courseId ->
-                                            mainViewModel.navigateTo(AppRoute.Checkout(route.session, courseId))
+                                        onCheckoutSelected = { courseIds ->
+                                            mainViewModel.navigateTo(AppRoute.Checkout(route.session, courseIds))
                                         },
                                         onBack = {
                                             mainViewModel.navigateTo(AppRoute.StudentCourseListing(route.session))
@@ -305,15 +306,14 @@ class MainActivity : ComponentActivity() {
                                     )
 
                                     is AppRoute.Checkout -> TransactionScreenRoute(
-                                        courseId = route.courseId,
+                                        courseIds = route.courseIds,
                                         token = route.session.accessToken,
                                         viewModel = transactionViewModel,
                                         onBackClick = {
-                                            mainViewModel.navigateTo(AppRoute.StudentCourseDetails(route.session, route.courseId))
+                                            mainViewModel.navigateTo(AppRoute.Home(route.session))
                                         },
                                         onPaymentSuccess = {
-                                            studentCoursesViewModel.loadCourseDetails(route.courseId, route.session.accessToken, forceReload = true)
-                                            mainViewModel.navigateTo(AppRoute.CourseCurriculum(route.session, route.courseId))
+                                            mainViewModel.navigateTo(AppRoute.MyCourses(route.session))
                                         }
                                     )
 
@@ -589,14 +589,17 @@ class MainActivity : ComponentActivity() {
                                         session = route.session,
                                         viewModel = favoriteViewModel,
                                         onBackClick = {
-                                            mainViewModel.navigateTo(AppRoute.StudentCourseListing(route.session))
+                                            mainViewModel.navigateTo(AppRoute.Home(route.session))
                                         },
                                         onCourseClick = { courseId ->
                                             mainViewModel.navigateTo(AppRoute.StudentCourseDetails(route.session, courseId))
                                         },
+                                        onCheckoutSelected = { courseIds ->
+                                            mainViewModel.navigateTo(AppRoute.Checkout(route.session, courseIds))
+                                        },
                                         onNavigateToDiscovery = {
                                             mainViewModel.navigateTo(AppRoute.StudentCourseListing(route.session))
-                                        },
+                                        }
                                     )
 
                                     is AppRoute.MyCourses -> {

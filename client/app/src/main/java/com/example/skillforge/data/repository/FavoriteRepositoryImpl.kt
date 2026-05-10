@@ -33,4 +33,32 @@ class FavoriteRepositoryImpl(
             Result.failure(Exception(e.message ?: "Failed to load favorites"))
         }
     }
+
+    override suspend fun addFavorite(token: String, courseId: String): Result<Unit> {
+        return try {
+            val bearerToken = if (token.startsWith("Bearer ")) token else "Bearer $token"
+            val response = api.addFavorite(bearerToken, mapOf("courseId" to courseId))
+            if (response.isSuccessful) {
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception("Failed to add to wishlist"))
+            }
+        } catch (e: Exception) {
+            Result.failure(Exception(e.message ?: "Failed to add to wishlist"))
+        }
+    }
+
+    override suspend fun removeFavorite(token: String, courseId: String): Result<Unit> {
+        return try {
+            val bearerToken = if (token.startsWith("Bearer ")) token else "Bearer $token"
+            val response = api.removeFavorite(bearerToken, courseId)
+            if (response.isSuccessful) {
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception("Failed to remove from wishlist"))
+            }
+        } catch (e: Exception) {
+            Result.failure(Exception(e.message ?: "Failed to remove from wishlist"))
+        }
+    }
 }

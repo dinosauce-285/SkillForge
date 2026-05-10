@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 data class TransactionUiState(
-    val course: CourseSummary? = null,
+    val courses: List<CourseSummary> = emptyList(),
     val promoCode: String = "",
     val discountPercent: Int = 0,
     val isLoading: Boolean = false,
@@ -23,7 +23,8 @@ data class TransactionUiState(
     val promoApplied: Boolean = false,  // true = applied successfully
     val orderSuccessful: Boolean = false,
 ) {
-    val totalPrice: Double get() = (course?.price ?: 0.0) * (1 - (discountPercent / 100.0))
+    val totalPrice: Double get() = courses.sumOf { it.price } * (1 - (discountPercent / 100.0))
+    val course: CourseSummary? get() = courses.firstOrNull() // For backward compatibility in UI if needed
 }
 
 class TransactionViewModel(
@@ -38,40 +39,53 @@ class TransactionViewModel(
         _uiState.value = TransactionUiState()
     }
 
-    fun loadCourse(courseId: String) {
+    fun loadCourses(courseIds: String) {
         viewModelScope.launch {
             _uiState.value = TransactionUiState(isLoading = true)
-            courseRepository.getCourseDetails(courseId).fold(
-                onSuccess = { courseDetails ->
-                    val summary = CourseSummary(
-                        id = courseDetails.id,
-                        title = courseDetails.title,
-                        subtitle = courseDetails.subtitle,
-                        summary = courseDetails.summary,
-                        thumbnailUrl = courseDetails.thumbnailUrl,
-                        categoryId = "", // Not needed for transaction
-                        categoryName = courseDetails.categoryName,
-                        instructorName = courseDetails.instructorName,
-                        level = courseDetails.level,
-                        price = courseDetails.price,
-                        isFree = courseDetails.isFree,
-                        averageRating = courseDetails.averageRating,
-                        studentCount = courseDetails.studentCount,
-                        reviewCount = courseDetails.reviewCount,
-                        chapterCount = courseDetails.chapterCount,
-                        tags = courseDetails.tags,
-                    )
-                    _uiState.update { it.copy(course = summary, isLoading = false) }
-                },
-                onFailure = { error ->
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            errorMessage = error.message ?: "Failed to load course"
+            val ids = courseIds.split(",").filter { it.isNotBlank() }
+            val loadedCourses = mutableListOf<CourseSummary>()
+            
+            var hasError = false
+            for (id in ids) {
+                courseRepository.getCourseDetails(id).fold(
+                    onSuccess = { courseDetails ->
+                        loadedCourses.add(
+                            CourseSummary(
+                                id = courseDetails.id,
+                                title = courseDetails.title,
+                                subtitle = courseDetails.subtitle,
+                                summary = courseDetails.summary,
+                                thumbnailUrl = courseDetails.thumbnailUrl,
+                                categoryId = "",
+                                categoryName = courseDetails.categoryName,
+                                instructorName = courseDetails.instructorName,
+                                level = courseDetails.level,
+                                price = courseDetails.price,
+                                isFree = courseDetails.isFree,
+                                averageRating = courseDetails.averageRating,
+                                studentCount = courseDetails.studentCount,
+                                reviewCount = courseDetails.reviewCount,
+                                chapterCount = courseDetails.chapterCount,
+                                tags = courseDetails.tags,
+                            )
                         )
+                    },
+                    onFailure = { error ->
+                        hasError = true
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                errorMessage = error.message ?: "Failed to load course $id"
+                            )
+                        }
                     }
-                }
-            )
+                )
+                if (hasError) break
+            }
+
+            if (!hasError) {
+                _uiState.update { it.copy(courses = loadedCourses, isLoading = false) }
+            }
         }
     }
 
@@ -81,14 +95,15 @@ class TransactionViewModel(
 
     fun applyPromoCode() {
         val code = _uiState.value.promoCode.trim()
-        val courseId = _uiState.value.course?.id
-        if (code.isEmpty() || courseId == null) {
+        val firstCourseId = _uiState.value.courses.firstOrNull()?.id
+        if (code.isEmpty() || firstCourseId == null) {
             _uiState.update { it.copy(discountPercent = 0, promoMessage = null, promoApplied = false) }
             return
         }
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, promoMessage = null, promoApplied = false) }
-            val result = couponRepository.validateCoupon(code, courseId)
+            // For now, apply coupon to the first course or handle it as a general discount if supported
+            val result = couponRepository.validateCoupon(code, firstCourseId)
             if (result.isSuccess) {
                 val validationResponse = result.getOrNull()
                 if (validationResponse != null) {
@@ -115,28 +130,37 @@ class TransactionViewModel(
     }
 
     fun confirmPayment(token: String) {
-        val course = _uiState.value.course ?: return
+        val courses = _uiState.value.courses
+        if (courses.isEmpty()) return
+        
         viewModelScope.launch {
             _uiState.update { it.copy(isProcessing = true, errorMessage = null) }
             val couponCode = if (_uiState.value.discountPercent > 0) _uiState.value.promoCode else null
-            orderRepository.createOrder(token, course.id, _uiState.value.totalPrice, couponCode).fold(
-                onSuccess = { order ->
+            
+            var allSuccessful = true
+            for (course in courses) {
+                val priceWithDiscount = course.price * (1 - (_uiState.value.discountPercent / 100.0))
+                val result = orderRepository.createOrder(token, course.id, priceWithDiscount, couponCode)
+                if (result.isFailure) {
+                    allSuccessful = false
                     _uiState.update {
                         it.copy(
                             isProcessing = false,
-                            orderSuccessful = true
+                            errorMessage = "Failed to purchase ${course.title}: ${result.exceptionOrNull()?.message}"
                         )
                     }
-                },
-                onFailure = { error ->
-                    _uiState.update {
-                        it.copy(
-                            isProcessing = false,
-                            errorMessage = error.message ?: "Failed to create order"
-                        )
-                    }
+                    break
                 }
-            )
+            }
+
+            if (allSuccessful) {
+                _uiState.update {
+                    it.copy(
+                        isProcessing = false,
+                        orderSuccessful = true
+                    )
+                }
+            }
         }
     }
 }

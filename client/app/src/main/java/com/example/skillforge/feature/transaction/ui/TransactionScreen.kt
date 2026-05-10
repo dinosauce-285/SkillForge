@@ -40,7 +40,7 @@ import com.example.skillforge.feature.transaction.viewmodel.TransactionViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TransactionScreenRoute(
-    courseId: String,
+    courseIds: String,
     token: String,
     viewModel: TransactionViewModel,
     onBackClick: () -> Unit = {},
@@ -48,8 +48,8 @@ fun TransactionScreenRoute(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    LaunchedEffect(courseId) {
-        viewModel.loadCourse(courseId)
+    LaunchedEffect(courseIds) {
+        viewModel.loadCourses(courseIds)
     }
 
     DisposableEffect(Unit) {
@@ -119,7 +119,7 @@ fun TransactionScreen(
                             .height(56.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange),
                         shape = RoundedCornerShape(12.dp),
-                        enabled = !uiState.isProcessing && uiState.course != null
+                        enabled = !uiState.isProcessing && uiState.courses.isNotEmpty()
                     ) {
                         if (uiState.isProcessing) {
                             CircularProgressIndicator(
@@ -196,43 +196,49 @@ fun TransactionScreen(
                             }
                         }
                     }
+                }
 
-                    Surface(
-                        modifier = Modifier.fillMaxWidth(),
-                        color = Color.White,
-                        shape = RoundedCornerShape(12.dp),
-                        border = BorderStroke(1.dp, Color.LightGray.copy(alpha = 0.3f))
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(16.dp),
-                            horizontalArrangement = Arrangement.spacedBy(16.dp)
+                // Products List
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    uiState.courses.forEach { course ->
+                        Surface(
+                            modifier = Modifier.fillMaxWidth(),
+                            color = Color.White,
+                            shape = RoundedCornerShape(12.dp),
+                            border = BorderStroke(1.dp, Color.LightGray.copy(alpha = 0.3f))
                         ) {
-                            val thumbnailUrl = uiState.course?.thumbnailUrl?.takeIf { it.isNotBlank() }
-                            if (thumbnailUrl != null) {
-                                AsyncImage(
-                                    model = thumbnailUrl,
-                                    contentDescription = uiState.course?.title,
-                                    modifier = Modifier
-                                        .size(96.dp)
-                                        .clip(RoundedCornerShape(8.dp)),
-                                    contentScale = ContentScale.Crop
-                                )
-                            } else {
-                                Box(
-                                    modifier = Modifier
-                                        .size(96.dp)
-                                        .background(Color.LightGray, RoundedCornerShape(8.dp))
-                                )
-                            }
-                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                Text(
-                                    uiState.course?.title ?: "Loading...",
-                                    fontWeight = FontWeight.Bold,
-                                    lineHeight = 20.sp,
-                                    maxLines = 2
-                                )
-                                Text("Instructor: ${uiState.course?.instructorName}", fontSize = 14.sp, color = Color.Gray)
-                                Text(formatPrice(uiState.course?.price ?: 0.0), fontWeight = FontWeight.Bold, color = PrimaryOrange)
+                            Row(
+                                modifier = Modifier.padding(16.dp),
+                                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                            ) {
+                                val thumbnailUrl = course.thumbnailUrl?.takeIf { it.isNotBlank() }
+                                if (thumbnailUrl != null) {
+                                    AsyncImage(
+                                        model = thumbnailUrl,
+                                        contentDescription = course.title,
+                                        modifier = Modifier
+                                            .size(72.dp)
+                                            .clip(RoundedCornerShape(8.dp)),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                } else {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(72.dp)
+                                            .background(Color.LightGray, RoundedCornerShape(8.dp))
+                                    )
+                                }
+                                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    Text(
+                                        course.title,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 14.sp,
+                                        lineHeight = 18.sp,
+                                        maxLines = 2
+                                    )
+                                    Text("Instructor: ${course.instructorName}", fontSize = 12.sp, color = Color.Gray)
+                                    Text(formatPrice(course.price), fontWeight = FontWeight.Bold, color = PrimaryOrange, fontSize = 14.sp)
+                                }
                             }
                         }
                     }
@@ -323,14 +329,16 @@ fun TransactionScreen(
                         Text("Payment Details", fontWeight = FontWeight.Bold, fontSize = 18.sp)
                         
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            val subtotal = uiState.courses.sumOf { it.price }
                             Text("Subtotal", color = Color.Gray, fontSize = 14.sp)
-                            Text(formatPrice(uiState.course?.price ?: 0.0), fontSize = 14.sp)
+                            Text(formatPrice(subtotal), fontSize = 14.sp)
                         }
                         
                         if (uiState.discountPercent > 0) {
+                            val subtotal = uiState.courses.sumOf { it.price }
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                 Text("Promo Code (${uiState.discountPercent}% off)", color = Color(0xFF2E7D32), fontSize = 14.sp, fontWeight = FontWeight.Medium)
-                                Text("-${formatPrice((uiState.discountPercent / 100.0) * (uiState.course?.price ?: 0.0))}", color = Color(0xFF2E7D32), fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                                Text("-${formatPrice((uiState.discountPercent / 100.0) * subtotal)}", color = Color(0xFF2E7D32), fontSize = 14.sp, fontWeight = FontWeight.Medium)
                             }
                         }
                         
@@ -345,7 +353,7 @@ fun TransactionScreen(
                             Column(horizontalAlignment = Alignment.End) {
                                 Row(verticalAlignment = Alignment.Bottom) {
                                     Text(
-                                        formatPrice((uiState.course?.price ?: 0.0) * (1 - (uiState.discountPercent / 100.0))),
+                                        formatPrice(uiState.totalPrice),
                                         fontSize = 30.sp,
                                         fontWeight = FontWeight.ExtraBold,
                                         color = PrimaryOrange
