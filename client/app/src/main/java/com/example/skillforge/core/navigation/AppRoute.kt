@@ -22,7 +22,7 @@ sealed interface AppRoute {
 
     data class Checkout(
         val session: AuthSession,
-        val courseId: String,
+        val courseIds: String,
     ) : AppRoute
 
     data class LessonLearning(

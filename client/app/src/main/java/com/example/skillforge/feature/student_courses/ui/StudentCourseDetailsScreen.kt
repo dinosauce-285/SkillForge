@@ -24,6 +24,8 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.Quiz
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
@@ -101,6 +103,7 @@ fun StudentCourseDetailsRoute(
         uiState = uiState,
         onOpenCurriculum = onOpenCurriculum,
         onCheckoutSelected = onCheckoutSelected,
+        onToggleFavorite = { viewModel.toggleFavorite(token, courseId) },
         onBack = onBack,
         onRetry = { viewModel.loadCourseDetails(courseId, token, forceReload = true) },
     )
@@ -111,6 +114,7 @@ fun StudentCourseDetailsScreen(
     uiState: StudentCourseDetailsUiState,
     onOpenCurriculum: (String) -> Unit,
     onCheckoutSelected: (String) -> Unit,
+    onToggleFavorite: () -> Unit,
     onBack: () -> Unit,
     onRetry: () -> Unit,
 ) {
@@ -176,7 +180,9 @@ fun StudentCourseDetailsScreen(
                                     course = course,
                                     displayRating = displayRating,
                                     displayReviewCount = displayReviewCount,
-                                    onCheckoutSelected = onCheckoutSelected
+                                    isFavorite = uiState.isFavorite,
+                                    onCheckoutSelected = onCheckoutSelected,
+                                    onToggleFavorite = onToggleFavorite
                                 )
                                 DetailTab.Curriculum -> CurriculumTabContent(course = course)
                                 DetailTab.Instructor -> InstructorTabContent(course = course)
@@ -226,7 +232,9 @@ private fun OverviewTabContent(
     course: CourseDetails,
     displayRating: Float,
     displayReviewCount: Int,
-    onCheckoutSelected: (String) -> Unit
+    isFavorite: Boolean,
+    onCheckoutSelected: (String) -> Unit,
+    onToggleFavorite: () -> Unit
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -305,6 +313,33 @@ private fun OverviewTabContent(
                 shape = SkillforgeShapes.button
             ) {
                 Text("Buy Now", modifier = Modifier.padding(vertical = 8.dp))
+            }
+            
+            Spacer(modifier = Modifier.height(SkillforgeSpacing.medium))
+
+            androidx.compose.material3.OutlinedButton(
+                onClick = onToggleFavorite,
+                modifier = Modifier.fillMaxWidth(),
+                shape = SkillforgeShapes.button,
+                colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(
+                    contentColor = if (isFavorite) MaterialTheme.colorScheme.error else PrimaryOrange
+                ),
+                border = androidx.compose.foundation.BorderStroke(
+                    1.dp, 
+                    if (isFavorite) MaterialTheme.colorScheme.error else PrimaryOrange
+                )
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Icon(
+                        imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Text(
+                        if (isFavorite) "Remove from Wishlist" else "Add to Wishlist",
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                }
             }
             Spacer(modifier = Modifier.height(SkillforgeSpacing.large))
         }
@@ -881,6 +916,7 @@ private fun StudentCourseDetailsPreview() {
             uiState = StudentCourseDetailsUiState(course = StudentCourseMockData.courseDetails),
             onOpenCurriculum = {},
             onCheckoutSelected = {},
+            onToggleFavorite = {},
             onBack = {},
             onRetry = {},
         )

@@ -13,11 +13,12 @@ class StudentCoursesViewModelFactory(
     private val lessonRepository: LessonRepository,
     private val progressRepository: ProgressRepository,
     private val reviewRepository: com.example.skillforge.domain.repository.ReviewRepository,
+    private val favoriteRepository: com.example.skillforge.domain.repository.FavoriteRepository,
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(StudentCoursesViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return StudentCoursesViewModel(courseRepository, categoryRepository, lessonRepository, progressRepository, reviewRepository) as T
+            return StudentCoursesViewModel(courseRepository, categoryRepository, lessonRepository, progressRepository, reviewRepository, favoriteRepository) as T
         }
 
         throw IllegalArgumentException("Unknown ViewModel class")

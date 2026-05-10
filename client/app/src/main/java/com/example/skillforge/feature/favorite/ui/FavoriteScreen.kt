@@ -9,8 +9,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -73,6 +75,7 @@ fun FavoriteRoute(
     viewModel: FavoriteViewModel,
     onBackClick: () -> Unit,
     onCourseClick: (String) -> Unit,
+    onCheckoutSelected: (String) -> Unit,
     onNavigateToDiscovery: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -85,6 +88,13 @@ fun FavoriteRoute(
         uiState = uiState,
         onBackClick = onBackClick,
         onCourseClick = onCourseClick,
+        onToggleSelection = { viewModel.toggleSelection(it) },
+        onBuySelected = {
+            val selectedIds = uiState.selectedCourseIds.joinToString(",")
+            if (selectedIds.isNotEmpty()) {
+                onCheckoutSelected(selectedIds)
+            }
+        },
         onNavigateToDiscovery = onNavigateToDiscovery,
         onRefresh = { viewModel.loadFavorites(session.accessToken) },
     )
@@ -96,6 +106,8 @@ fun FavoriteScreen(
     uiState: FavoriteUiState,
     onBackClick: () -> Unit,
     onCourseClick: (String) -> Unit,
+    onToggleSelection: (String) -> Unit,
+    onBuySelected: () -> Unit,
     onNavigateToDiscovery: () -> Unit,
     onRefresh: () -> Unit,
 ) {
@@ -124,6 +136,47 @@ fun FavoriteScreen(
                     containerColor = BackgroundColor,
                 ),
             )
+        },
+        bottomBar = {
+            if (uiState.selectedCourseIds.isNotEmpty()) {
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shadowElevation = 8.dp,
+                    color = MaterialTheme.colorScheme.surface
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .navigationBarsPadding(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        val selectedCount = uiState.selectedCourseIds.size
+                        val totalPrice = uiState.courses.filter { uiState.selectedCourseIds.contains(it.id) }.sumOf { it.price }
+                        
+                        Column {
+                            Text(
+                                text = "$selectedCount items selected",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = TextSecondaryColor
+                            )
+                            Text(
+                                text = String.format("$%.2f", totalPrice),
+                                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                                color = PrimaryOrange
+                            )
+                        }
+
+                        Button(
+                            onClick = onBuySelected,
+                            colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text("Buy Selected", fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
         },
         containerColor = BackgroundColor,
     ) { innerPadding ->
@@ -169,6 +222,8 @@ fun FavoriteScreen(
                     FavoriteCourseCard(
                         course = course,
                         isPurchased = course.isFree,
+                        isSelected = uiState.selectedCourseIds.contains(course.id),
+                        onToggleSelection = { onToggleSelection(course.id) },
                         onClick = { onCourseClick(course.id) },
                     )
                 }
@@ -217,6 +272,8 @@ private fun FavoriteHeaderSection() {
 private fun FavoriteCourseCard(
     course: FavoriteCourse,
     isPurchased: Boolean,
+    isSelected: Boolean,
+    onToggleSelection: () -> Unit,
     onClick: () -> Unit,
 ) {
     ElevatedCard(
@@ -231,7 +288,19 @@ private fun FavoriteCourseCard(
                 .padding(16.dp)
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
+            if (!isPurchased) {
+                androidx.compose.material3.Checkbox(
+                    checked = isSelected,
+                    onCheckedChange = { onToggleSelection() },
+                    colors = androidx.compose.material3.CheckboxDefaults.colors(
+                        checkedColor = PrimaryOrange
+                    )
+                )
+            } else {
+                Spacer(modifier = Modifier.width(12.dp))
+            }
             Box(
                 modifier = Modifier
                     .size(width = 120.dp, height = 90.dp)
@@ -447,6 +516,8 @@ fun FavoriteScreenPreview() {
         ),
         onBackClick = {},
         onCourseClick = {},
+        onToggleSelection = {},
+        onBuySelected = {},
         onNavigateToDiscovery = {},
         onRefresh = {},
     )

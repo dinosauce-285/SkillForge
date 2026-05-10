@@ -33,6 +33,7 @@ data class StudentCourseDetailsUiState(
     val isLoading: Boolean = false,
     val course: CourseDetails? = null,
     val isEnrolled: Boolean = false,
+    val isFavorite: Boolean = false,
     val completedLessonIds: List<String> = emptyList(),
     val completedQuizIds: List<String> = emptyList(),
     val quizStatuses: List<com.example.skillforge.data.remote.QuizProgressDto> = emptyList(),
@@ -53,6 +54,7 @@ class StudentCoursesViewModel(
     private val lessonRepository: LessonRepository,
     private val progressRepository: com.example.skillforge.domain.repository.ProgressRepository,
     private val reviewRepository: com.example.skillforge.domain.repository.ReviewRepository,
+    private val favoriteRepository: com.example.skillforge.domain.repository.FavoriteRepository,
 ) : ViewModel() {
     private val _courseListState = MutableStateFlow(StudentCourseListUiState(isLoading = true))
     val courseListState: StateFlow<StudentCourseListUiState> = _courseListState
@@ -178,8 +180,13 @@ class StudentCoursesViewModel(
             if (!forceReload && loadedCourseDetailsId == courseId && _courseDetailsState.value.course != null) {
                 val enrollmentResult = courseRepository.getEnrollmentStatus(token, courseId)
                 val userIsEnrolled = enrollmentResult.getOrNull() ?: false
+                
+                val favoritesResult = favoriteRepository.getFavorites(token)
+                val isFavorite = favoritesResult.getOrNull()?.any { it.id == courseId } ?: false
+
                 _courseDetailsState.value = _courseDetailsState.value.copy(
-                    isEnrolled = userIsEnrolled
+                    isEnrolled = userIsEnrolled,
+                    isFavorite = isFavorite
                 )
                 return@launch
             }
@@ -190,6 +197,9 @@ class StudentCoursesViewModel(
                     loadedCourseDetailsId = courseId
                     val enrollmentResult = courseRepository.getEnrollmentStatus(token, courseId)
                     val userIsEnrolled = enrollmentResult.getOrNull() ?: false
+
+                    val favoritesResult = favoriteRepository.getFavorites(token)
+                    val isFavorite = favoritesResult.getOrNull()?.any { it.id == courseId } ?: false
                     
                     var completedLessons: List<String> = emptyList()
                     var completedQuizzes: List<String> = emptyList()
@@ -215,6 +225,7 @@ class StudentCoursesViewModel(
                         isLoading = false,
                         course = course,
                         isEnrolled = userIsEnrolled,
+                        isFavorite = isFavorite,
                         completedLessonIds = completedLessons,
                         completedQuizIds = completedQuizzes,
                         quizStatuses = quizStatuses,
@@ -304,6 +315,26 @@ class StudentCoursesViewModel(
                 onSuccess = {
                     // Refresh progress data in course details
                     loadCourseDetails(courseId, token, forceReload = true)
+                },
+                onFailure = { error ->
+                    error.printStackTrace()
+                }
+            )
+        }
+    }
+
+    fun toggleFavorite(token: String, courseId: String) {
+        viewModelScope.launch {
+            val isCurrentlyFavorite = _courseDetailsState.value.isFavorite
+            val result = if (isCurrentlyFavorite) {
+                favoriteRepository.removeFavorite(token, courseId)
+            } else {
+                favoriteRepository.addFavorite(token, courseId)
+            }
+
+            result.fold(
+                onSuccess = {
+                    _courseDetailsState.update { it.copy(isFavorite = !isCurrentlyFavorite) }
                 },
                 onFailure = { error ->
                     error.printStackTrace()

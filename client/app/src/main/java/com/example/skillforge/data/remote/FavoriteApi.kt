@@ -35,4 +35,16 @@ interface FavoriteApi {
     suspend fun getFavorites(
         @Header("Authorization") token: String,
     ): Response<List<FavoriteItemDto>>
+
+    @retrofit2.http.POST("favorites")
+    suspend fun addFavorite(
+        @Header("Authorization") token: String,
+        @retrofit2.http.Body body: Map<String, String>,
+    ): Response<FavoriteItemDto>
+
+    @retrofit2.http.DELETE("favorites/{courseId}")
+    suspend fun removeFavorite(
+        @Header("Authorization") token: String,
+        @retrofit2.http.Path("courseId") courseId: String,
+    ): Response<Unit>
 }
