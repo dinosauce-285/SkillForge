@@ -8,6 +8,7 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -50,7 +51,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -75,10 +80,18 @@ fun LoginScreen(
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
 
+    val passwordFocusRequester = remember { FocusRequester() }
+    val focusManager = LocalFocusManager.current
     val loginState by viewModel.loginState.collectAsState()
     val defaultPadding = 16.dp
     val cardPadding = 24.dp
     val errorMessage = (loginState as? LoginState.Error)?.message
+    val submitLogin = {
+        if (loginState !is LoginState.Loading) {
+            focusManager.clearFocus()
+            viewModel.login(email, password)
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -153,7 +166,14 @@ fun LoginScreen(
                         focusedBorderColor = MaterialTheme.colorScheme.primary,
                         unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant
                     ),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Email,
+                        imeAction = ImeAction.Next
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onNext = { passwordFocusRequester.requestFocus() }
+                    )
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -165,7 +185,9 @@ fun LoginScreen(
                         viewModel.clearError()
                     },
                     placeholder = { Text("Password") },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .focusRequester(passwordFocusRequester),
                     shape = RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedContainerColor = TextFieldBackgroundColor,
@@ -181,7 +203,14 @@ fun LoginScreen(
                             Icon(imageVector = image, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Password,
+                        imeAction = ImeAction.Done
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onDone = { submitLogin() }
+                    )
                 )
 
                 Row(
@@ -212,7 +241,7 @@ fun LoginScreen(
 
                 Button(
                     enabled = loginState !is LoginState.Loading,
-                    onClick = { viewModel.login(email, password) },
+                    onClick = { submitLogin() },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
