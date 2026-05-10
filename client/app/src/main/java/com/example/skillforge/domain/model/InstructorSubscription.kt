@@ -7,7 +7,7 @@ data class InstructorSubscription(
     val paymentStatus: String,
     val amount: String,
     val currency: String,
-    val mockPaymentReference: String,
+    val paymentReference: String,
     val startedAt: String,
     val expiresAt: String?,
 )

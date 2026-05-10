@@ -28,7 +28,7 @@ class InstructorSubscriptionViewModel(
     )
     val uiState: StateFlow<InstructorSubscriptionUiState> = _uiState.asStateFlow()
 
-    fun confirmMockPayment() {
+    fun confirmPayment() {
         if (_uiState.value is InstructorSubscriptionUiState.Loading) return
 
         viewModelScope.launch {

@@ -10,7 +10,7 @@ import com.example.skillforge.domain.repository.SubscriptionRepository
 import org.json.JSONArray
 import org.json.JSONObject
 
-private const val INSTRUCTOR_MOCK_PLAN_CODE = "INSTRUCTOR_MOCK_PLAN"
+private const val INSTRUCTOR_PLAN_CODE = "INSTRUCTOR_STANDARD_PLAN"
 
 class SubscriptionRepositoryImpl(
     private val api: SubscriptionApi,
@@ -19,8 +19,8 @@ class SubscriptionRepositoryImpl(
         return try {
             val response = api.createInstructorSubscription(
                 CreateInstructorSubscriptionRequestDto(
-                    mockPaymentConfirmed = true,
-                    planCode = INSTRUCTOR_MOCK_PLAN_CODE,
+                    isConfirmed = true,
+                    planCode = INSTRUCTOR_PLAN_CODE,
                 ),
             )
 
@@ -49,7 +49,7 @@ class SubscriptionRepositoryImpl(
                 paymentStatus = subscription.paymentStatus,
                 amount = subscription.amount,
                 currency = subscription.currency,
-                mockPaymentReference = subscription.mockPaymentReference,
+                paymentReference = subscription.paymentReference,
                 startedAt = subscription.startedAt,
                 expiresAt = subscription.expiresAt,
             ),

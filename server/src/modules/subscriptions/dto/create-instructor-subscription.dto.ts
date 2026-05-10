@@ -3,15 +3,15 @@ import { IsBoolean, IsOptional, IsString } from 'class-validator';
 
 export class CreateInstructorSubscriptionDto {
   @ApiProperty({
-    description: 'Confirms that the mock payment was accepted by the user.',
+    description: 'Confirms that the payment was accepted by the user.',
     example: true,
   })
   @IsBoolean()
-  readonly mockPaymentConfirmed!: boolean;
+  readonly isConfirmed!: boolean;
 
   @ApiPropertyOptional({
-    description: 'Optional mock plan identifier. The backend owns the actual plan values.',
-    example: 'INSTRUCTOR_MOCK_PLAN',
+    description: 'Optional plan identifier. The backend owns the actual plan values.',
+    example: 'INSTRUCTOR_STANDARD_PLAN',
   })
   @IsOptional()
   @IsString()

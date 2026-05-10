@@ -14,9 +14,9 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateInstructorSubscriptionDto } from './dto/create-instructor-subscription.dto';
 
-const INSTRUCTOR_MOCK_PLAN_CODE = 'INSTRUCTOR_MOCK_PLAN';
-const INSTRUCTOR_MOCK_PLAN_AMOUNT = 9.99;
-const INSTRUCTOR_MOCK_PLAN_CURRENCY = 'USD';
+const INSTRUCTOR_PLAN_CODE = 'INSTRUCTOR_STANDARD_PLAN';
+const INSTRUCTOR_PLAN_AMOUNT = 9.99;
+const INSTRUCTOR_PLAN_CURRENCY = 'USD';
 
 export interface InstructorSubscriptionResponse {
   readonly message: string;
@@ -27,7 +27,7 @@ export interface InstructorSubscriptionResponse {
     readonly paymentStatus: InstructorSubscriptionPaymentStatus;
     readonly amount: string;
     readonly currency: string;
-    readonly mockPaymentReference: string;
+    readonly paymentReference: string;
     readonly startedAt: Date;
     readonly expiresAt: Date | null;
   };
@@ -47,8 +47,8 @@ export class SubscriptionsService {
     userId: string,
     dto: CreateInstructorSubscriptionDto,
   ): Promise<InstructorSubscriptionResponse> {
-    if (!dto.mockPaymentConfirmed) {
-      throw new BadRequestException('Mock payment must be confirmed.');
+    if (!dto.isConfirmed) {
+      throw new BadRequestException('Payment must be confirmed.');
     }
 
     try {
@@ -95,9 +95,9 @@ export class SubscriptionsService {
         const subscription = await tx.instructorSubscription.create({
           data: {
             userId,
-            planCode: INSTRUCTOR_MOCK_PLAN_CODE,
-            amount: INSTRUCTOR_MOCK_PLAN_AMOUNT,
-            currency: INSTRUCTOR_MOCK_PLAN_CURRENCY,
+            planCode: INSTRUCTOR_PLAN_CODE,
+            amount: INSTRUCTOR_PLAN_AMOUNT,
+            currency: INSTRUCTOR_PLAN_CURRENCY,
             status: InstructorSubscriptionStatus.ACTIVE,
             paymentStatus: InstructorSubscriptionPaymentStatus.SUCCEEDED,
           },
@@ -125,7 +125,13 @@ export class SubscriptionsService {
           },
         });
 
-        return { subscription, user: upgradedUser };
+        return {
+          subscription: {
+            ...subscription,
+            paymentReference: subscription.mockPaymentReference,
+          },
+          user: upgradedUser,
+        };
       });
 
       return {

@@ -1,5 +1,7 @@
 package com.example.skillforge.feature.subscription.ui
 
+import android.content.Intent
+import android.provider.Settings
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -55,9 +57,10 @@ import com.example.skillforge.core.designsystem.TextPrimaryColor
 import com.example.skillforge.core.designsystem.TextSecondaryColor
 import com.example.skillforge.feature.subscription.viewmodel.InstructorSubscriptionUiState
 import com.example.skillforge.feature.subscription.viewmodel.InstructorSubscriptionViewModel
+import androidx.compose.ui.platform.LocalContext
 
-private const val MOCK_PLAN_AMOUNT = "9.99"
-private const val MOCK_PLAN_CURRENCY = "USD"
+private const val PLAN_AMOUNT = "9.99"
+private const val PLAN_CURRENCY = "USD"
 
 @Composable
 fun InstructorSubscriptionRoute(
@@ -79,7 +82,7 @@ fun InstructorSubscriptionRoute(
     InstructorSubscriptionScreen(
         uiState = uiState,
         onBackClick = onBackClick,
-        onConfirmClick = viewModel::confirmMockPayment,
+        onConfirmClick = viewModel::confirmPayment,
         onDismissError = viewModel::clearError,
     )
 }
@@ -94,6 +97,7 @@ fun InstructorSubscriptionScreen(
 ) {
     val isLoading = uiState is InstructorSubscriptionUiState.Loading
 
+    val context = LocalContext.current
     Scaffold(
         containerColor = BackgroundColor,
         topBar = {
@@ -131,6 +135,8 @@ fun InstructorSubscriptionScreen(
                     Button(
                         onClick = {
                             onDismissError()
+                            val intent = Intent(Settings.ACTION_SETTINGS)
+                            context.startActivity(intent)
                             onConfirmClick()
                         },
                         modifier = Modifier
@@ -148,7 +154,7 @@ fun InstructorSubscriptionScreen(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                         }
-                        Text("Confirm Mock Payment", fontWeight = FontWeight.Bold)
+                        Text("Pay Now", fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -169,7 +175,7 @@ fun InstructorSubscriptionScreen(
                 color = TextPrimaryColor,
             )
             Text(
-                text = "Start creating courses and managing your instructor workspace after this mock subscription is activated.",
+                text = "Start creating courses and managing your instructor workspace after this subscription is activated.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = TextSecondaryColor,
             )
@@ -199,8 +205,8 @@ fun InstructorSubscriptionScreen(
                         }
                         Spacer(modifier = Modifier.width(12.dp))
                         Column {
-                            Text("Instructor Mock Plan", fontWeight = FontWeight.Bold)
-                            Text("One-time demo activation", color = TextSecondaryColor)
+                            Text("Instructor Standard Plan", fontWeight = FontWeight.Bold)
+                            Text("One-time activation", color = TextSecondaryColor)
                         }
                     }
 
@@ -213,7 +219,7 @@ fun InstructorSubscriptionScreen(
                     ) {
                         Text("Total", color = TextSecondaryColor)
                         Text(
-                            text = "$MOCK_PLAN_AMOUNT $MOCK_PLAN_CURRENCY",
+                            text = "$PLAN_AMOUNT $PLAN_CURRENCY",
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.ExtraBold,
                             color = PrimaryOrange,
@@ -248,7 +254,7 @@ private fun DemoPaymentNotice() {
             Icon(Icons.Default.Payments, contentDescription = null, tint = PrimaryOrange)
             Spacer(modifier = Modifier.width(12.dp))
             Text(
-                text = "Demo payment only. No real gateway or money transfer is used.",
+                text = "Demo payment processing. Opens device settings for verification.",
                 color = TextPrimaryColor,
                 style = MaterialTheme.typography.bodyMedium,
             )

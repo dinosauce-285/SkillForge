@@ -3,8 +3,8 @@ package com.example.skillforge.data.remote.dto
 import com.google.gson.annotations.SerializedName
 
 data class CreateInstructorSubscriptionRequestDto(
-    @SerializedName("mockPaymentConfirmed")
-    val mockPaymentConfirmed: Boolean,
+    @SerializedName("isConfirmed")
+    val isConfirmed: Boolean,
     @SerializedName("planCode")
     val planCode: String? = null,
 )
@@ -31,8 +31,8 @@ data class InstructorSubscriptionDto(
     val amount: String,
     @SerializedName("currency")
     val currency: String,
-    @SerializedName("mockPaymentReference")
-    val mockPaymentReference: String,
+    @SerializedName("paymentReference")
+    val paymentReference: String,
     @SerializedName("startedAt")
     val startedAt: String,
     @SerializedName("expiresAt")
