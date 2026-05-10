@@ -12,10 +12,8 @@ export class ReviewsService {
 
   async createReview(studentId: string, courseId: string, dto: CreateReviewDto) {
     // 1. Ensure the student is enrolled in the course
-    const enrollment = await this.prisma.enrollment.findUnique({
-      where: {
-        userId_courseId: { userId: studentId, courseId }
-      }
+    const enrollment = await this.prisma.enrollment.findFirst({
+      where: { userId: studentId, courseId }
     });
 
     if (!enrollment) {
@@ -24,8 +22,8 @@ export class ReviewsService {
 
     const progressData = await this.progressService.getCourseProgress(studentId, courseId);
 
-    if (progressData.percentage <= 20) {
-      throw new BadRequestException('You can only review after completing more than 20% of the course.');
+    if (!progressData.isCompleted) {
+      throw new BadRequestException('You can only review courses you have completed.');
     }
 
     // 2. Check if a review already exists (upsert)
@@ -35,13 +33,13 @@ export class ReviewsService {
       },
       update: {
         rating: dto.rating,
-        content: dto.content,
+        content: dto.content ?? '',
       },
       create: {
         studentId,
         courseId,
         rating: dto.rating,
-        content: dto.content,
+        content: dto.content ?? '',
       }
     });
 

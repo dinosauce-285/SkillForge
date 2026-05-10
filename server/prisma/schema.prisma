@@ -390,7 +390,7 @@ model Review {
   studentId       String   @map("student_id")
   courseId        String   @map("course_id")
   rating          Int
-  content         String
+  content         String?
   instructorReply String?  @map("instructor_reply")
   helpfulCount    Int      @default(0) @map("helpful_count")
   createdAt       DateTime @default(now()) @map("created_at")

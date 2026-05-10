@@ -102,3 +102,62 @@ fun WriteReviewDialog(
         }
     )
 }
+
+@Composable
+fun ReadOnlyStarRating(
+    rating: Int,
+    modifier: Modifier = Modifier,
+    starSize: androidx.compose.ui.unit.Dp = 16.dp
+) {
+    Row(modifier = modifier) {
+        for (i in 1..5) {
+            Icon(
+                imageVector = if (i <= rating) Icons.Default.Star else Icons.Outlined.StarOutline,
+                contentDescription = null,
+                tint = if (i <= rating) Color(0xFFFFC107) else Color.Gray,
+                modifier = Modifier.size(starSize)
+            )
+        }
+    }
+}
+
+@Composable
+fun ReviewItem(
+    review: com.example.skillforge.data.remote.ReviewResponse,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = review.student.fullName,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = review.createdAt.split("T").first(),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            
+            ReadOnlyStarRating(rating = review.rating, modifier = Modifier.padding(vertical = 4.dp))
+            
+            if (review.content.isNotBlank()) {
+                Text(
+                    text = review.content,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+        }
+    }
+}

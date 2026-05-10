@@ -36,6 +36,7 @@ data class StudentCourseDetailsUiState(
     val completedLessonIds: List<String> = emptyList(),
     val completedQuizIds: List<String> = emptyList(),
     val quizStatuses: List<com.example.skillforge.data.remote.QuizProgressDto> = emptyList(),
+    val reviews: List<com.example.skillforge.data.remote.ReviewResponse> = emptyList(),
     val errorMessage: String? = null,
 )
 
@@ -51,6 +52,7 @@ class StudentCoursesViewModel(
     private val categoryRepository: CategoryRepository,
     private val lessonRepository: LessonRepository,
     private val progressRepository: com.example.skillforge.domain.repository.ProgressRepository,
+    private val reviewRepository: com.example.skillforge.domain.repository.ReviewRepository,
 ) : ViewModel() {
     private val _courseListState = MutableStateFlow(StudentCourseListUiState(isLoading = true))
     val courseListState: StateFlow<StudentCourseListUiState> = _courseListState
@@ -192,6 +194,10 @@ class StudentCoursesViewModel(
                     var completedLessons: List<String> = emptyList()
                     var completedQuizzes: List<String> = emptyList()
                     var quizStatuses: List<com.example.skillforge.data.remote.QuizProgressDto> = emptyList()
+                    var reviews: List<com.example.skillforge.data.remote.ReviewResponse> = emptyList()
+
+                    val reviewsDeferred = async { reviewRepository.getCourseReviews(courseId) }
+
                     if (userIsEnrolled) {
                         try {
                             val progress = progressRepository.getCourseProgress(courseId)
@@ -203,6 +209,8 @@ class StudentCoursesViewModel(
                         }
                     }
 
+                    reviews = reviewsDeferred.await().getOrNull()?.reviews ?: emptyList()
+
                     _courseDetailsState.value = StudentCourseDetailsUiState(
                         isLoading = false,
                         course = course,
@@ -210,6 +218,7 @@ class StudentCoursesViewModel(
                         completedLessonIds = completedLessons,
                         completedQuizIds = completedQuizzes,
                         quizStatuses = quizStatuses,
+                        reviews = reviews,
                     )
                 },
                 onFailure = { error ->

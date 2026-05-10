@@ -215,10 +215,10 @@ fun MyCoursesScreen(
                                 course = course,
                                 onClick = { onCourseClick(course.courseId) },
                                 onRateClick = {
-                                    if (course.percentage > 20) {
+                                    if (course.percentage == 100) {
                                         courseToReview = course
                                     } else {
-                                        Toast.makeText(context, "You can only review after completing more than 20% of the course.", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, "You can only review courses you have completed.", Toast.LENGTH_SHORT).show()
                                     }
                                 },
                                 onDownloadCertificate = { onDownloadCertificate(course.courseId) }

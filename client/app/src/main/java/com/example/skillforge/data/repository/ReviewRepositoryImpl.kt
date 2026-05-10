@@ -19,4 +19,17 @@ class ReviewRepositoryImpl(private val api: ReviewApi) : ReviewRepository {
             Result.failure(e)
         }
     }
+
+    override suspend fun getCourseReviews(courseId: String): Result<com.example.skillforge.data.remote.CourseReviewsResponse> {
+        return try {
+            val response = api.getReviews(courseId)
+            if (response.isSuccessful && response.body() != null) {
+                Result.success(response.body()!!)
+            } else {
+                Result.failure(Exception("Failed to load reviews"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

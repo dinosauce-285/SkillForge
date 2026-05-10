@@ -21,6 +21,7 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
@@ -29,6 +30,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -119,6 +121,11 @@ fun StudentCourseDetailsScreen(
                         item { CourseTagsCard(tags = course.tags) }
                     }
                     item { InstructorCard(course = course) }
+                    if (uiState.reviews.isNotEmpty()) {
+                        item {
+                            ReviewsSection(reviews = uiState.reviews)
+                        }
+                    }
                 }
             }
         }
@@ -337,6 +344,31 @@ private fun InstructorCard(course: CourseDetails) {
                                 containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
                             ),
                         )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ReviewsSection(reviews: List<com.example.skillforge.data.remote.ReviewResponse>) {
+    ElevatedCard(shape = SkillforgeShapes.card, colors = skillforgeElevatedCardColors()) {
+        Column(
+            modifier = Modifier.padding(SkillforgeLayout.cardContentPadding),
+            verticalArrangement = Arrangement.spacedBy(SkillforgeSpacing.medium),
+        ) {
+            Text(text = "Student Reviews", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Column(verticalArrangement = Arrangement.spacedBy(SkillforgeSpacing.medium)) {
+                for (review in reviews.take(5)) {
+                    ReviewItem(review = review)
+                }
+                if (reviews.size > 5) {
+                    TextButton(
+                        onClick = { /* Could navigate to a full reviews screen */ },
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                    ) {
+                        Text("See all ${reviews.size} reviews", color = PrimaryOrange)
                     }
                 }
             }
