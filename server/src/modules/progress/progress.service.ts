@@ -162,6 +162,7 @@ export class ProgressService {
       totalLessons,
       completedLessons: completedLessonsCount,
       percentage,
+      isCompleted: percentage === 100,
       completedLessonIds,
       completedQuizIds,
       quizStatuses,

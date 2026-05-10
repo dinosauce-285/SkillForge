@@ -105,6 +105,7 @@ class MainActivity : ComponentActivity() {
                         appContainer.categoryRepository,
                         appContainer.lessonRepository,
                         appContainer.progressRepository,
+                        appContainer.reviewRepository,
                     )
                 )
                 val transactionViewModel: TransactionViewModel = viewModel(

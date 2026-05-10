@@ -11,7 +11,7 @@ export class ReviewsController {
   @UseGuards(JwtAuthGuard)
   @Post()
   createReview(
-    @CurrentUser('userId') userId: string,
+    @CurrentUser('id') userId: string,
     @Param('courseId') courseId: string,
     @Body() dto: CreateReviewDto
   ) {
