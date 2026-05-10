@@ -2,6 +2,7 @@ package com.example.skillforge.feature.auth.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -14,8 +15,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -46,8 +51,18 @@ fun RegisterScreen(
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
 
+    val emailFocusRequester = remember { FocusRequester() }
+    val passwordFocusRequester = remember { FocusRequester() }
+    val focusManager = LocalFocusManager.current
+
     // translated comment
     val registerState by viewModel.registerState.collectAsState()
+    val submitRegister = {
+        if (registerState !is RegisterState.Loading) {
+            focusManager.clearFocus()
+            viewModel.register(fullName, email, password)
+        }
+    }
 
     // translated comment
     val defaultPadding = 16.dp
@@ -130,7 +145,15 @@ fun RegisterScreen(
                         unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant
                     ),
                     leadingIcon = { Icon(Icons.Default.Person, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)) },
-                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words) // translated comment
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(
+                        capitalization = KeyboardCapitalization.Words,
+                        keyboardType = KeyboardType.Text,
+                        imeAction = ImeAction.Next
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onNext = { emailFocusRequester.requestFocus() }
+                    )
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -140,14 +163,23 @@ fun RegisterScreen(
                     value = email,
                     onValueChange = { email = it },
                     placeholder = { Text("Email Address") },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .focusRequester(emailFocusRequester),
                     shape = RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         unfocusedContainerColor = TextFieldBackgroundColor,
                         unfocusedBorderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f),
                         unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant
                     ),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Email,
+                        imeAction = ImeAction.Next
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onNext = { passwordFocusRequester.requestFocus() }
+                    )
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -157,7 +189,9 @@ fun RegisterScreen(
                     value = password,
                     onValueChange = { password = it },
                     placeholder = { Text("Password") },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .focusRequester(passwordFocusRequester),
                     shape = RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         unfocusedContainerColor = TextFieldBackgroundColor,
@@ -174,7 +208,14 @@ fun RegisterScreen(
                             Icon(imageVector = image, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Password,
+                        imeAction = ImeAction.Done
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onDone = { submitRegister() }
+                    )
                 )
 
                 // translated comment
@@ -191,9 +232,7 @@ fun RegisterScreen(
                 // translated comment
                 Button(
                     enabled = registerState !is RegisterState.Loading,
-                    onClick = {
-                        viewModel.register(fullName, email, password) // translated comment
-                    },
+                    onClick = { submitRegister() },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
