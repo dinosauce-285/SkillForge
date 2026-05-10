@@ -33,8 +33,11 @@ import com.example.skillforge.core.designsystem.SkillforgeTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PaymentScreen(
+    totalPrice: Double = 2450000.0,
+    originalPrice: Double? = null,
     onBackClick: () -> Unit = {}
 ) {
+    val showDiscount = originalPrice != null && originalPrice > totalPrice
     Scaffold(
         topBar = {
             TopAppBar(
@@ -105,20 +108,31 @@ fun PaymentScreen(
                         fontWeight = FontWeight.Medium
                     )
                     Spacer(modifier = Modifier.height(8.dp))
-                    Row(verticalAlignment = Alignment.Bottom) {
-                        Text(
-                            text = "2,450,000",
-                            fontSize = 48.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = PrimaryOrange
-                        )
-                        Text(
-                            text = "₫",
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = PrimaryOrange,
-                            modifier = Modifier.padding(bottom = 8.dp, start = 4.dp)
-                        )
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        if (showDiscount && originalPrice != null) {
+                            Text(
+                                text = String.format("%,.0f ₫", originalPrice),
+                                fontSize = 18.sp,
+                                color = Color.Gray,
+                                style = androidx.compose.ui.text.TextStyle(textDecoration = androidx.compose.ui.text.style.TextDecoration.LineThrough),
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                        Row(verticalAlignment = Alignment.Bottom) {
+                            Text(
+                                text = String.format("%,.0f", totalPrice),
+                                fontSize = 48.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = PrimaryOrange
+                            )
+                            Text(
+                                text = "₫",
+                                fontSize = 24.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = PrimaryOrange,
+                                modifier = Modifier.padding(bottom = 8.dp, start = 4.dp)
+                            )
+                        }
                     }
                     Spacer(modifier = Modifier.height(16.dp))
                     Surface(
