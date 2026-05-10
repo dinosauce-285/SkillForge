@@ -247,6 +247,9 @@ class MainActivity : ComponentActivity() {
                                             onNavigateToMyCourses = {
                                                 mainViewModel.navigateTo(AppRoute.MyCourses(session))
                                             },
+                                            onCourseClick = { courseId ->
+                                                mainViewModel.navigateTo(AppRoute.CourseCurriculum(session, courseId))
+                                            },
                                         )
                                     }
 

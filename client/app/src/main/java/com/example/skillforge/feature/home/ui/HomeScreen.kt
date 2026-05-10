@@ -35,7 +35,8 @@ fun HomeScreen(
     viewModel: HomeViewModel,
     notificationViewModel: NotificationViewModel,
     onNavigateToMyCourses: () -> Unit = {},
-    onNavigateToDiscovery: () -> Unit = {}
+    onNavigateToDiscovery: () -> Unit = {},
+    onCourseClick: (String) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val notificationState by notificationViewModel.notificationState.collectAsState()
@@ -52,6 +53,7 @@ fun HomeScreen(
         unreadCount = notificationState.unreadCount,
         onNavigateToMyCourses = onNavigateToMyCourses,
         onNavigateToDiscovery = onNavigateToDiscovery,
+        onCourseClick = onCourseClick,
         onNotificationClick = {
             showNotifications = true
             notificationViewModel.fetchNotifications()
@@ -78,6 +80,7 @@ fun HomeScreenContent(
     unreadCount: Int = 0,
     onNavigateToMyCourses: () -> Unit = {},
     onNavigateToDiscovery: () -> Unit = {},
+    onCourseClick: (String) -> Unit = {},
     onNotificationClick: () -> Unit = {},
     onRetry: () -> Unit = {}
 ) {
@@ -139,7 +142,8 @@ fun HomeScreenContent(
 
                             mostRecent?.let { course ->
                                 ContinueLearningCard(
-                                    course = course
+                                    course = course,
+                                    onClick = { onCourseClick(course.courseId) }
                                 )
                             }
 
@@ -153,7 +157,8 @@ fun HomeScreenContent(
                             if (otherCourses.isNotEmpty()) {
                                 ActiveCourseList(
                                     courses = otherCourses,
-                                    onViewAllClick = onNavigateToMyCourses
+                                    onViewAllClick = onNavigateToMyCourses,
+                                    onCourseClick = { course -> onCourseClick(course.courseId) }
                                 )
                                 Spacer(modifier = Modifier.height(SkillforgeSpacing.large))
                             }
