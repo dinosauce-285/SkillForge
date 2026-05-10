@@ -4,6 +4,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -13,6 +14,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -26,6 +29,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
@@ -33,27 +38,21 @@ import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MenuAnchorType
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -77,22 +76,21 @@ import com.example.skillforge.core.designsystem.SkillforgeLayout
 import com.example.skillforge.core.designsystem.SkillforgeShapes
 import com.example.skillforge.core.designsystem.SkillforgeSpacing
 import com.example.skillforge.core.designsystem.SkillforgeTheme
+import com.example.skillforge.core.designsystem.components.SafeFlowRow
 import com.example.skillforge.core.designsystem.skillforgeElevatedCardColors
 import com.example.skillforge.core.designsystem.skillforgePrimaryButtonColors
 import com.example.skillforge.domain.model.AuthSession
 import com.example.skillforge.domain.model.AuthUser
 import com.example.skillforge.domain.model.Category
 import com.example.skillforge.domain.model.CourseSummary
-import com.example.skillforge.core.designsystem.components.SkillForgeBottomNavigationBar
 import com.example.skillforge.feature.student_courses.viewmodel.StudentCourseListUiState
 import com.example.skillforge.feature.student_courses.viewmodel.StudentCoursesViewModel
-import androidx.compose.ui.platform.LocalConfiguration
 private val levelOptions = listOf(
     null to "All levels",
     "BEGINNER" to "Beginner",
     "INTERMEDIATE" to "Intermediate",
     "ADVANCED" to "Advanced",
-    "ALL_LEVELS" to "All levels course",
+    "ALL_LEVELS" to "All-level courses",
 )
 
 @Composable
@@ -491,7 +489,6 @@ private fun SectionHeader(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun CourseFilterSidebar(
     modifier: Modifier = Modifier,
@@ -503,16 +500,14 @@ private fun CourseFilterSidebar(
     onResetFilters: () -> Unit,
     onClose: () -> Unit,
 ) {
-    var levelExpanded by remember { mutableStateOf(false) }
-    val selectedLevelLabel = levelOptions.firstOrNull { it.first == selectedLevel }?.second ?: "All levels"
-
     ElevatedCard(
-        modifier = modifier,
+        modifier = modifier.fillMaxHeight(),
         shape = SkillforgeShapes.card,
         colors = skillforgeElevatedCardColors(),
     ) {
         Column(
             modifier = Modifier
+                .fillMaxSize()
                 .fillMaxWidth()
                 .padding(SkillforgeLayout.cardContentPadding),
             verticalArrangement = Arrangement.spacedBy(SkillforgeSpacing.medium),
@@ -520,79 +515,106 @@ private fun CourseFilterSidebar(
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
+                verticalAlignment = Alignment.Top,
             ) {
-                Text(
-                    text = "Filters",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                )
-                Row(horizontalArrangement = Arrangement.spacedBy(SkillforgeSpacing.xSmall)) {
-                    OutlinedButton(onClick = onResetFilters) {
-                        Text("Reset")
-                    }
-                    OutlinedButton(onClick = onClose) {
-                        Text("Close")
-                    }
-                }
-            }
-
-            Column(verticalArrangement = Arrangement.spacedBy(SkillforgeSpacing.xSmall)) {
-                Text(
-                    text = "Category",
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.SemiBold,
-                )
-                FilterCheckboxRow(
-                    label = "All categories",
-                    checked = selectedCategoryId == null,
-                    onClick = { onCategorySelected(null) },
-                )
-                categories.forEach { category ->
-                    FilterCheckboxRow(
-                        label = category.name,
-                        checked = selectedCategoryId == category.id,
-                        onClick = { onCategorySelected(category.id) },
-                    )
-                }
-            }
-
-            Column(verticalArrangement = Arrangement.spacedBy(SkillforgeSpacing.xSmall)) {
-                Text(
-                    text = "Difficulty",
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.SemiBold,
-                )
-                ExposedDropdownMenuBox(
-                    expanded = levelExpanded,
-                    onExpandedChange = { levelExpanded = !levelExpanded },
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(SkillforgeSpacing.xSmall),
                 ) {
-                    OutlinedTextField(
-                        value = selectedLevelLabel,
-                        onValueChange = {},
-                        readOnly = true,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .menuAnchor(MenuAnchorType.PrimaryNotEditable),
-                        trailingIcon = {
-                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = levelExpanded)
-                        },
-                        colors = TextFieldDefaults.colors(),
+                    Text(
+                        text = "Filters",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
                     )
-                    ExposedDropdownMenu(
-                        expanded = levelExpanded,
-                        onDismissRequest = { levelExpanded = false },
+                    Text(
+                        text = "Refine courses by category and level",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                IconButton(onClick = onClose) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Close filters",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                contentPadding = PaddingValues(bottom = SkillforgeSpacing.small),
+                verticalArrangement = Arrangement.spacedBy(SkillforgeSpacing.medium),
+            ) {
+                item {
+                    FilterSectionTitle(
+                        title = "Category",
+                        subtitle = "Choose one course area",
+                    )
+                }
+                item {
+                    SafeFlowRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalSpacing = SkillforgeSpacing.small,
+                        verticalSpacing = SkillforgeSpacing.small,
                     ) {
-                        levelOptions.forEach { option ->
-                            DropdownMenuItem(
-                                text = { Text(option.second) },
-                                onClick = {
-                                    onLevelSelected(option.first)
-                                    levelExpanded = false
-                                },
+                        FilterChoiceChip(
+                            label = "All categories",
+                            selected = selectedCategoryId == null,
+                            onClick = { onCategorySelected(null) },
+                        )
+                        categories.forEach { category ->
+                            FilterChoiceChip(
+                                label = category.name,
+                                selected = selectedCategoryId == category.id,
+                                onClick = { onCategorySelected(category.id) },
                             )
                         }
                     }
+                }
+
+                item {
+                    FilterSectionTitle(
+                        title = "Difficulty",
+                        subtitle = "Match courses to your current skill level",
+                    )
+                }
+                item {
+                    SafeFlowRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalSpacing = SkillforgeSpacing.small,
+                        verticalSpacing = SkillforgeSpacing.small,
+                    ) {
+                        levelOptions.forEach { option ->
+                            FilterChoiceChip(
+                                label = option.second,
+                                selected = selectedLevel == option.first,
+                                onClick = { onLevelSelected(option.first) },
+                            )
+                        }
+                    }
+                }
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(SkillforgeSpacing.small),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                TextButton(
+                    onClick = onResetFilters,
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Text("Reset")
+                }
+                Button(
+                    onClick = onClose,
+                    modifier = Modifier.weight(1f),
+                    colors = skillforgePrimaryButtonColors(),
+                ) {
+                    Text("Close")
                 }
             }
         }
@@ -600,29 +622,78 @@ private fun CourseFilterSidebar(
 }
 
 @Composable
-private fun FilterCheckboxRow(
-    label: String,
-    checked: Boolean,
-    onClick: () -> Unit,
+private fun FilterSectionTitle(
+    title: String,
+    subtitle: String,
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(SkillforgeShapes.card)
-            .clickable(onClick = onClick)
-            .padding(vertical = 2.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(SkillforgeSpacing.xSmall),
-    ) {
-        Checkbox(
-            checked = checked,
-            onCheckedChange = { onClick() },
+    Column(verticalArrangement = Arrangement.spacedBy(SkillforgeSpacing.xSmall)) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold,
         )
         Text(
-            text = label,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface,
+            text = subtitle,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
+    }
+}
+
+@Composable
+private fun FilterChoiceChip(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    val backgroundColor = if (selected) {
+        MaterialTheme.colorScheme.primaryContainer
+    } else {
+        MaterialTheme.colorScheme.surface
+    }
+    val contentColor = if (selected) {
+        MaterialTheme.colorScheme.onPrimaryContainer
+    } else {
+        MaterialTheme.colorScheme.onSurfaceVariant
+    }
+    val borderColor = if (selected) {
+        MaterialTheme.colorScheme.primary
+    } else {
+        MaterialTheme.colorScheme.outlineVariant
+    }
+
+    Surface(
+        modifier = Modifier
+            .defaultMinSize(minHeight = 44.dp)
+            .clip(SkillforgeShapes.chip),
+        shape = SkillforgeShapes.chip,
+        color = backgroundColor,
+        contentColor = contentColor,
+        border = BorderStroke(1.dp, borderColor),
+        onClick = onClick,
+    ) {
+        Row(
+            modifier = Modifier.padding(
+                horizontal = SkillforgeSpacing.medium,
+                vertical = SkillforgeSpacing.small,
+            ),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(SkillforgeSpacing.xSmall),
+        ) {
+            if (selected) {
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp),
+                )
+            }
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+                maxLines = 1,
+            )
+        }
     }
 }
 
