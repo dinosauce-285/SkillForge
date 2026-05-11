@@ -76,6 +76,7 @@ fun SkillforgeInstructorDashboardScreen(
     courses: List<CourseSummaryDto> = emptyList(),
     analyticsData: InstructorAnalyticsDto? = null,
     token: String,
+    sessionFullName: String = "Instructor",
     profileViewModel: ProfileViewModel,
     qnaViewModel: com.example.skillforge.feature.instructor_portal.viewmodel.InstructorQnAViewModel,
     notificationViewModel: NotificationViewModel,
@@ -91,11 +92,15 @@ fun SkillforgeInstructorDashboardScreen(
     var showNotifications by remember { mutableStateOf(false) }
     var selectedRoute by remember { mutableStateOf(SkillforgeInstructorRoute.Dashboard) }
 
+    LaunchedEffect(token) {
+        profileViewModel.loadProfile(forceRefresh = true)
+    }
+
     Scaffold(
         topBar = { 
             if (selectedRoute != SkillforgeInstructorRoute.Account) {
                 var avatarToPass: String? = null
-                var nameToPass = "Instructor"
+                var nameToPass = sessionFullName
                 if (profileState is com.example.skillforge.feature.profile.viewmodel.ProfileUiState.Success) {
                     avatarToPass = (profileState as com.example.skillforge.feature.profile.viewmodel.ProfileUiState.Success).avatarUrl
                     nameToPass = (profileState as com.example.skillforge.feature.profile.viewmodel.ProfileUiState.Success).fullName
@@ -691,4 +696,4 @@ fun SkillforgeInstructorBottomBar(selectedRoute: SkillforgeInstructorRoute, onRo
         }
     }
 }
-
+
