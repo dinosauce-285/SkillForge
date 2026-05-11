@@ -67,7 +67,12 @@ class ProfileViewModel(
     /**
      * Loads the user profile.
      */
-    fun loadProfile() {
+    fun loadProfile(forceRefresh: Boolean = false) {
+        if (forceRefresh) {
+            committedProfile = null
+            draftProfile = null
+        }
+
         if (committedProfile == null) {
             _uiState.value = ProfileUiState.Loading
         }
