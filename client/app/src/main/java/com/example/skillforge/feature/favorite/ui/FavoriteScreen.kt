@@ -64,6 +64,7 @@ import com.example.skillforge.core.designsystem.PrimaryOrange
 import com.example.skillforge.core.designsystem.SurfaceColor
 import com.example.skillforge.core.designsystem.TextPrimaryColor
 import com.example.skillforge.core.designsystem.TextSecondaryColor
+import com.example.skillforge.core.designsystem.components.SkillforgeHeader
 import com.example.skillforge.domain.model.AuthSession
 import com.example.skillforge.domain.model.FavoriteCourse
 import com.example.skillforge.feature.favorite.viewmodel.FavoriteUiState
@@ -116,31 +117,6 @@ fun FavoriteScreen(
     onRefresh: () -> Unit,
 ) {
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        "Favorite Courses",
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = PrimaryOrange,
-                        ),
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = PrimaryOrange,
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = BackgroundColor,
-                ),
-            )
-        },
         bottomBar = {
             if (uiState.selectedCourseIds.isNotEmpty()) {
                 Surface(
@@ -214,14 +190,13 @@ fun FavoriteScreen(
                 )
                 else -> LazyColumn(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 24.dp),
+                        .fillMaxSize(),
                     verticalArrangement = Arrangement.spacedBy(24.dp),
                 ) {
                     item {
-                    FavoriteHeaderSection(
-                        fullName = fullName,
-                        onMenuClick = onBackClick,
+                    SkillforgeHeader(
+                        name = fullName,
+                        subtitle = "Saved courses to learn later.",
                     )
                 }
 
@@ -241,63 +216,6 @@ fun FavoriteScreen(
             }
         }
     }
-    }
-}
-
-@Composable
-private fun FavoriteHeaderSection(
-    fullName: String,
-    onMenuClick: () -> Unit,
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            IconButton(onClick = onMenuClick) {
-                Icon(
-                    imageVector = Icons.Default.Menu,
-                    contentDescription = "Back",
-                    tint = PrimaryOrange,
-                )
-            }
-            Column {
-                Text(
-                    text = "Wishlist",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = TextPrimaryColor,
-                )
-                Text(
-                    text = "Saved courses to learn later",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = TextSecondaryColor,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-        }
-
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .clip(CircleShape)
-                .background(PrimaryOrange.copy(alpha = 0.14f)),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                text = fullName.initials(),
-                color = PrimaryOrange,
-                fontWeight = FontWeight.Bold,
-                style = MaterialTheme.typography.labelLarge,
-            )
-        }
     }
 }
 

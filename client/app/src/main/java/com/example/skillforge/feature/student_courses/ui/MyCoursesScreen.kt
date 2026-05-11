@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import com.example.skillforge.core.designsystem.SkillforgeLayout
 import com.example.skillforge.core.designsystem.SkillforgeSpacing
 import com.example.skillforge.core.designsystem.components.CourseProgressCard
+import com.example.skillforge.core.designsystem.components.SkillforgeHeader
 import com.example.skillforge.domain.model.ActiveCourse
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.skillforge.feature.home.viewmodel.HomeViewModel
@@ -44,7 +45,8 @@ sealed interface MyCoursesState {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyCoursesScreen(
-     token: String = "",
+    token: String = "",
+    fullName: String = "Learner",
     reviewViewModel: ReviewViewModel,
     onNavigateBack: () -> Unit,
     onCourseClick: (String) -> Unit,
@@ -114,27 +116,6 @@ fun MyCoursesScreen(
     }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "My Courses",
-                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
-                )
-            )
-        },
         containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         var isRefreshing by remember { mutableStateOf(false) }
@@ -195,13 +176,17 @@ fun MyCoursesScreen(
                             .fillMaxSize()
                             .padding(paddingValues),
                         contentPadding = PaddingValues(
-                            start = SkillforgeLayout.screenHorizontalPadding,
-                            end = SkillforgeLayout.screenHorizontalPadding,
-                            top = SkillforgeSpacing.medium,
                             bottom = SkillforgeSpacing.large
                         ),
                         verticalArrangement = Arrangement.spacedBy(SkillforgeSpacing.medium)
                     ) {
+                        item {
+                            SkillforgeHeader(
+                                name = fullName,
+                                subtitle = "Continue your learning.",
+                            )
+                        }
+
                         items(myCourses, key = { it.courseId }) { course ->
                             MyCourseCard(
                                 course = course,

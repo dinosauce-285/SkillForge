@@ -77,6 +77,7 @@ import com.example.skillforge.core.designsystem.SkillforgeShapes
 import com.example.skillforge.core.designsystem.SkillforgeSpacing
 import com.example.skillforge.core.designsystem.SkillforgeTheme
 import com.example.skillforge.core.designsystem.components.SafeFlowRow
+import com.example.skillforge.core.designsystem.components.SkillforgeHeader
 import com.example.skillforge.core.designsystem.skillforgeElevatedCardColors
 import com.example.skillforge.core.designsystem.skillforgePrimaryButtonColors
 import com.example.skillforge.domain.model.AuthSession
@@ -176,9 +177,9 @@ fun StudentCourseListingScreen(
                 verticalArrangement = Arrangement.spacedBy(SkillforgeSpacing.medium),
             ) {
                 item {
-                    DiscoverHeader(
-                        fullName = session.user.fullName,
-                        onLogout = onLogout,
+                    SkillforgeHeader(
+                        name = session.user.fullName,
+                        subtitle = "Discover new courses.",
                     )
                 }
 
@@ -331,77 +332,6 @@ fun StudentCourseListingScreen(
                         )
                     }
                 }
-            }
-        }
-    }
-}
-
-@Composable
-private fun DiscoverHeader(
-    fullName: String,
-    onLogout: () -> Unit,
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(SkillforgeSpacing.small),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            IconButton(onClick = {}) {
-                Icon(
-                    imageVector = Icons.Default.Menu,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                )
-            }
-            Column {
-                Text(
-                    text = "Discover",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                )
-                Text(
-                    text = "Hi, ${fullName.substringBefore(" ")}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        }
-
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(SkillforgeSpacing.xSmall),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            IconButton(onClick = {}) {
-                Icon(
-                    imageVector = Icons.Default.ShoppingCart,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = fullName.initials(),
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold,
-                    style = MaterialTheme.typography.labelLarge,
-                )
-            }
-            IconButton(onClick = onLogout) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.Logout,
-                    contentDescription = "Logout",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
             }
         }
     }
