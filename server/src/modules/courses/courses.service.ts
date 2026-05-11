@@ -122,7 +122,7 @@ export class CoursesService {
     return result;
   }
 
-  async findAll(query: CourseListQueryDto) {
+  async findAll(query: CourseListQueryDto, userId?: string) {
     const page = this.parsePositiveInt(query.page, 1);
     const limit = this.parsePositiveInt(query.limit, 10);
     const search = query.search?.trim();
@@ -133,6 +133,16 @@ export class CoursesService {
       deletedAt: null,
       ...(query.categoryId ? { categoryId: query.categoryId } : {}),
       ...(levelFilter ? { level: levelFilter } : {}),
+      ...(userId
+        ? {
+            enrollments: {
+              none: {
+                userId,
+                status: 'ACTIVE',
+              },
+            },
+          }
+        : {}),
       ...(search
         ? {
             title: { contains: search, mode: 'insensitive' },
@@ -209,9 +219,19 @@ export class CoursesService {
       },
     };
 
-    const baseWhere = {
+    const baseWhere: Prisma.CourseWhereInput = {
       status: CourseStatus.PUBLISHED,
       deletedAt: null,
+      ...(userId
+        ? {
+            enrollments: {
+              none: {
+                userId,
+                status: 'ACTIVE',
+              },
+            },
+          }
+        : {}),
     };
 
     // 1. Trending right now

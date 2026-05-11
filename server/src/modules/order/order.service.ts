@@ -104,6 +104,13 @@ export class OrderService {
         },
       });
 
+      await tx.favorite.deleteMany({
+        where: {
+          userId,
+          courseId,
+        },
+      });
+
       await tx.orderFinancialSnapshot.create({
         data: {
           orderId: createdOrder.id,
