@@ -1,5 +1,10 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
-import { NotificationType } from '@prisma/client';
+import {
+  Injectable,
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
+import { EnrollmentStatus, NotificationType, Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 
@@ -10,7 +15,9 @@ export class DiscussionsService {
     private readonly notificationsService: NotificationsService,
   ) {}
 
-  async getLessonDiscussions(lessonId: string) {
+  async getLessonDiscussions(lessonId: string, userId: string, role: Role) {
+    await this.assertCanAccessLessonDiscussions(lessonId, userId, role);
+
     const discussions = await this.prisma.discussion.findMany({
       where: {
         lessonId: lessonId,
@@ -73,6 +80,21 @@ export class DiscussionsService {
       throw new BadRequestException('Content cannot be empty');
     }
 
+    if (parentId) {
+      const parentDiscussion = await this.prisma.discussion.findUnique({
+        where: { id: parentId },
+        select: { lessonId: true },
+      });
+
+      if (!parentDiscussion) {
+        throw new NotFoundException('Parent discussion not found');
+      }
+
+      if (parentDiscussion.lessonId !== lessonId) {
+        throw new BadRequestException('Reply must belong to the same lesson as the parent discussion');
+      }
+    }
+
     const newDiscussion = await this.prisma.discussion.create({
       data: {
         lessonId,
@@ -110,6 +132,70 @@ export class DiscussionsService {
       },
       replies: [],
     };
+  }
+
+  async createLessonDiscussion(
+    lessonId: string,
+    userId: string,
+    role: Role,
+    content: string,
+    parentId?: string,
+  ) {
+    await this.assertCanAccessLessonDiscussions(lessonId, userId, role);
+    return this.createDiscussion(lessonId, userId, content, parentId);
+  }
+
+  async replyToInstructorDiscussion(
+    instructorId: string,
+    discussionId: string,
+    content: string,
+  ) {
+    if (!content || content.trim() === '') {
+      throw new BadRequestException('Content cannot be empty');
+    }
+
+    const parentDiscussion = await this.prisma.discussion.findFirst({
+      where: {
+        id: discussionId,
+        parentId: null,
+      },
+      select: {
+        lessonId: true,
+        lesson: {
+          select: {
+            chapter: {
+              select: {
+                course: {
+                  select: {
+                    instructorId: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!parentDiscussion) {
+      throw new NotFoundException('Discussion not found');
+    }
+
+    const courseInstructorId =
+      parentDiscussion.lesson.chapter.course.instructorId;
+
+    if (courseInstructorId !== instructorId) {
+      throw new ForbiddenException(
+        'You can only reply to discussions from your own courses',
+      );
+    }
+
+    return this.createDiscussion(
+      parentDiscussion.lessonId,
+      instructorId,
+      content,
+      discussionId,
+    );
   }
 
   async getInstructorDiscussions(
@@ -276,5 +362,58 @@ export class DiscussionsService {
     } catch (error) {
       console.error('Failed to create discussion notification', error);
     }
+  }
+
+  private async assertCanAccessLessonDiscussions(
+    lessonId: string,
+    userId: string,
+    role: Role,
+  ) {
+    const lesson = await this.prisma.lesson.findUnique({
+      where: { id: lessonId },
+      select: {
+        chapter: {
+          select: {
+            course: {
+              select: {
+                id: true,
+                instructorId: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!lesson) {
+      throw new NotFoundException('Lesson not found');
+    }
+
+    if (role === Role.ADMIN) {
+      return;
+    }
+
+    const course = lesson.chapter.course;
+    if (course.instructorId === userId) {
+      return;
+    }
+
+    const enrollment = await this.prisma.enrollment.findUnique({
+      where: {
+        userId_courseId: {
+          userId,
+          courseId: course.id,
+        },
+      },
+      select: { status: true },
+    });
+
+    if (enrollment?.status === EnrollmentStatus.ACTIVE) {
+      return;
+    }
+
+    throw new ForbiddenException(
+      'You can only access discussions for your enrolled courses or courses you teach',
+    );
   }
 }

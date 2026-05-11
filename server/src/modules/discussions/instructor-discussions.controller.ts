@@ -28,13 +28,12 @@ export class InstructorDiscussionsController {
   replyToDiscussion(
     @Param('id') discussionId: string,
     @CurrentUser() user: any,
-    @Body() dto: { content: string; lessonId: string },
+    @Body() dto: { content: string },
   ) {
-    return this.discussionsService.createDiscussion(
-      dto.lessonId,
+    return this.discussionsService.replyToInstructorDiscussion(
       user.id,
+      discussionId,
       dto.content,
-      discussionId, // discussionId becomes the parentId
     );
   }
 }

@@ -14,8 +14,12 @@ export class DiscussionsController {
 
   @Get()
   @Roles(Role.STUDENT, Role.INSTRUCTOR, Role.ADMIN)
-  getDiscussions(@Param('lessonId') lessonId: string) {
-    return this.discussionsService.getLessonDiscussions(lessonId);
+  getDiscussions(@Param('lessonId') lessonId: string, @CurrentUser() user: any) {
+    return this.discussionsService.getLessonDiscussions(
+      lessonId,
+      user.id,
+      user.role,
+    );
   }
 
   @Post()
@@ -25,9 +29,10 @@ export class DiscussionsController {
     @CurrentUser() user: any,
     @Body() createDiscussionDto: CreateDiscussionDto,
   ) {
-    return this.discussionsService.createDiscussion(
+    return this.discussionsService.createLessonDiscussion(
       lessonId,
       user.id,
+      user.role,
       createDiscussionDto.content,
       createDiscussionDto.parentId,
     );
