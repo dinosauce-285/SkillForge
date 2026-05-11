@@ -293,6 +293,15 @@ private fun AccountActionsSection(
     onBecomeInstructorClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val isStudent = role.equals("STUDENT", ignoreCase = true)
+    val showPurchaseHistory = isStudent
+    val showBecomeInstructor = isStudent
+    val hasVisibleActions = showPurchaseHistory || showBecomeInstructor
+
+    if (!hasVisibleActions) {
+        return
+    }
+
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = SkillforgeShapes.extraLarge,
@@ -309,19 +318,21 @@ private fun AccountActionsSection(
                 fontWeight = FontWeight.Bold
             )
 
-            OutlinedButton(
-                onClick = onNavigateToPurchaseHistory,
-                enabled = enabled,
-                modifier = Modifier.fillMaxWidth(),
-                shape = SkillforgeShapes.button,
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary)
-            ) {
-                Icon(Icons.AutoMirrored.Filled.MenuBook, contentDescription = null)
-                Spacer(modifier = Modifier.width(SkillforgeSpacing.small))
-                Text("Purchase History")
+            if (showPurchaseHistory) {
+                OutlinedButton(
+                    onClick = onNavigateToPurchaseHistory,
+                    enabled = enabled,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = SkillforgeShapes.button,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary)
+                ) {
+                    Icon(Icons.AutoMirrored.Filled.MenuBook, contentDescription = null)
+                    Spacer(modifier = Modifier.width(SkillforgeSpacing.small))
+                    Text("Purchase History")
+                }
             }
 
-            if (role.equals("STUDENT", ignoreCase = true)) {
+            if (showBecomeInstructor) {
                 Button(
                     onClick = onBecomeInstructorClick,
                     enabled = enabled,

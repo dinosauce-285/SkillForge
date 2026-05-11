@@ -2,6 +2,7 @@ package com.example.skillforge.feature.student_courses.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,14 +33,18 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -50,12 +55,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import coil.compose.AsyncImage
 import com.example.skillforge.core.designsystem.PrimaryOrange
 import com.example.skillforge.core.designsystem.PrimaryOrangeLight
-import com.example.skillforge.core.designsystem.SkillforgeComponentSizes
 import com.example.skillforge.core.designsystem.SkillforgeLayout
 import com.example.skillforge.core.designsystem.SkillforgeShapes
 import com.example.skillforge.core.designsystem.SkillforgeSpacing
@@ -109,6 +113,7 @@ fun StudentCourseDetailsRoute(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StudentCourseDetailsScreen(
     uiState: StudentCourseDetailsUiState,
@@ -119,14 +124,39 @@ fun StudentCourseDetailsScreen(
     onRetry: () -> Unit,
 ) {
     var selectedTab by remember { mutableStateOf(DetailTab.Overview) }
+    val appBarTitle = uiState.course?.title?.takeIf { it.isNotBlank() } ?: "Course Details"
 
-    Surface(modifier = Modifier.fillMaxSize()) {
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = appBarTitle,
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background,
+                ),
+            )
+        },
+        containerColor = MaterialTheme.colorScheme.background,
+    ) { innerPadding ->
         when {
-            uiState.isLoading -> LoadingDetailsState()
+            uiState.isLoading -> LoadingDetailsState(modifier = Modifier.padding(innerPadding))
             uiState.errorMessage != null -> ErrorDetailsState(
                 message = uiState.errorMessage,
                 onBack = onBack,
                 onRetry = onRetry,
+                modifier = Modifier.padding(innerPadding),
             )
             uiState.course != null -> {
                 val course = uiState.course
@@ -137,10 +167,17 @@ fun StudentCourseDetailsScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
+                        .padding(innerPadding)
                         .background(MaterialTheme.colorScheme.background)
                 ) {
-                    // Hero section is always visible
-                    CourseDetailsHero(course = course, onBack = onBack)
+                    Spacer(modifier = Modifier.height(SkillforgeSpacing.small))
+                    CourseDetailsHero(
+                        course = course,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = SkillforgeLayout.screenHorizontalPadding),
+                    )
+                    Spacer(modifier = Modifier.height(SkillforgeSpacing.small))
 
                     TabRow(
                         selectedTabIndex = selectedTab.ordinal,
@@ -448,55 +485,13 @@ private fun InstructorTabContent(course: CourseDetails) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(SkillforgeLayout.screenHorizontalPadding),
-        verticalArrangement = Arrangement.spacedBy(SkillforgeSpacing.large)
+        verticalArrangement = Arrangement.spacedBy(SkillforgeSpacing.medium)
     ) {
         item {
             Spacer(modifier = Modifier.height(SkillforgeSpacing.small))
             InstructorCard(course = course)
         }
 
-        if (course.instructorSkills.isNotEmpty()) {
-            item {
-                Column(verticalArrangement = Arrangement.spacedBy(SkillforgeSpacing.medium)) {
-                    Text(text = "Instructor Skills", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(SkillforgeSpacing.small)
-                    ) {
-                        items(course.instructorSkills) { skill ->
-                            AssistChip(
-                                onClick = {},
-                                label = { Text(skill) },
-                                colors = AssistChipDefaults.assistChipColors(
-                                    containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
-                                )
-                            )
-                        }
-                    }
-                }
-            }
-        }
-
-        item {
-            // Placeholder for other courses as we don't have the data in current model
-            Column(verticalArrangement = Arrangement.spacedBy(SkillforgeSpacing.medium)) {
-                Text(text = "More from this Instructor", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                ElevatedCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = SkillforgeShapes.card,
-                    colors = skillforgeElevatedCardColors()
-                ) {
-                    Box(modifier = Modifier.fillMaxWidth().padding(SkillforgeSpacing.large), contentAlignment = Alignment.Center) {
-                        Text(
-                            text = "Discover more courses by ${course.instructorName} on their profile.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                }
-            }
-        }
-        
         item {
             Spacer(modifier = Modifier.height(SkillforgeSpacing.large))
         }
@@ -589,9 +584,10 @@ private fun ReviewTabContent(
 @Composable
 private fun CourseDetailsHero(
     course: CourseDetails,
-    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     ElevatedCard(
+        modifier = modifier,
         shape = SkillforgeShapes.card,
         colors = CardDefaults.elevatedCardColors(containerColor = PrimaryOrangeLight),
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = SkillforgeSpacing.small),
@@ -600,29 +596,10 @@ private fun CourseDetailsHero(
             modifier = Modifier.padding(SkillforgeLayout.cardContentPadding),
             verticalArrangement = Arrangement.spacedBy(SkillforgeSpacing.medium),
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                IconButton(onClick = onBack) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
-                        tint = MaterialTheme.colorScheme.onPrimary,
-                    )
-                }
-                Text(
-                    text = course.categoryName.uppercase(),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.84f),
-                )
-            }
-
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(SkillforgeComponentSizes.thumbnailHeight)
+                    .height(132.dp)
                     .clip(SkillforgeShapes.card)
                     .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.18f)),
             ) {
@@ -660,7 +637,7 @@ private fun CourseDetailsHero(
 
             Text(
                 text = course.title,
-                style = MaterialTheme.typography.headlineMedium,
+                style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onPrimary,
             )
@@ -693,7 +670,13 @@ private fun CourseDetailsHero(
 
 @Composable
 private fun InstructorCard(course: CourseDetails) {
-    ElevatedCard(shape = SkillforgeShapes.card, colors = skillforgeElevatedCardColors()) {
+    val instructorName = course.instructorName.takeIf { it.isNotBlank() } ?: "Instructor"
+
+    ElevatedCard(
+        modifier = Modifier.fillMaxWidth(),
+        shape = SkillforgeShapes.card,
+        colors = skillforgeElevatedCardColors(),
+    ) {
         Column(
             modifier = Modifier.padding(SkillforgeLayout.cardContentPadding),
             verticalArrangement = Arrangement.spacedBy(SkillforgeSpacing.medium),
@@ -705,37 +688,81 @@ private fun InstructorCard(course: CourseDetails) {
             ) {
                 Box(
                     modifier = Modifier
-                        .clip(androidx.compose.foundation.shape.CircleShape)
-                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
-                        .padding(SkillforgeSpacing.medium),
+                        .size(56.dp)
+                        .clip(CircleShape)
+                        .background(PrimaryOrange.copy(alpha = 0.12f)),
+                    contentAlignment = Alignment.Center,
                 ) {
                     Text(
-                        text = course.instructorName.take(1),
+                        text = instructorName.take(1).uppercase(),
                         color = PrimaryOrange,
                         fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleMedium,
                     )
                 }
                 Column(verticalArrangement = Arrangement.spacedBy(SkillforgeSpacing.xSmall)) {
                     Text(
-                        text = course.instructorName,
+                        text = instructorName,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                     )
-                    if (!course.instructorGoals.isNullOrBlank()) {
-                        Text(text = course.instructorGoals, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
+                    Text(
+                        text = course.categoryName,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
             }
+
+            if (!course.instructorGoals.isNullOrBlank()) {
+                Text(
+                    text = course.instructorGoals,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(SkillforgeSpacing.small),
+            ) {
+                InstructorStat(
+                    label = "Students",
+                    value = course.studentCount.toString(),
+                    modifier = Modifier.weight(1f),
+                )
+                InstructorStat(
+                    label = "Rating",
+                    value = formatRating(course.averageRating),
+                    modifier = Modifier.weight(1f),
+                )
+                InstructorStat(
+                    label = "Reviews",
+                    value = course.reviewCount.toString(),
+                    modifier = Modifier.weight(1f),
+                )
+            }
+
             if (course.instructorSkills.isNotEmpty()) {
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(SkillforgeSpacing.small)) {
-                    items(course.instructorSkills) { skill ->
-                        AssistChip(
-                            onClick = {},
-                            label = { Text(skill) },
-                            colors = AssistChipDefaults.assistChipColors(
-                                containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
-                            ),
-                        )
+                Column(verticalArrangement = Arrangement.spacedBy(SkillforgeSpacing.small)) {
+                    Text(
+                        text = "Skills",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(SkillforgeSpacing.small)) {
+                        items(course.instructorSkills) { skill ->
+                            AssistChip(
+                                onClick = {},
+                                label = { Text(skill) },
+                                colors = AssistChipDefaults.assistChipColors(
+                                    containerColor = PrimaryOrange.copy(alpha = 0.08f),
+                                    labelColor = MaterialTheme.colorScheme.onSurface,
+                                ),
+                            )
+                        }
                     }
                 }
             }
@@ -744,8 +771,33 @@ private fun InstructorCard(course: CourseDetails) {
 }
 
 @Composable
-private fun LoadingDetailsState() {
-    Surface(modifier = Modifier.fillMaxSize()) {
+private fun InstructorStat(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(2.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(
+            text = value,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = PrimaryOrange,
+        )
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+@Composable
+private fun LoadingDetailsState(modifier: Modifier = Modifier) {
+    Surface(modifier = modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -765,8 +817,9 @@ private fun ErrorDetailsState(
     message: String,
     onBack: () -> Unit,
     onRetry: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
-    Surface(modifier = Modifier.fillMaxSize()) {
+    Surface(modifier = modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -809,5 +862,4 @@ private fun StudentCourseDetailsPreview() {
         )
     }
 }
-
 
