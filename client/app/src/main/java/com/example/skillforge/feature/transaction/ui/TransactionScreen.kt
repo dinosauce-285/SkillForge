@@ -242,7 +242,8 @@ fun TransactionScreen(
                                     Text(course.title, fontWeight = FontWeight.Bold, fontSize = 14.sp, lineHeight = 18.sp, maxLines = 2)
                                     Text("Instructor: ${course.instructorName}", fontSize = 12.sp, color = Color.Gray)
                                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                        if (uiState.discountPercent > 0) {
+                                        val discount = uiState.courseDiscounts[course.id] ?: 0
+                                        if (discount > 0) {
                                             Text(
                                                 formatPrice(course.price),
                                                 style = MaterialTheme.typography.bodySmall.copy(
@@ -251,7 +252,7 @@ fun TransactionScreen(
                                                 ),
                                                 fontSize = 12.sp
                                             )
-                                            val discountedPrice = course.price * (1 - (uiState.discountPercent / 100.0))
+                                            val discountedPrice = course.price * (1 - (discount / 100.0))
                                             Text(
                                                 formatPrice(discountedPrice),
                                                 fontWeight = FontWeight.Bold,
@@ -363,11 +364,10 @@ fun TransactionScreen(
                             Text(formatPrice(subtotal), fontSize = 14.sp)
                         }
                         
-                        if (uiState.discountPercent > 0) {
-                            val subtotal = uiState.courses.sumOf { it.price }
+                        if (uiState.discountAmount > 0) {
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text("Promo Code (${uiState.discountPercent}% off)", color = Color(0xFF2E7D32), fontSize = 14.sp, fontWeight = FontWeight.Medium)
-                                Text("-${formatPrice((uiState.discountPercent / 100.0) * subtotal)}", color = Color(0xFF2E7D32), fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                                Text("Promo Code Discount", color = Color(0xFF2E7D32), fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                                Text("-${formatPrice(uiState.discountAmount)}", color = Color(0xFF2E7D32), fontSize = 14.sp, fontWeight = FontWeight.Medium)
                             }
                         }
                         

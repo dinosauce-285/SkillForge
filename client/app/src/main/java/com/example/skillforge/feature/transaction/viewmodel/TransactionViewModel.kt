@@ -15,7 +15,7 @@ import kotlinx.coroutines.launch
 data class TransactionUiState(
     val courses: List<CourseSummary> = emptyList(),
     val promoCode: String = "",
-    val discountPercent: Int = 0,
+    val courseDiscounts: Map<String, Int> = emptyMap(),
     val isLoading: Boolean = false,
     val isProcessing: Boolean = false,
     val errorMessage: String? = null,
@@ -23,7 +23,11 @@ data class TransactionUiState(
     val promoApplied: Boolean = false,  // true = applied successfully
     val orderSuccessful: Boolean = false,
 ) {
-    val totalPrice: Double get() = courses.sumOf { it.price } * (1 - (discountPercent / 100.0))
+    val discountAmount: Double get() = courses.sumOf { 
+         val discount = courseDiscounts[it.id] ?: 0
+         it.price * (discount / 100.0) 
+    }
+    val totalPrice: Double get() = courses.sumOf { it.price }  - discountAmount
     val course: CourseSummary? get() = courses.firstOrNull() // For backward compatibility in UI if needed
 }
 
@@ -90,37 +94,49 @@ class TransactionViewModel(
     }
 
     fun onPromoCodeChange(code: String) {
-        _uiState.update { it.copy(promoCode = code, promoMessage = null, promoApplied = false, discountPercent = 0) }
+        _uiState.update { it.copy(promoCode = code, promoMessage = null, promoApplied = false, courseDiscounts = emptyMap()) }
     }
 
     fun applyPromoCode() {
         val code = _uiState.value.promoCode.trim()
-        val firstCourseId = _uiState.value.courses.firstOrNull()?.id
-        if (code.isEmpty() || firstCourseId == null) {
-            _uiState.update { it.copy(discountPercent = 0, promoMessage = null, promoApplied = false) }
+        if (code.isEmpty() || _uiState.value.courses.isEmpty()) {
+            _uiState.update { it.copy(courseDiscounts = emptyMap(), promoMessage = null, promoApplied = false) }
             return
         }
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, promoMessage = null, promoApplied = false) }
-            // For now, apply coupon to the first course or handle it as a general discount if supported
-            val result = couponRepository.validateCoupon(code, firstCourseId)
-            if (result.isSuccess) {
-                val validationResponse = result.getOrNull()
-                if (validationResponse != null) {
-                    _uiState.update {
-                        it.copy(
-                            discountPercent = validationResponse.discountPercent,
-                            promoMessage = "Code applied! ${validationResponse.discountPercent}% off",
-                            promoApplied = true,
-                            isLoading = false
-                        )
+            val newDiscounts = mutableMapOf<String, Int>()
+            var anyApplied = false
+            var appliedDiscountPercent = 0
+
+            for (course in _uiState.value.courses) {
+                val result = couponRepository.validateCoupon(code, course.id)
+                if (result.isSuccess) {
+                    val validationResponse = result.getOrNull()
+                    if (validationResponse != null) {
+                        newDiscounts[course.id] = validationResponse.discountPercent
+                        appliedDiscountPercent = validationResponse.discountPercent
+                        anyApplied = true
                     }
+                } else {
+                    newDiscounts[course.id] = 0
+                }
+            }
+
+            if (anyApplied) {
+                _uiState.update {
+                    it.copy(
+                        courseDiscounts = newDiscounts,
+                        promoMessage = "Code applied! ${appliedDiscountPercent}% off applicable courses",
+                        promoApplied = true,
+                        isLoading = false
+                    )
                 }
             } else {
                 _uiState.update {
                     it.copy(
-                        discountPercent = 0,
-                        promoMessage = result.exceptionOrNull()?.message ?: "Invalid promo code",
+                        courseDiscounts = emptyMap(),
+                        promoMessage = "Invalid promo code or not applicable",
                         promoApplied = false,
                         isLoading = false
                     )
@@ -135,11 +151,14 @@ class TransactionViewModel(
         
         viewModelScope.launch {
             _uiState.update { it.copy(isProcessing = true, errorMessage = null) }
-            val couponCode = if (_uiState.value.discountPercent > 0) _uiState.value.promoCode else null
+            val promoCode = _uiState.value.promoCode
             
             var allSuccessful = true
             for (course in courses) {
-                val priceWithDiscount = course.price * (1 - (_uiState.value.discountPercent / 100.0))
+                val discount = _uiState.value.courseDiscounts[course.id] ?: 0
+                val priceWithDiscount = course.price * (1 - (discount / 100.0))
+                val couponCode = if (discount > 0) promoCode else null
+                
                 val result = orderRepository.createOrder(token, course.id, priceWithDiscount, couponCode)
                 if (result.isFailure) {
                     allSuccessful = false
