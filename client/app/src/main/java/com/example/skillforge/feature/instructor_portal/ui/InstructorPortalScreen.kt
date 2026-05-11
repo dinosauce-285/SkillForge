@@ -48,10 +48,12 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.skillforge.core.designsystem.*
+import com.example.skillforge.data.remote.ChartDataDto
 import com.example.skillforge.core.designsystem.components.SkillforgeHeader
 import com.example.skillforge.data.remote.CourseSummaryDto
 import com.example.skillforge.data.remote.InstructorDashboardDto
@@ -251,37 +253,139 @@ fun DashboardTabContent(
                 shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(containerColor = SurfaceColor)
             ) {
-                Box(modifier = Modifier.padding(24.dp).fillMaxWidth().height(200.dp)) {
-                    if (chartData.isEmpty()) {
-                        Text("No data available", modifier = Modifier.align(Alignment.Center))
-                    } else {
-                        val maxCount = chartData.maxOfOrNull { it.count }?.toFloat()?.coerceAtLeast(1f) ?: 1f
+                EnrollmentBarChart(
+                    chartData = chartData,
+                    modifier = Modifier.padding(24.dp)
+                )
+            }
+        }
+    }
+}
 
-                        Row(
-                            modifier = Modifier.fillMaxSize(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.Bottom
-                        ) {
-                            chartData.forEach { dataPoint ->
-                                val heightFraction = (dataPoint.count.toFloat() / maxCount)
+@Composable
+private fun EnrollmentBarChart(
+    chartData: List<ChartDataDto>,
+    modifier: Modifier = Modifier,
+    emptyMessage: String = "No data available"
+) {
+    InstructorMonthlyBarChart(
+        points = chartData.map { dataPoint ->
+            InstructorMonthlyBarChartPoint(
+                month = dataPoint.month,
+                value = dataPoint.count.toFloat(),
+                valueLabel = dataPoint.count.toString()
+            )
+        },
+        barColor = PrimaryOrange,
+        modifier = modifier,
+        emptyMessage = emptyMessage
+    )
+}
 
-                                Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    modifier = Modifier.weight(1f)
-                                ) {
-                                    Text(text = dataPoint.count.toString(), fontSize = 10.sp, color = TextSecondaryColor)
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxWidth(0.6f)
-                                            .fillMaxHeight(heightFraction.coerceAtLeast(0.05f))
-                                            .background(PrimaryOrange, RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
-                                    )
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    Text(text = dataPoint.month, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextPrimaryColor)
-                                }
-                            }
+@Composable
+private fun RevenueBarChart(
+    chartData: List<ChartDataDto>,
+    modifier: Modifier = Modifier,
+    emptyMessage: String = "No data available"
+) {
+    InstructorMonthlyBarChart(
+        points = chartData.map { dataPoint ->
+            InstructorMonthlyBarChartPoint(
+                month = dataPoint.month,
+                value = dataPoint.revenue.toFloat(),
+                valueLabel = "$${dataPoint.revenue.toInt()}"
+            )
+        },
+        barColor = Color(0xFF4CAF50),
+        modifier = modifier,
+        emptyMessage = emptyMessage
+    )
+}
+
+private data class InstructorMonthlyBarChartPoint(
+    val month: String,
+    val value: Float,
+    val valueLabel: String
+)
+
+@Composable
+private fun InstructorMonthlyBarChart(
+    points: List<InstructorMonthlyBarChartPoint>,
+    barColor: Color,
+    modifier: Modifier = Modifier,
+    emptyMessage: String = "No data available"
+) {
+    val chartHeight = 200.dp
+    val plotHeight = 156.dp
+    val maxBarHeight = 118.dp
+    val minVisibleBarHeight = 8.dp
+    val zeroBaselineHeight = 2.dp
+    val barShape = RoundedCornerShape(topStart = 6.dp, topEnd = 6.dp)
+
+    Box(modifier = modifier.fillMaxWidth().height(chartHeight)) {
+        if (points.isEmpty()) {
+            Text(
+                text = emptyMessage,
+                color = TextSecondaryColor,
+                modifier = Modifier.align(Alignment.Center)
+            )
+        } else {
+            val maxValue = points.maxOfOrNull { it.value }?.coerceAtLeast(1f) ?: 1f
+
+            Column(modifier = Modifier.fillMaxSize()) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().height(plotHeight),
+                    horizontalArrangement = Arrangement.spacedBy(SkillforgeSpacing.small),
+                    verticalAlignment = Alignment.Bottom
+                ) {
+                    points.forEach { point ->
+                        val heightFraction = point.value / maxValue
+                        val barHeight = when {
+                            point.value <= 0f -> zeroBaselineHeight
+                            else -> (maxBarHeight * heightFraction).coerceAtLeast(minVisibleBarHeight)
                         }
+                        val resolvedBarColor = if (point.value <= 0f) SearchBarBackgroundColor else barColor
+
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Bottom,
+                            modifier = Modifier.weight(1f).fillMaxHeight()
+                        ) {
+                            Text(
+                                text = point.valueLabel,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = TextSecondaryColor,
+                                maxLines = 1
+                            )
+                            Spacer(modifier = Modifier.height(SkillforgeSpacing.xSmall))
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth(0.56f)
+                                    .height(barHeight)
+                                    .background(resolvedBarColor, barShape)
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(SkillforgeSpacing.small))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth().height(28.dp),
+                    horizontalArrangement = Arrangement.spacedBy(SkillforgeSpacing.small),
+                    verticalAlignment = Alignment.Top
+                ) {
+                    points.forEach { point ->
+                        Text(
+                            text = point.month,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = TextPrimaryColor,
+                            maxLines = 1,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.weight(1f)
+                        )
                     }
                 }
             }
@@ -520,41 +624,10 @@ fun AnalyticsTabContent(dashboardData: InstructorDashboardDto?, isLoading: Boole
 
                     Spacer(modifier = Modifier.height(32.dp))
 
-                    // --- REAL BAR CHART IMPL ---
-                    Box(modifier = Modifier.fillMaxWidth().height(180.dp)) {
-                        if (chartData.isEmpty()) {
-                            Text("No data available yet.", color = TextSecondaryColor, modifier = Modifier.align(Alignment.Center))
-                        } else {
-                            val maxCount = chartData.maxOfOrNull { it.count }?.toFloat()?.coerceAtLeast(1f) ?: 1f
-
-                            Row(
-                                modifier = Modifier.fillMaxSize(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.Bottom
-                            ) {
-                                chartData.forEach { dataPoint ->
-                                    val heightFraction = (dataPoint.count.toFloat() / maxCount)
-
-                                    Column(
-                                        horizontalAlignment = Alignment.CenterHorizontally,
-                                        modifier = Modifier.weight(1f)
-                                    ) {
-                                        Text(text = dataPoint.count.toString(), fontSize = 10.sp, color = TextSecondaryColor, fontWeight = FontWeight.Bold)
-                                        Spacer(modifier = Modifier.height(6.dp))
-                                        Box(
-                                            modifier = Modifier
-                                                .fillMaxWidth(0.5f)
-                                                .fillMaxHeight(heightFraction.coerceAtLeast(0.05f))
-                                                .background(PrimaryOrange, RoundedCornerShape(topStart = 6.dp, topEnd = 6.dp))
-                                        )
-                                        Spacer(modifier = Modifier.height(8.dp))
-                                        Text(text = dataPoint.month, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextPrimaryColor)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    // ---------------------------
+                    EnrollmentBarChart(
+                        chartData = chartData,
+                        emptyMessage = "No data available yet."
+                    )
                 }
             }
         }
@@ -578,39 +651,10 @@ fun AnalyticsTabContent(dashboardData: InstructorDashboardDto?, isLoading: Boole
 
                     Spacer(modifier = Modifier.height(32.dp))
 
-                    Box(modifier = Modifier.fillMaxWidth().height(180.dp)) {
-                        if (chartData.isEmpty()) {
-                            Text("No data available yet.", color = TextSecondaryColor, modifier = Modifier.align(Alignment.Center))
-                        } else {
-                            val maxRevenue = chartData.maxOfOrNull { it.revenue }?.toFloat()?.coerceAtLeast(1f) ?: 1f
-
-                            Row(
-                                modifier = Modifier.fillMaxSize(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.Bottom
-                            ) {
-                                chartData.forEach { dataPoint ->
-                                    val heightFraction = (dataPoint.revenue.toFloat() / maxRevenue)
-
-                                    Column(
-                                        horizontalAlignment = Alignment.CenterHorizontally,
-                                        modifier = Modifier.weight(1f)
-                                    ) {
-                                        Text(text = "$${dataPoint.revenue.toInt()}", fontSize = 10.sp, color = TextSecondaryColor, fontWeight = FontWeight.Bold)
-                                        Spacer(modifier = Modifier.height(6.dp))
-                                        Box(
-                                            modifier = Modifier
-                                                .fillMaxWidth(0.5f)
-                                                .fillMaxHeight(heightFraction.coerceAtLeast(0.05f))
-                                                .background(Color(0xFF4CAF50), RoundedCornerShape(topStart = 6.dp, topEnd = 6.dp))
-                                        )
-                                        Spacer(modifier = Modifier.height(8.dp))
-                                        Text(text = dataPoint.month, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = TextPrimaryColor)
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    RevenueBarChart(
+                        chartData = chartData,
+                        emptyMessage = "No data available yet."
+                    )
                 }
             }
         }
@@ -696,4 +740,3 @@ fun SkillforgeInstructorBottomBar(selectedRoute: SkillforgeInstructorRoute, onRo
         }
     }
 }
-
