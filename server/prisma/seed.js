@@ -56,6 +56,9 @@ const PASSWORD = '123456';
 const PLATFORM_SHARE_RATE = 30;
 const INSTRUCTOR_SHARE_RATE = 70;
 const PENDING_RELEASE_DAYS = 30;
+const ADMIN_EMAIL = 'admin@skillforge.dev';
+const KHOA_EMAIL = 'khoa@skillforge.dev';
+const NAM_EMAIL = 'nam@skillforge.dev';
 
 const videos = [
   {
@@ -101,53 +104,25 @@ const docs = [
 
 const users = [
   {
-    email: 'admin@skillforge.dev',
+    email: ADMIN_EMAIL,
     fullName: 'SkillForge Admin',
     role: Role.ADMIN,
     skills: ['Operations', 'Moderation', 'Finance'],
     learningGoals: null,
   },
   {
-    email: 'khoa@skillforge.dev',
+    email: KHOA_EMAIL,
     fullName: 'Nguyen Minh Khoa',
     role: Role.INSTRUCTOR,
     skills: ['HTML', 'CSS', 'React', 'Machine Learning', 'Figma'],
     learningGoals: null,
   },
   {
-    email: 'han@skillforge.dev',
-    fullName: 'Tran Gia Han',
-    role: Role.INSTRUCTOR,
-    skills: ['JavaScript', 'Node.js', 'PostgreSQL', 'Python', 'Docker'],
-    learningGoals: null,
-  },
-  {
-    email: 'nam@skillforge.dev',
+    email: NAM_EMAIL,
     fullName: 'Le Hoang Nam',
     role: Role.STUDENT,
     skills: ['Frontend', 'JavaScript'],
     learningGoals: 'Become a full-stack developer.',
-  },
-  {
-    email: 'anh@skillforge.dev',
-    fullName: 'Ngo Minh Anh',
-    role: Role.STUDENT,
-    skills: ['UI', 'React'],
-    learningGoals: 'Ship polished web apps with React.',
-  },
-  {
-    email: 'tung@skillforge.dev',
-    fullName: 'Vu Thanh Tung',
-    role: Role.STUDENT,
-    skills: ['Databases', 'DevOps'],
-    learningGoals: 'Improve backend and deployment skills.',
-  },
-  {
-    email: 'linh@skillforge.dev',
-    fullName: 'Pham Thanh Linh',
-    role: Role.STUDENT,
-    skills: ['Python', 'Data Analysis'],
-    learningGoals: 'Move into a data science role.',
   },
 ];
 
@@ -158,7 +133,7 @@ const courseBlueprints = [
     summary:
       'Learn how to structure content correctly, then style it with layout systems that scale from mobile to desktop.',
     category: 'Web Development',
-    instructor: 'khoa@skillforge.dev',
+    instructor: KHOA_EMAIL,
     level: CourseLevel.BEGINNER,
     price: 0,
     isFree: true,
@@ -172,7 +147,7 @@ const courseBlueprints = [
     summary:
       'Cover language fundamentals, object patterns, and asynchronous behavior that every developer needs.',
     category: 'JavaScript',
-    instructor: 'han@skillforge.dev',
+    instructor: KHOA_EMAIL,
     level: CourseLevel.BEGINNER,
     price: 19.99,
     isFree: false,
@@ -186,7 +161,7 @@ const courseBlueprints = [
     summary:
       'Move from JSX basics to data flow, hooks, and reusable UI composition for real product screens.',
     category: 'Frontend Engineering',
-    instructor: 'khoa@skillforge.dev',
+    instructor: KHOA_EMAIL,
     level: CourseLevel.INTERMEDIATE,
     price: 29.99,
     isFree: false,
@@ -200,7 +175,7 @@ const courseBlueprints = [
     summary:
       'Wire request handling, validation, error handling, authentication, and testing into a maintainable backend.',
     category: 'Backend Engineering',
-    instructor: 'han@skillforge.dev',
+    instructor: KHOA_EMAIL,
     level: CourseLevel.INTERMEDIATE,
     price: 34.99,
     isFree: false,
@@ -214,7 +189,7 @@ const courseBlueprints = [
     summary:
       'Learn relational design, indexing, and Prisma workflows that turn a schema into a production-ready database layer.',
     category: 'Databases',
-    instructor: 'han@skillforge.dev',
+    instructor: KHOA_EMAIL,
     level: CourseLevel.INTERMEDIATE,
     price: 24.99,
     isFree: false,
@@ -228,7 +203,7 @@ const courseBlueprints = [
     summary:
       'From NumPy arrays to Pandas DataFrames and Matplotlib charts, build the foundation for machine learning projects.',
     category: 'Data Science',
-    instructor: 'han@skillforge.dev',
+    instructor: KHOA_EMAIL,
     level: CourseLevel.BEGINNER,
     price: 39.99,
     isFree: false,
@@ -242,7 +217,7 @@ const courseBlueprints = [
     summary:
       'Implement regression, classification, clustering, and evaluation pipelines using Python and scikit-learn.',
     category: 'AI & Machine Learning',
-    instructor: 'khoa@skillforge.dev',
+    instructor: KHOA_EMAIL,
     level: CourseLevel.INTERMEDIATE,
     price: 49.99,
     isFree: false,
@@ -256,7 +231,7 @@ const courseBlueprints = [
     summary:
       'Go from writing a Dockerfile to deploying multi-service apps on Kubernetes with health checks and rolling updates.',
     category: 'DevOps & Cloud',
-    instructor: 'han@skillforge.dev',
+    instructor: KHOA_EMAIL,
     level: CourseLevel.INTERMEDIATE,
     price: 44.99,
     isFree: false,
@@ -585,22 +560,13 @@ async function seedCourses(categoryMap, tagMap, userMap) {
 }
 
 async function seedInstructorCommerce(userMap) {
-  const khoa = userMap.get('khoa@skillforge.dev');
-  const han = userMap.get('han@skillforge.dev');
+  const khoa = userMap.get(KHOA_EMAIL);
 
   const khoaWallet = await prisma.wallet.create({
     data: {
       userId: khoa.id,
       availableBalance: decimal(620),
       pendingBalance: decimal(180),
-    },
-  });
-
-  await prisma.wallet.create({
-    data: {
-      userId: han.id,
-      availableBalance: decimal(480),
-      pendingBalance: decimal(240),
     },
   });
 
@@ -617,17 +583,6 @@ async function seedInstructorCommerce(userMap) {
   await prisma.instructorSubscription.create({
     data: {
       userId: khoa.id,
-      planCode: 'PRO_INSTRUCTOR_MONTHLY',
-      amount: decimal(19.99),
-      currency: 'USD',
-      status: InstructorSubscriptionStatus.ACTIVE,
-      paymentStatus: InstructorSubscriptionPaymentStatus.SUCCEEDED,
-    },
-  });
-
-  await prisma.instructorSubscription.create({
-    data: {
-      userId: han.id,
       planCode: 'PRO_INSTRUCTOR_MONTHLY',
       amount: decimal(19.99),
       currency: 'USD',
@@ -652,15 +607,15 @@ async function seedCoupons(userMap) {
       discountPercent: 20,
       description: 'React course promo by Khoa',
       scope: CouponScope.INSTRUCTOR,
-      instructorId: userMap.get('khoa@skillforge.dev').id,
+      instructorId: userMap.get(KHOA_EMAIL).id,
       maxUses: 100,
     },
     {
-      code: 'BACKEND30',
+      code: 'KHOA30',
       discountPercent: 30,
-      description: 'Backend bundle promo by Han',
+      description: 'Instructor promo by Khoa',
       scope: CouponScope.INSTRUCTOR,
-      instructorId: userMap.get('han@skillforge.dev').id,
+      instructorId: userMap.get(KHOA_EMAIL).id,
       maxUses: 80,
     },
   ];
@@ -726,24 +681,9 @@ async function createCompletedOrder({ student, course, coupon = null, daysAgo = 
 async function seedLearningActivity(courses, userMap, couponMap) {
   const plans = [
     {
-      email: 'nam@skillforge.dev',
-      courseIndexes: [0, 1, 2],
-      completedLessons: [4, 3, 1],
-    },
-    {
-      email: 'anh@skillforge.dev',
-      courseIndexes: [0, 2, 5],
-      completedLessons: [2, 4, 1],
-    },
-    {
-      email: 'tung@skillforge.dev',
-      courseIndexes: [3, 4, 7],
-      completedLessons: [3, 2, 1],
-    },
-    {
-      email: 'linh@skillforge.dev',
-      courseIndexes: [5, 6],
-      completedLessons: [4, 2],
+      email: NAM_EMAIL,
+      courseIndexes: [0, 1, 2, 3],
+      completedLessons: [4, 3, 2, 1],
     },
   ];
 
@@ -832,6 +772,33 @@ async function seedLearningActivity(courses, userMap, couponMap) {
         }
       }
 
+      if (quizzes[1]) {
+        const essayQuiz = quizzes[1];
+        const essayAttempt = await prisma.quizAttempt.create({
+          data: {
+            studentId: student.id,
+            quizId: essayQuiz.id,
+            startTime: dateDaysAgo(index + 1),
+            endTime: dateDaysAgo(index + 1),
+            score: null,
+            isPassed: null,
+            status: AttemptStatus.SUBMITTED,
+            instructorFeedback: null,
+          },
+        });
+
+        for (const question of essayQuiz.questions) {
+          await prisma.studentAnswer.create({
+            data: {
+              attemptId: essayAttempt.id,
+              questionId: question.id,
+              essayAnswer: `I would apply ${course.title} by building a small real project, documenting each decision, asking for feedback, and improving the solution after testing it with realistic requirements.`,
+              pointsAwarded: null,
+            },
+          });
+        }
+      }
+
       if (completedCount >= 2) {
         await prisma.review.create({
           data: {
@@ -888,28 +855,15 @@ async function seedLearningActivity(courses, userMap, couponMap) {
 
 async function seedFavorites(courses, userMap) {
   const favorites = [
-    ['nam@skillforge.dev', 4],
-    ['nam@skillforge.dev', 5],
-    ['anh@skillforge.dev', 1],
-    ['anh@skillforge.dev', 7],
-    ['tung@skillforge.dev', 0],
-    ['linh@skillforge.dev', 2],
-    ['linh@skillforge.dev', 7],
+    [NAM_EMAIL, 4],
+    [NAM_EMAIL, 5],
+    [NAM_EMAIL, 6],
+    [NAM_EMAIL, 7],
   ];
 
   for (const [email, courseIndex] of favorites) {
     const student = userMap.get(email);
     const course = courses[courseIndex];
-    const existingEnrollment = await prisma.enrollment.findUnique({
-      where: {
-        userId_courseId: {
-          userId: student.id,
-          courseId: course.id,
-        },
-      },
-    });
-
-    if (existingEnrollment) continue;
 
     await prisma.favorite.create({
       data: {
@@ -921,13 +875,15 @@ async function seedFavorites(courses, userMap) {
 }
 
 async function seedDiscussions(courses, userMap) {
-  const nam = userMap.get('nam@skillforge.dev');
-  const han = userMap.get('han@skillforge.dev');
-  const lesson = courses[0].chapters[0].lessons[0];
+  const nam = userMap.get(NAM_EMAIL);
+  const khoa = userMap.get(KHOA_EMAIL);
+  const htmlLesson = courses[0].chapters[0].lessons[0];
+  const jsLesson = courses[1].chapters[0].lessons[1];
+  const reactLesson = courses[2].chapters[1].lessons[0];
 
-  const parent = await prisma.discussion.create({
+  const answeredParent = await prisma.discussion.create({
     data: {
-      lessonId: lesson.id,
+      lessonId: htmlLesson.id,
       userId: nam.id,
       content: 'How should I decide between flexbox and grid for this layout?',
       timestampTag: 120,
@@ -937,18 +893,38 @@ async function seedDiscussions(courses, userMap) {
 
   await prisma.discussion.create({
     data: {
-      lessonId: lesson.id,
-      userId: han.id,
-      parentId: parent.id,
+      lessonId: htmlLesson.id,
+      userId: khoa.id,
+      parentId: answeredParent.id,
       content: 'Use flexbox for one-dimensional alignment and grid for two-dimensional page structure.',
       timestampTag: 150,
+    },
+  });
+
+  await prisma.discussion.create({
+    data: {
+      lessonId: jsLesson.id,
+      userId: nam.id,
+      content: 'I understand promises in simple examples, but when should I switch to async and await?',
+      timestampTag: 240,
+      isPinned: false,
+    },
+  });
+
+  await prisma.discussion.create({
+    data: {
+      lessonId: reactLesson.id,
+      userId: nam.id,
+      content: 'For the project checklist, should state live in the parent component or inside each reusable child?',
+      timestampTag: 90,
+      isPinned: false,
     },
   });
 }
 
 async function seedReportsAndAudit(userMap, courses) {
-  const admin = userMap.get('admin@skillforge.dev');
-  const nam = userMap.get('nam@skillforge.dev');
+  const admin = userMap.get(ADMIN_EMAIL);
+  const nam = userMap.get(NAM_EMAIL);
 
   await prisma.report.create({
     data: {
@@ -974,8 +950,8 @@ async function seedReportsAndAudit(userMap, courses) {
 }
 
 async function seedNotifications(userMap, courses) {
-  const nam = userMap.get('nam@skillforge.dev');
-  const khoa = userMap.get('khoa@skillforge.dev');
+  const nam = userMap.get(NAM_EMAIL);
+  const khoa = userMap.get(KHOA_EMAIL);
 
   await prisma.notification.createMany({
     data: [
@@ -1002,6 +978,14 @@ async function seedNotifications(userMap, courses) {
         message: 'Your question received a reply from the instructor.',
         metadata: { courseId: courses[0].id },
         readAt: new Date(),
+      },
+      {
+        recipientId: khoa.id,
+        actorId: nam.id,
+        type: NotificationType.DISCUSSION_CREATED,
+        title: 'New question waiting for reply',
+        message: `Nam asked a question in ${courses[1].title}.`,
+        metadata: { courseId: courses[1].id, courseTitle: courses[1].title },
       },
     ],
   });
@@ -1048,7 +1032,7 @@ async function main() {
       name: user.fullName,
     })),
   );
-  console.log('Coupons: WELCOME10, REACT20, BACKEND30');
+  console.log('Coupons: WELCOME10, REACT20, KHOA30');
 }
 
 main()
