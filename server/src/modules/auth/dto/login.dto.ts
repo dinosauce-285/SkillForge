@@ -4,7 +4,7 @@ import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
 export class LoginDto {
   @ApiProperty({
     description: 'The email address of the user',
-    example: 'student@skillforge.com',
+    example: 'nam@skillforge.dev',
   })
   @IsEmail({}, { message: 'Invalid email format' })
   readonly email!: string;

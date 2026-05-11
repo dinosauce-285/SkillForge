@@ -400,6 +400,7 @@ class MainActivity : ComponentActivity() {
                                             },
                                             onNavigateToUploadMaterial = { },
                                             token = route.session.accessToken,
+                                            sessionFullName = route.session.user.fullName,
                                             profileViewModel = profileViewModel,
                                             onLogout = {
                                                 mainViewModel.logout()
@@ -624,6 +625,7 @@ class MainActivity : ComponentActivity() {
                                         
                                         MyCoursesScreen(
                                             token = route.session.accessToken,
+                                            fullName = route.session.user.fullName,
                                             reviewViewModel = reviewViewModel, 
                                             onNavigateBack = { mainViewModel.navigateTo(AppRoute.StudentCourseListing(route.session)) },
                                             onCourseClick = { cId -> mainViewModel.navigateTo(AppRoute.CourseCurriculum(route.session, cId)) },
