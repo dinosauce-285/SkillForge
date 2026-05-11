@@ -15,10 +15,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material3.Button
@@ -86,6 +88,7 @@ fun FavoriteRoute(
 
     FavoriteScreen(
         uiState = uiState,
+        fullName = session.user.fullName,
         onBackClick = onBackClick,
         onCourseClick = onCourseClick,
         onToggleSelection = { viewModel.toggleSelection(it) },
@@ -104,6 +107,7 @@ fun FavoriteRoute(
 @Composable
 fun FavoriteScreen(
     uiState: FavoriteUiState,
+    fullName: String = "",
     onBackClick: () -> Unit,
     onCourseClick: (String) -> Unit,
     onToggleSelection: (String) -> Unit,
@@ -172,7 +176,7 @@ fun FavoriteScreen(
                             colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange),
                             shape = RoundedCornerShape(12.dp)
                         ) {
-                            Text("Buy Selected", fontWeight = FontWeight.Bold)
+                            Text("Checkout", fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -215,7 +219,10 @@ fun FavoriteScreen(
                     verticalArrangement = Arrangement.spacedBy(24.dp),
                 ) {
                     item {
-                    FavoriteHeaderSection()
+                    FavoriteHeaderSection(
+                        fullName = fullName,
+                        onMenuClick = onBackClick,
+                    )
                 }
 
                 items(uiState.courses) { course ->
@@ -238,31 +245,57 @@ fun FavoriteScreen(
 }
 
 @Composable
-private fun FavoriteHeaderSection() {
-    Column(modifier = Modifier.padding(vertical = 16.dp)) {
-        Text(
-            text = "YOUR COLLECTION",
-            style = MaterialTheme.typography.labelMedium.copy(
-                fontWeight = FontWeight.Medium,
-                letterSpacing = 1.sp,
-                color = TextSecondaryColor,
-            ),
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Row {
-            Text(
-                text = "Continue your journey of ",
-                style = MaterialTheme.typography.headlineMedium.copy(
-                    fontWeight = FontWeight.ExtraBold,
+private fun FavoriteHeaderSection(
+    fullName: String,
+    onMenuClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            IconButton(onClick = onMenuClick) {
+                Icon(
+                    imageVector = Icons.Default.Menu,
+                    contentDescription = "Back",
+                    tint = PrimaryOrange,
+                )
+            }
+            Column {
+                Text(
+                    text = "Wishlist",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
                     color = TextPrimaryColor,
-                ),
-            )
+                )
+                Text(
+                    text = "Saved courses to learn later",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = TextSecondaryColor,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(CircleShape)
+                .background(PrimaryOrange.copy(alpha = 0.14f)),
+            contentAlignment = Alignment.Center,
+        ) {
             Text(
-                text = "knowledge",
-                style = MaterialTheme.typography.headlineMedium.copy(
-                    fontWeight = FontWeight.ExtraBold,
-                    color = PrimaryOrange,
-                ),
+                text = fullName.initials(),
+                color = PrimaryOrange,
+                fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.labelLarge,
             )
         }
     }
@@ -497,6 +530,15 @@ private fun FavoriteEmptyState(
             Text("Explore Courses")
         }
     }
+}
+
+private fun String.initials(): String {
+    return trim()
+        .split(" ")
+        .filter { it.isNotBlank() }
+        .take(2)
+        .joinToString("") { it.first().uppercase() }
+        .ifBlank { "SF" }
 }
 
 @Preview(showBackground = true)

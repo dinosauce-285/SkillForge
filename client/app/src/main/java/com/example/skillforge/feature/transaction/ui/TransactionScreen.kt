@@ -1,5 +1,10 @@
 package com.example.skillforge.feature.transaction.ui
 
+import android.content.ActivityNotFoundException
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -25,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Devices
@@ -80,6 +86,7 @@ fun TransactionScreen(
     viewModel: TransactionViewModel,
     onBackClick: () -> Unit = {},
 ) {
+    val context = LocalContext.current
     // Removed local promoCode state
     Scaffold(
         topBar = {
@@ -113,7 +120,10 @@ fun TransactionScreen(
                         )
                     }
                     Button(
-                        onClick = { viewModel.confirmPayment(token) },
+                        onClick = {
+                            openMomoPaymentMock(context)
+                            viewModel.confirmPayment(token)
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(56.dp),
@@ -129,7 +139,7 @@ fun TransactionScreen(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                         }
-                        Text("Confirm & Pay", fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
+                        Text("Checkout", fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
                     }
                 }
             }
@@ -329,7 +339,7 @@ fun TransactionScreen(
                                     tint = Color.Gray
                                 )
                             }
-                            Text("Bank Transfer", modifier = Modifier.weight(1f), fontWeight = FontWeight.Medium)
+                            Text("MoMo Wallet", modifier = Modifier.weight(1f), fontWeight = FontWeight.Medium)
                             RadioButton(selected = true, onClick = {}, colors = RadioButtonDefaults.colors(selectedColor = PrimaryOrange))
                         }
                     }
@@ -415,6 +425,27 @@ fun TransactionScreen(
 
 private fun formatPrice(price: Double): String {
     return String.format("$%.2f", price)
+}
+
+private fun openMomoPaymentMock(context: Context) {
+    val momoPackageName = "com.mservice.momotransfer"
+    val launchIntent = context.packageManager.getLaunchIntentForPackage(momoPackageName)
+
+    if (launchIntent != null) {
+        context.startActivity(launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        return
+    }
+
+    try {
+        context.startActivity(
+            Intent(
+                Intent.ACTION_VIEW,
+                Uri.parse("market://details?id=$momoPackageName")
+            ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        )
+    } catch (_: ActivityNotFoundException) {
+        Toast.makeText(context, "MoMo app is not installed on this device.", Toast.LENGTH_SHORT).show()
+    }
 }
 
 @Preview(showBackground = true, showSystemUi = true, device = Devices.PIXEL_7)

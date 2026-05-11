@@ -19,6 +19,7 @@ import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -28,13 +29,15 @@ export class CoursesController {
   constructor(private readonly coursesService: CoursesService) {}
 
   @Get()
-  findAll(@Query() query: CourseListQueryDto) {
-    return this.coursesService.findAll(query);
+  @UseGuards(OptionalJwtAuthGuard)
+  findAll(@Query() query: CourseListQueryDto, @Request() req) {
+    return this.coursesService.findAll(query, req.user?.id);
   }
 
   @Get('suggested/recommendations')
-  getSuggestions() {
-    return this.coursesService.getSuggestions();
+  @UseGuards(OptionalJwtAuthGuard)
+  getSuggestions(@Request() req) {
+    return this.coursesService.getSuggestions(req.user?.id);
   }
 
   @Get(':id')

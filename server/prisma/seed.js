@@ -1,18 +1,48 @@
 const fs = require('fs');
 const path = require('path');
+const bcrypt = require('bcrypt');
+const {
+  PrismaClient,
+  Prisma,
+  ActionType,
+  AttemptStatus,
+  CourseLevel,
+  CourseStatus,
+  CouponScope,
+  EnrollmentStatus,
+  InstructorSubscriptionPaymentStatus,
+  InstructorSubscriptionStatus,
+  MaterialStatus,
+  MaterialType,
+  NotificationType,
+  OrderStatus,
+  PaymentGateway,
+  Provider,
+  ReportStatus,
+  ReportType,
+  Role,
+  WithdrawalStatus,
+} = require('@prisma/client');
 
 function loadEnvFile(filePath) {
   if (!fs.existsSync(filePath)) return;
+
   const fileContent = fs.readFileSync(filePath, 'utf8');
   for (const line of fileContent.split(/\r?\n/)) {
     const trimmedLine = line.trim();
     if (!trimmedLine || trimmedLine.startsWith('#')) continue;
+
     const separatorIndex = trimmedLine.indexOf('=');
     if (separatorIndex === -1) continue;
+
     const key = trimmedLine.slice(0, separatorIndex).trim();
     if (!key || process.env[key] !== undefined) continue;
+
     let value = trimmedLine.slice(separatorIndex + 1).trim();
-    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
       value = value.slice(1, -1);
     }
     process.env[key] = value;
@@ -21,574 +51,1011 @@ function loadEnvFile(filePath) {
 
 loadEnvFile(path.resolve(__dirname, '..', '.env'));
 
-const { PrismaClient, Prisma, Role, CourseLevel, CourseStatus, MaterialType, MaterialStatus, EnrollmentStatus } = require('@prisma/client');
-const bcrypt = require('bcrypt');
-
 const prisma = new PrismaClient();
 const PASSWORD = '123456';
-const DEFAULT_DOC_SIZE = 1_250_000;
-const mockPdfMaterials = [
+const PLATFORM_SHARE_RATE = 30;
+const INSTRUCTOR_SHARE_RATE = 70;
+const PENDING_RELEASE_DAYS = 30;
+
+const videos = [
+  {
+    url: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/11274341-uhd-3840-2160-25fps.mp4',
+    size: 5013657,
+  },
+  {
+    url: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/3982250-uhd-3840-2160-30fps.mp4',
+    size: 4596166,
+  },
+  {
+    url: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/4298113-uhd-3840-2160-25fps.mp4',
+    size: 3252525,
+  },
+  {
+    url: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/4494856-uhd-3840-2160-25fps.mp4',
+    size: 1589070,
+  },
+  {
+    url: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/4974769-hd-1920-1080-25fps.mp4',
+    size: 2950550,
+  },
+  {
+    url: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/6672610-uhd-3840-2160-24fps.mp4',
+    size: 1597603,
+  },
+];
+
+const docs = [
   {
     url: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/mock-pdfs/movers-2.pdf',
-    size: 6_307_561,
+    size: 6307561,
   },
   {
     url: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/mock-pdfs/starters-1-sb.pdf',
-    size: 15_628_899,
+    size: 15628899,
   },
   {
     url: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/mock-pdfs/starters-2-sb.pdf',
-    size: 30_212_281,
-  },
-  {
-    url: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/mock-pdfs/starters-3-sb.pdf',
-    size: 25_851_275,
-  },
-  {
-    url: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/mock-pdfs/starters-5-sb.pdf',
-    size: 13_745_229,
-  },
-  {
-    url: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/mock-pdfs/starters-6-sb.pdf',
-    size: 14_691_320,
-  },
-  {
-    url: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/mock-pdfs/starters-9.pdf',
-    size: 21_703_336,
-  },
-];
-const processedVideoMaterials = [
-  {
-    sourceName: '11274341-uhd_3840_2160_25fps.mp4',
-    url: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/11274341-uhd-3840-2160-25fps.mp4',
-    size: 5_013_657,
-  },
-  {
-    sourceName: '3982250-uhd_3840_2160_30fps.mp4',
-    url: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/3982250-uhd-3840-2160-30fps.mp4',
-    size: 4_596_166,
-  },
-  {
-    sourceName: '4298113-uhd_3840_2160_25fps.mp4',
-    url: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/4298113-uhd-3840-2160-25fps.mp4',
-    size: 3_252_525,
-  },
-  {
-    sourceName: '4494856-uhd_3840_2160_25fps.mp4',
-    url: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/4494856-uhd-3840-2160-25fps.mp4',
-    size: 1_589_070,
-  },
-  {
-    sourceName: '4974769-hd_1920_1080_25fps.mp4',
-    url: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/4974769-hd-1920-1080-25fps.mp4',
-    size: 2_950_550,
-  },
-  {
-    sourceName: '4974888-hd_1920_1080_25fps.mp4',
-    url: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/4974888-hd-1920-1080-25fps.mp4',
-    size: 2_624_552,
-  },
-  {
-    sourceName: '6672610-uhd_3840_2160_24fps.mp4',
-    url: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/6672610-uhd-3840-2160-24fps.mp4',
-    size: 1_597_603,
-  },
-  {
-    sourceName: '6985310-uhd_3840_2160_25fps.mp4',
-    url: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/6985310-uhd-3840-2160-25fps.mp4',
-    size: 2_824_167,
-  },
-  {
-    sourceName: '8088455-uhd_3840_2160_30fps.mp4',
-    url: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/8088455-uhd-3840-2160-30fps.mp4',
-    size: 3_545_424,
-  },
-  {
-    sourceName: '8088557-uhd_3840_2160_30fps.mp4',
-    url: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/8088557-uhd-3840-2160-30fps.mp4',
-    size: 4_806_747,
-  },
-  {
-    sourceName: '9198192-hd_1920_1080_25fps.mp4',
-    url: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/9198192-hd-1920-1080-25fps.mp4',
-    size: 6_809_696,
+    size: 30212281,
   },
 ];
 
-// === BLUEPRINTS ================================================================
+const users = [
+  {
+    email: 'admin@skillforge.dev',
+    fullName: 'SkillForge Admin',
+    role: Role.ADMIN,
+    skills: ['Operations', 'Moderation', 'Finance'],
+    learningGoals: null,
+  },
+  {
+    email: 'khoa@skillforge.dev',
+    fullName: 'Nguyen Minh Khoa',
+    role: Role.INSTRUCTOR,
+    skills: ['HTML', 'CSS', 'React', 'Machine Learning', 'Figma'],
+    learningGoals: null,
+  },
+  {
+    email: 'han@skillforge.dev',
+    fullName: 'Tran Gia Han',
+    role: Role.INSTRUCTOR,
+    skills: ['JavaScript', 'Node.js', 'PostgreSQL', 'Python', 'Docker'],
+    learningGoals: null,
+  },
+  {
+    email: 'nam@skillforge.dev',
+    fullName: 'Le Hoang Nam',
+    role: Role.STUDENT,
+    skills: ['Frontend', 'JavaScript'],
+    learningGoals: 'Become a full-stack developer.',
+  },
+  {
+    email: 'anh@skillforge.dev',
+    fullName: 'Ngo Minh Anh',
+    role: Role.STUDENT,
+    skills: ['UI', 'React'],
+    learningGoals: 'Ship polished web apps with React.',
+  },
+  {
+    email: 'tung@skillforge.dev',
+    fullName: 'Vu Thanh Tung',
+    role: Role.STUDENT,
+    skills: ['Databases', 'DevOps'],
+    learningGoals: 'Improve backend and deployment skills.',
+  },
+  {
+    email: 'linh@skillforge.dev',
+    fullName: 'Pham Thanh Linh',
+    role: Role.STUDENT,
+    skills: ['Python', 'Data Analysis'],
+    learningGoals: 'Move into a data science role.',
+  },
+];
 
 const courseBlueprints = [
   {
     title: 'HTML & CSS Foundations',
     subtitle: 'Build accessible pages with semantic HTML and modern CSS.',
-    summary: 'Learn how to structure content correctly, then style it with layout systems that scale from mobile to desktop.',
-    categoryName: 'Web Development',
-    instructorEmail: 'khoa@skillforge.dev',
+    summary:
+      'Learn how to structure content correctly, then style it with layout systems that scale from mobile to desktop.',
+    category: 'Web Development',
+    instructor: 'khoa@skillforge.dev',
     level: CourseLevel.BEGINNER,
-    price: 0, isFree: true,
-    thumbnailUrl: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80',
-    promoVideoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/11274341-uhd-3840-2160-25fps.mp4',
-    tagNames: ['HTML', 'CSS', 'Responsive Design'],
-    chapters: [
-      { title: 'HTML Basics', docUrl: 'https://developer.mozilla.org/en-US/docs/Web/HTML', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/9198192-hd-1920-1080-25fps.mp4', videoSize: 41_000_000,
-        lessons: ['Document structure and semantic tags', 'Forms, tables, and accessibility'] },
-      { title: 'Modern CSS', docUrl: 'https://developer.mozilla.org/en-US/docs/Web/CSS', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/11274341-uhd-3840-2160-25fps.mp4', videoSize: 43_000_000,
-        lessons: ['Box model and spacing', 'Flexbox and responsive layout'] },
-    ],
+    price: 0,
+    isFree: true,
+    tags: ['HTML', 'CSS', 'Responsive Design'],
+    thumbnailUrl:
+      'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80',
   },
   {
     title: 'JavaScript Core',
     subtitle: 'Write dependable browser and runtime code with modern JavaScript.',
-    summary: 'Cover language fundamentals, object patterns, and asynchronous behavior that every developer needs.',
-    categoryName: 'JavaScript',
-    instructorEmail: 'han@skillforge.dev',
+    summary:
+      'Cover language fundamentals, object patterns, and asynchronous behavior that every developer needs.',
+    category: 'JavaScript',
+    instructor: 'han@skillforge.dev',
     level: CourseLevel.BEGINNER,
-    price: 19.99, isFree: false,
-    thumbnailUrl: 'https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&w=1200&q=80',
-    promoVideoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/3982250-uhd-3840-2160-30fps.mp4',
-    tagNames: ['JavaScript', 'Async', 'ES6'],
-    chapters: [
-      { title: 'Language Essentials', docUrl: 'https://developer.mozilla.org/en-US/docs/Web/JavaScript', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/3982250-uhd-3840-2160-30fps.mp4', videoSize: 47_000_000,
-        lessons: ['Syntax, types, and control flow', 'Arrays, objects, and loops'] },
-      { title: 'Async JavaScript', docUrl: 'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/4298113-uhd-3840-2160-25fps.mp4', videoSize: 50_000_000,
-        lessons: ['Functions and scope', 'Async/await and fetch'] },
-    ],
+    price: 19.99,
+    isFree: false,
+    tags: ['JavaScript', 'Async', 'ES6'],
+    thumbnailUrl:
+      'https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&w=1200&q=80',
   },
   {
     title: 'React UI Systems',
     subtitle: 'Compose predictable user interfaces with reusable React patterns.',
-    summary: 'Move from JSX basics to data flow, hooks, and reusable UI composition for real product screens.',
-    categoryName: 'Frontend Engineering',
-    instructorEmail: 'khoa@skillforge.dev',
+    summary:
+      'Move from JSX basics to data flow, hooks, and reusable UI composition for real product screens.',
+    category: 'Frontend Engineering',
+    instructor: 'khoa@skillforge.dev',
     level: CourseLevel.INTERMEDIATE,
-    price: 29.99, isFree: false,
-    thumbnailUrl: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=1200&q=80',
-    promoVideoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/4298113-uhd-3840-2160-25fps.mp4',
-    tagNames: ['React', 'UI', 'Hooks'],
-    chapters: [
-      { title: 'Components and State', docUrl: 'https://react.dev/learn', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/4494856-uhd-3840-2160-25fps.mp4', videoSize: 52_000_000,
-        lessons: ['Components and JSX', 'Props, state, and rendering'] },
-      { title: 'Data and Reusability', docUrl: 'https://react.dev/reference/react', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/4974769-hd-1920-1080-25fps.mp4', videoSize: 56_000_000,
-        lessons: ['Hooks and component lifecycle thinking', 'Data fetching and reusable UI'] },
-    ],
+    price: 29.99,
+    isFree: false,
+    tags: ['React', 'UI', 'Hooks'],
+    thumbnailUrl:
+      'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=1200&q=80',
   },
   {
     title: 'Node.js API Foundations',
-    subtitle: 'Build reliable REST APIs with Node.js, Express, and clean service logic.',
-    summary: 'Learn how to wire request handling, validation, error handling, and authentication into a maintainable backend.',
-    categoryName: 'Backend Engineering',
-    instructorEmail: 'han@skillforge.dev',
+    subtitle: 'Build reliable REST APIs with Node.js and clean service logic.',
+    summary:
+      'Wire request handling, validation, error handling, authentication, and testing into a maintainable backend.',
+    category: 'Backend Engineering',
+    instructor: 'han@skillforge.dev',
     level: CourseLevel.INTERMEDIATE,
-    price: 34.99, isFree: false,
-    thumbnailUrl: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=1200&q=80',
-    promoVideoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/4494856-uhd-3840-2160-25fps.mp4',
-    tagNames: ['Node.js', 'Express', 'API'],
-    chapters: [
-      { title: 'Runtime and Routing', docUrl: 'https://nodejs.org/en/learn/getting-started/introduction-to-nodejs', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/4974888-hd-1920-1080-25fps.mp4', videoSize: 58_000_000,
-        lessons: ['Node runtime and project setup', 'Express routing and middleware'] },
-      { title: 'Production Patterns', docUrl: 'https://expressjs.com/en/guide/routing.html', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/6672610-uhd-3840-2160-24fps.mp4', videoSize: 60_000_000,
-        lessons: ['Validation and error handling', 'Authentication and API hardening'] },
-    ],
-  },
-  {
-    title: 'Git & Collaboration',
-    subtitle: 'Use Git and GitHub safely in a team workflow.',
-    summary: 'Practice branching, review flow, conflict resolution, and release habits that keep teams moving.',
-    categoryName: 'Developer Tools',
-    instructorEmail: 'khoa@skillforge.dev',
-    level: CourseLevel.BEGINNER,
-    price: 0, isFree: true,
-    thumbnailUrl: 'https://images.unsplash.com/photo-1516321497487-e288fb19713f?auto=format&fit=crop&w=1200&q=80',
-    promoVideoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/4974769-hd-1920-1080-25fps.mp4',
-    tagNames: ['Git', 'GitHub', 'Collaboration'],
-    chapters: [
-      { title: 'Version Control Basics', docUrl: 'https://git-scm.com/book/en/v2', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/6985310-uhd-3840-2160-25fps.mp4', videoSize: 42_000_000,
-        lessons: ['Git init, commit, and history', 'Branching and merge strategies'] },
-      { title: 'Team Workflow', docUrl: 'https://docs.github.com/en/get-started', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/8088455-uhd-3840-2160-30fps.mp4', videoSize: 44_000_000,
-        lessons: ['Pull requests and code review', 'Conflict resolution and release flow'] },
-    ],
+    price: 34.99,
+    isFree: false,
+    tags: ['Node.js', 'Express', 'API'],
+    thumbnailUrl:
+      'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=1200&q=80',
   },
   {
     title: 'PostgreSQL & Prisma',
     subtitle: 'Model data correctly and ship with safe database migrations.',
-    summary: 'Learn relational design, indexing, and Prisma workflows that turn a schema into a production-ready database layer.',
-    categoryName: 'Databases',
-    instructorEmail: 'han@skillforge.dev',
+    summary:
+      'Learn relational design, indexing, and Prisma workflows that turn a schema into a production-ready database layer.',
+    category: 'Databases',
+    instructor: 'han@skillforge.dev',
     level: CourseLevel.INTERMEDIATE,
-    price: 24.99, isFree: false,
-    thumbnailUrl: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80',
-    promoVideoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/4974888-hd-1920-1080-25fps.mp4',
-    tagNames: ['PostgreSQL', 'Prisma', 'SQL'],
-    chapters: [
-      { title: 'Relational Design', docUrl: 'https://www.postgresql.org/docs/current/tutorial.html', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/8088557-uhd-3840-2160-30fps.mp4', videoSize: 53_000_000,
-        lessons: ['Relational modeling and primary keys', 'Foreign keys and indexing'] },
-      { title: 'Prisma Workflow', docUrl: 'https://www.prisma.io/docs/getting-started', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/9198192-hd-1920-1080-25fps.mp4', videoSize: 55_000_000,
-        lessons: ['Prisma schema design', 'Querying and migrations'] },
-    ],
+    price: 24.99,
+    isFree: false,
+    tags: ['PostgreSQL', 'Prisma', 'SQL'],
+    thumbnailUrl:
+      'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80',
   },
   {
     title: 'Python for Data Science',
     subtitle: 'Analyze and visualize real-world data with Python.',
-    summary: 'From NumPy arrays to Pandas DataFrames and Matplotlib charts - build the foundation for machine learning projects.',
-    categoryName: 'Data Science',
-    instructorEmail: 'han@skillforge.dev',
+    summary:
+      'From NumPy arrays to Pandas DataFrames and Matplotlib charts, build the foundation for machine learning projects.',
+    category: 'Data Science',
+    instructor: 'han@skillforge.dev',
     level: CourseLevel.BEGINNER,
-    price: 39.99, isFree: false,
-    thumbnailUrl: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=1200&q=80',
-    promoVideoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/6672610-uhd-3840-2160-24fps.mp4',
-    tagNames: ['Python', 'Data Science', 'NumPy'],
-    chapters: [
-      { title: 'Python Essentials', docUrl: 'https://docs.python.org/3/tutorial/', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/11274341-uhd-3840-2160-25fps.mp4', videoSize: 62_000_000,
-        lessons: ['Variables, lists, and loops', 'Functions and modules'] },
-      { title: 'Data Analysis', docUrl: 'https://pandas.pydata.org/docs/', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/3982250-uhd-3840-2160-30fps.mp4', videoSize: 65_000_000,
-        lessons: ['NumPy arrays and operations', 'Pandas DataFrames and cleaning'] },
-    ],
+    price: 39.99,
+    isFree: false,
+    tags: ['Python', 'Data Science', 'NumPy'],
+    thumbnailUrl:
+      'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=1200&q=80',
   },
   {
     title: 'Machine Learning with scikit-learn',
     subtitle: 'Build and evaluate ML models end-to-end.',
-    summary: 'Implement regression, classification, clustering, and evaluation pipelines using Python and scikit-learn.',
-    categoryName: 'AI & Machine Learning',
-    instructorEmail: 'khoa@skillforge.dev',
+    summary:
+      'Implement regression, classification, clustering, and evaluation pipelines using Python and scikit-learn.',
+    category: 'AI & Machine Learning',
+    instructor: 'khoa@skillforge.dev',
     level: CourseLevel.INTERMEDIATE,
-    price: 49.99, isFree: false,
-    thumbnailUrl: 'https://images.unsplash.com/photo-1509228468518-180dd4864904?auto=format&fit=crop&w=1200&q=80',
-    promoVideoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/6985310-uhd-3840-2160-25fps.mp4',
-    tagNames: ['Python', 'Machine Learning', 'scikit-learn'],
-    chapters: [
-      { title: 'Supervised Learning', docUrl: 'https://scikit-learn.org/stable/supervised_learning.html', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/4298113-uhd-3840-2160-25fps.mp4', videoSize: 68_000_000,
-        lessons: ['Linear regression from scratch', 'Classification with decision trees'] },
-      { title: 'Model Evaluation', docUrl: 'https://scikit-learn.org/stable/model_selection.html', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/4494856-uhd-3840-2160-25fps.mp4', videoSize: 70_000_000,
-        lessons: ['Train/test split and cross-validation', 'Precision, recall, and F1'] },
-    ],
+    price: 49.99,
+    isFree: false,
+    tags: ['Python', 'Machine Learning', 'scikit-learn'],
+    thumbnailUrl:
+      'https://images.unsplash.com/photo-1509228468518-180dd4864904?auto=format&fit=crop&w=1200&q=80',
   },
   {
     title: 'Docker & Kubernetes Essentials',
     subtitle: 'Containerize applications and orchestrate them at scale.',
-    summary: 'Go from writing a Dockerfile to deploying multi-service apps on Kubernetes with health checks and rolling updates.',
-    categoryName: 'DevOps & Cloud',
-    instructorEmail: 'han@skillforge.dev',
+    summary:
+      'Go from writing a Dockerfile to deploying multi-service apps on Kubernetes with health checks and rolling updates.',
+    category: 'DevOps & Cloud',
+    instructor: 'han@skillforge.dev',
     level: CourseLevel.INTERMEDIATE,
-    price: 44.99, isFree: false,
-    thumbnailUrl: 'https://images.unsplash.com/photo-1667372393119-3d4c48d07fc9?auto=format&fit=crop&w=1200&q=80',
-    promoVideoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/8088455-uhd-3840-2160-30fps.mp4',
-    tagNames: ['Docker', 'Kubernetes', 'DevOps'],
-    chapters: [
-      { title: 'Containers with Docker', docUrl: 'https://docs.docker.com/get-started/', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/4974769-hd-1920-1080-25fps.mp4', videoSize: 72_000_000,
-        lessons: ['Dockerfile and image layers', 'Docker Compose for local development'] },
-      { title: 'Orchestration with Kubernetes', docUrl: 'https://kubernetes.io/docs/home/', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/4974888-hd-1920-1080-25fps.mp4', videoSize: 75_000_000,
-        lessons: ['Pods, deployments, and services', 'ConfigMaps, secrets, and rolling updates'] },
-    ],
-  },
-  {
-    title: 'UI/UX Design Fundamentals',
-    subtitle: 'Design intuitive interfaces with proven UX principles.',
-    summary: 'Learn typography, color theory, wireframing, and user research methods that turn ideas into polished product designs.',
-    categoryName: 'Design',
-    instructorEmail: 'khoa@skillforge.dev',
-    level: CourseLevel.BEGINNER,
-    price: 22.99, isFree: false,
-    thumbnailUrl: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?auto=format&fit=crop&w=1200&q=80',
-    promoVideoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/8088557-uhd-3840-2160-30fps.mp4',
-    tagNames: ['UI', 'UX', 'Figma'],
-    chapters: [
-      { title: 'Design Principles', docUrl: 'https://www.nngroup.com/articles/ten-usability-heuristics/', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/6672610-uhd-3840-2160-24fps.mp4', videoSize: 58_000_000,
-        lessons: ['Typography and color theory', 'Gestalt principles and visual hierarchy'] },
-      { title: 'Prototyping', docUrl: 'https://help.figma.com/hc/en-us/articles/360040314193', videoUrl: 'https://awenevlehjlpiyfxlpky.supabase.co/storage/v1/object/public/materials/videos/6985310-uhd-3840-2160-25fps.mp4', videoSize: 60_000_000,
-        lessons: ['Wireframing with Figma', 'User testing and iterating on feedback'] },
-    ],
+    price: 44.99,
+    isFree: false,
+    tags: ['Docker', 'Kubernetes', 'DevOps'],
+    thumbnailUrl:
+      'https://images.unsplash.com/photo-1667372393119-3d4c48d07fc9?auto=format&fit=crop&w=1200&q=80',
   },
 ];
 
-const baseUsers = [
-  { email: 'admin@skillforge.dev', fullName: 'SkillForge Admin', role: Role.ADMIN, skills: ['Operations', 'Content Review'], learningGoals: null },
-  { email: 'khoa@skillforge.dev', fullName: 'Nguyen Minh Khoa', role: Role.INSTRUCTOR, skills: ['HTML', 'CSS', 'React', 'Git', 'Figma'], learningGoals: null },
-  { email: 'han@skillforge.dev', fullName: 'Tran Gia Han', role: Role.INSTRUCTOR, skills: ['JavaScript', 'Node.js', 'PostgreSQL', 'Python', 'Docker'], learningGoals: null },
-  { email: 'nam@skillforge.dev', fullName: 'Le Hoang Nam', role: Role.STUDENT, skills: ['Frontend'], learningGoals: 'Become a full-stack developer.' },
-  { email: 'anh@skillforge.dev', fullName: 'Ngo Minh Anh', role: Role.STUDENT, skills: ['UI', 'JavaScript'], learningGoals: 'Ship polished web apps with React.' },
-  { email: 'tung@skillforge.dev', fullName: 'Vu Thanh Tung', role: Role.STUDENT, skills: ['Databases', 'DevOps'], learningGoals: 'Improve backend and deployment skills.' },
-  { email: 'linh@skillforge.dev', fullName: 'Pham Thanh Linh', role: Role.STUDENT, skills: ['Python', 'Data Analysis'], learningGoals: 'Transition into a data scientist role.' },
-  { email: 'duc@skillforge.dev', fullName: 'Nguyen Hoang Duc', role: Role.STUDENT, skills: ['Design', 'Frontend'], learningGoals: 'Master UI/UX and build a design portfolio.' },
+const categories = [
+  'Web Development',
+  'JavaScript',
+  'Frontend Engineering',
+  'Backend Engineering',
+  'Databases',
+  'Data Science',
+  'AI & Machine Learning',
+  'DevOps & Cloud',
 ];
 
-const allCategories = ['Web Development', 'JavaScript', 'Frontend Engineering', 'Backend Engineering', 'Developer Tools', 'Databases', 'Data Science', 'AI & Machine Learning', 'DevOps & Cloud', 'Design'];
-const allTags = ['HTML', 'CSS', 'Responsive Design', 'JavaScript', 'Async', 'ES6', 'React', 'UI', 'Hooks', 'Node.js', 'Express', 'API', 'Git', 'GitHub', 'Collaboration', 'PostgreSQL', 'Prisma', 'SQL', 'Python', 'Data Science', 'NumPy', 'Machine Learning', 'scikit-learn', 'Docker', 'Kubernetes', 'DevOps', 'UX', 'Figma'];
+const tags = [
+  'HTML',
+  'CSS',
+  'Responsive Design',
+  'JavaScript',
+  'Async',
+  'ES6',
+  'React',
+  'UI',
+  'Hooks',
+  'Node.js',
+  'Express',
+  'API',
+  'PostgreSQL',
+  'Prisma',
+  'SQL',
+  'Python',
+  'Data Science',
+  'NumPy',
+  'Machine Learning',
+  'scikit-learn',
+  'Docker',
+  'Kubernetes',
+  'DevOps',
+];
 
-// === HELPERS ==================================================================
-
-function applyMockPdfMaterials() {
-  let pdfIndex = 0;
-  for (const course of courseBlueprints) {
-    for (const chapter of course.chapters) {
-      const pdf = mockPdfMaterials[pdfIndex % mockPdfMaterials.length];
-      chapter.docUrl = pdf.url;
-      chapter.docSize = pdf.size;
-      pdfIndex += 1;
-    }
-  }
+function decimal(value) {
+  return new Prisma.Decimal(String(value));
 }
 
-function findProcessedVideo(originalUrl) {
-  return processedVideoMaterials.find((video) =>
-    originalUrl === video.url || originalUrl?.endsWith(video.sourceName),
-  );
+function dateDaysAgo(days) {
+  const value = new Date();
+  value.setDate(value.getDate() - days);
+  return value;
 }
 
-function applyProcessedVideoMaterials() {
-  for (const course of courseBlueprints) {
-    const promoVideo = findProcessedVideo(course.promoVideoUrl);
-    if (promoVideo) {
-      course.promoVideoUrl = promoVideo.url;
-    }
-
-    for (const chapter of course.chapters) {
-      const video = findProcessedVideo(chapter.videoUrl);
-      if (!video) continue;
-      chapter.videoUrl = video.url;
-      chapter.videoSize = video.size;
-    }
-  }
+function releaseDate(createdAt) {
+  const value = new Date(createdAt);
+  value.setDate(value.getDate() + PENDING_RELEASE_DAYS);
+  return value;
 }
 
-function buildMaterials(docUrl, videoUrl, videoSize, docSize = DEFAULT_DOC_SIZE) {
+function snapshotData(amount, coupon = null, createdAt = new Date()) {
+  const original = Number(amount);
+  const discountPercent = coupon?.discountPercent ?? 0;
+  const discountAmount = Math.round(original * (discountPercent / 100) * 100) / 100;
+  const paid = Math.max(0, Math.round((original - discountAmount) * 100) / 100);
+  const instructorGross = Math.round(original * (INSTRUCTOR_SHARE_RATE / 100) * 100) / 100;
+  const platformGross = Math.round(original * (PLATFORM_SHARE_RATE / 100) * 100) / 100;
+  const platformDiscount = coupon?.scope === CouponScope.PLATFORM ? discountAmount : 0;
+  const instructorDiscount = coupon?.scope === CouponScope.INSTRUCTOR ? discountAmount : 0;
+
   return {
-    create: [
-      { type: MaterialType.DOCUMENT, fileUrl: docUrl, fileSize: docSize, status: MaterialStatus.READY },
-      { type: MaterialType.VIDEO, fileUrl: videoUrl, fileSize: videoSize, status: MaterialStatus.READY },
-    ],
+    originalCoursePrice: decimal(original),
+    customerPaidAmount: decimal(paid),
+    couponId: coupon?.id ?? null,
+    couponCode: coupon?.code ?? null,
+    couponScope: coupon?.scope ?? null,
+    discountAmount: decimal(discountAmount),
+    discountAbsorbedByPlatform: decimal(platformDiscount),
+    discountAbsorbedByInstructor: decimal(instructorDiscount),
+    platformShareRate: PLATFORM_SHARE_RATE,
+    instructorShareRate: INSTRUCTOR_SHARE_RATE,
+    instructorGrossRevenue: decimal(instructorGross),
+    instructorNetRevenue: decimal(Math.max(0, instructorGross - instructorDiscount)),
+    platformGrossRevenue: decimal(platformGross),
+    platformNetRevenue: decimal(Math.max(0, platformGross - platformDiscount)),
+    pendingReleaseDate: releaseDate(createdAt),
   };
 }
 
-function flattenLessons(course) {
-  return course.chapters.flatMap((ch) => ch.lessons);
-}
-
-// === CLEAR ====================================================================
-
 async function clearAll() {
-  console.log('[seed] Clearing all data...');
   const models = [
-    prisma.studentAnswer, prisma.quizAttempt, prisma.answerChoice, prisma.question, prisma.quiz,
-    prisma.discussion, prisma.lessonProgress, prisma.lessonMaterial, prisma.review, prisma.favorite,
-    prisma.certificate, prisma.coupon, prisma.transaction, prisma.order,
-    prisma.courseStatistic, prisma.courseProgress, prisma.enrollment,
-    prisma.lesson, prisma.chapter, prisma.course,
-    prisma.userProfile, prisma.user,
+    prisma.studentAnswer,
+    prisma.quizAttempt,
+    prisma.answerChoice,
+    prisma.question,
+    prisma.quiz,
+    prisma.discussion,
+    prisma.lessonProgress,
+    prisma.lessonMaterial,
+    prisma.review,
+    prisma.favorite,
+    prisma.notification,
+    prisma.certificate,
+    prisma.orderFinancialSnapshot,
+    prisma.transaction,
+    prisma.order,
+    prisma.coupon,
+    prisma.withdrawalRequest,
+    prisma.wallet,
+    prisma.instructorSubscription,
+    prisma.report,
+    prisma.auditLog,
+    prisma.courseStatistic,
+    prisma.courseProgress,
+    prisma.enrollment,
+    prisma.lesson,
+    prisma.chapter,
+    prisma.course,
+    prisma.userProfile,
+    prisma.user,
+    prisma.tag,
+    prisma.category,
   ];
-  for (const model of models) {
-    try { await model.deleteMany(); } catch (_) {}
-  }
-  // Clear lookup tables separately (no FK to courses)
-  try { await prisma.tag.deleteMany(); } catch (_) {}
-  try { await prisma.category.deleteMany(); } catch (_) {}
-}
 
-// === USERS ====================================================================
+  for (const model of models) {
+    await model.deleteMany();
+  }
+}
 
 async function seedUsers(passwordHash) {
-  const map = new Map();
-  for (const u of baseUsers) {
-    const record = await prisma.user.upsert({
-      where: { email: u.email },
-      update: { fullName: u.fullName, role: u.role, provider: 'LOCAL', isActive: true, password: passwordHash },
-      create: { email: u.email, fullName: u.fullName, role: u.role, provider: 'LOCAL', isActive: true, password: passwordHash },
+  const userMap = new Map();
+
+  for (const user of users) {
+    const created = await prisma.user.create({
+      data: {
+        email: user.email,
+        password: passwordHash,
+        fullName: user.fullName,
+        role: user.role,
+        provider: Provider.LOCAL,
+        isActive: true,
+        profile: {
+          create: {
+            avatarUrl: `https://api.dicebear.com/8.x/initials/svg?seed=${encodeURIComponent(user.fullName)}`,
+            skills: user.skills,
+            learningGoals: user.learningGoals,
+          },
+        },
+      },
     });
-    await prisma.userProfile.upsert({
-      where: { userId: record.id },
-      update: { skills: u.skills, learningGoals: u.learningGoals },
-      create: { userId: record.id, skills: u.skills, learningGoals: u.learningGoals },
-    });
-    map.set(u.email, record);
+    userMap.set(user.email, created);
   }
-  return map;
+
+  return userMap;
 }
 
-// === LOOKUP ===================================================================
-
-async function seedLookup() {
+async function seedLookups() {
   const categoryMap = new Map();
   const tagMap = new Map();
-  for (const name of allCategories) {
-    const r = await prisma.category.upsert({ where: { name }, update: {}, create: { name } });
-    categoryMap.set(name, r);
+
+  for (const name of categories) {
+    const created = await prisma.category.create({ data: { name } });
+    categoryMap.set(name, created);
   }
-  for (const name of allTags) {
-    const r = await prisma.tag.upsert({ where: { name }, update: {}, create: { name } });
-    tagMap.set(name, r);
+
+  for (const name of tags) {
+    const created = await prisma.tag.create({ data: { name } });
+    tagMap.set(name, created);
   }
+
   return { categoryMap, tagMap };
 }
 
-// === COURSES ==================================================================
+function lessonNames(courseTitle, chapterIndex) {
+  if (chapterIndex === 0) {
+    return [
+      `${courseTitle}: core concepts`,
+      `${courseTitle}: guided practice`,
+    ];
+  }
+  return [
+    `${courseTitle}: applied workflow`,
+    `${courseTitle}: project checklist`,
+  ];
+}
 
 async function seedCourses(categoryMap, tagMap, userMap) {
-  const created = [];
-  for (const bp of courseBlueprints) {
-    const category = categoryMap.get(bp.categoryName);
-    const instructor = userMap.get(bp.instructorEmail);
+  const createdCourses = [];
+
+  for (const [courseIndex, blueprint] of courseBlueprints.entries()) {
+    const video = videos[courseIndex % videos.length];
+    const promo = videos[(courseIndex + 1) % videos.length];
+
     const course = await prisma.course.create({
       data: {
-        instructorId: instructor.id,
-        categoryId: category.id,
-        title: bp.title, subtitle: bp.subtitle, summary: bp.summary,
-        thumbnailUrl: bp.thumbnailUrl, promoVideoUrl: bp.promoVideoUrl,
-        price: new Prisma.Decimal(String(bp.price)),
-        isFree: bp.isFree, level: bp.level,
+        instructorId: userMap.get(blueprint.instructor).id,
+        categoryId: categoryMap.get(blueprint.category).id,
+        title: blueprint.title,
+        subtitle: blueprint.subtitle,
+        summary: blueprint.summary,
+        thumbnailUrl: blueprint.thumbnailUrl,
+        promoVideoUrl: promo.url,
+        price: decimal(blueprint.price),
+        isFree: blueprint.isFree,
+        level: blueprint.level,
         status: CourseStatus.PUBLISHED,
-        tags: { connect: bp.tagNames.filter(n => tagMap.has(n)).map(n => ({ id: tagMap.get(n).id })) },
+        tags: {
+          connect: blueprint.tags.map((name) => ({ id: tagMap.get(name).id })),
+        },
         chapters: {
-          create: bp.chapters.map((ch, ci) => ({
-            title: ch.title, orderIndex: ci,
+          create: [0, 1].map((chapterIndex) => ({
+            title: chapterIndex === 0 ? 'Foundations' : 'Applied Project',
+            orderIndex: chapterIndex,
             lessons: {
-              create: ch.lessons.map((title, li) => ({
-                title, orderIndex: li,
-                materials: buildMaterials(ch.docUrl, ch.videoUrl, ch.videoSize, ch.docSize),
-              })),
+              create: lessonNames(blueprint.title, chapterIndex).map((title, lessonIndex) => {
+                const doc = docs[(courseIndex + lessonIndex) % docs.length];
+                return {
+                  title,
+                  orderIndex: lessonIndex,
+                  materials: {
+                    create: [
+                      {
+                        type: MaterialType.VIDEO,
+                        fileUrl: video.url,
+                        fileSize: video.size,
+                        status: MaterialStatus.READY,
+                      },
+                      {
+                        type: MaterialType.DOCUMENT,
+                        fileUrl: doc.url,
+                        fileSize: doc.size,
+                        status: MaterialStatus.READY,
+                      },
+                    ],
+                  },
+                };
+              }),
+            },
+            quizzes: {
+              create: [
+                {
+                  title: `${blueprint.title} checkpoint`,
+                  timeLimit: 15,
+                  passingScore: 70,
+                  randomizeQuestions: true,
+                  isEssay: false,
+                  orderIndex: 0,
+                  questions: {
+                    create: [
+                      {
+                        content: `What is the main goal of ${blueprint.title}?`,
+                        explanation: 'The course focuses on practical skill building.',
+                        orderIndex: 0,
+                        points: 10,
+                        choices: {
+                          create: [
+                            { content: 'Build practical skills', isCorrect: true, orderIndex: 0 },
+                            { content: 'Memorize unrelated facts', isCorrect: false, orderIndex: 1 },
+                            { content: 'Skip project work', isCorrect: false, orderIndex: 2 },
+                          ],
+                        },
+                      },
+                      {
+                        content: 'Which habit matters most while learning?',
+                        explanation: 'Consistent practice turns lessons into usable skills.',
+                        orderIndex: 1,
+                        points: 10,
+                        choices: {
+                          create: [
+                            { content: 'Practice consistently', isCorrect: true, orderIndex: 0 },
+                            { content: 'Avoid feedback', isCorrect: false, orderIndex: 1 },
+                            { content: 'Ignore examples', isCorrect: false, orderIndex: 2 },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+                {
+                  title: `${blueprint.title} reflection`,
+                  timeLimit: 20,
+                  passingScore: 60,
+                  isEssay: true,
+                  orderIndex: 1,
+                  questions: {
+                    create: [
+                      {
+                        content: 'Describe how you would apply this course in a real project.',
+                        minWords: 25,
+                        points: 20,
+                        orderIndex: 0,
+                      },
+                    ],
+                  },
+                },
+              ],
             },
           })),
         },
       },
       include: {
-        chapters: { orderBy: { orderIndex: 'asc' }, include: { lessons: { orderBy: { orderIndex: 'asc' }, include: { materials: true } } } },
+        chapters: {
+          orderBy: { orderIndex: 'asc' },
+          include: {
+            lessons: { orderBy: { orderIndex: 'asc' } },
+            quizzes: {
+              orderBy: { orderIndex: 'asc' },
+              include: {
+                questions: {
+                  orderBy: { orderIndex: 'asc' },
+                  include: { choices: { orderBy: { orderIndex: 'asc' } } },
+                },
+              },
+            },
+          },
+        },
       },
     });
-    created.push(course);
+
+    createdCourses.push(course);
   }
-  return created;
+
+  return createdCourses;
 }
 
-// === ENROLLMENTS, PROGRESS, REVIEWS ===========================================
+async function seedInstructorCommerce(userMap) {
+  const khoa = userMap.get('khoa@skillforge.dev');
+  const han = userMap.get('han@skillforge.dev');
 
-async function seedActivity(courses, userMap) {
-  const students = [
-    { user: userMap.get('nam@skillforge.dev'),  completions: [4,3,3,2,2,1,0,0,0,0] },
-    { user: userMap.get('anh@skillforge.dev'),  completions: [2,2,1,1,0,0,2,1,0,2] },
-    { user: userMap.get('tung@skillforge.dev'), completions: [0,1,0,2,0,2,0,0,2,0] },
-    { user: userMap.get('linh@skillforge.dev'), completions: [0,0,0,0,0,0,4,3,0,0] },
-    { user: userMap.get('duc@skillforge.dev'),  completions: [2,0,2,0,0,0,0,0,0,4] },
+  const khoaWallet = await prisma.wallet.create({
+    data: {
+      userId: khoa.id,
+      availableBalance: decimal(620),
+      pendingBalance: decimal(180),
+    },
+  });
+
+  await prisma.wallet.create({
+    data: {
+      userId: han.id,
+      availableBalance: decimal(480),
+      pendingBalance: decimal(240),
+    },
+  });
+
+  await prisma.withdrawalRequest.create({
+    data: {
+      walletId: khoaWallet.id,
+      amount: decimal(120),
+      bankInfo: 'VCB - 0123456789 - Nguyen Minh Khoa',
+      status: WithdrawalStatus.PENDING,
+      note: 'Monthly instructor payout request',
+    },
+  });
+
+  await prisma.instructorSubscription.create({
+    data: {
+      userId: khoa.id,
+      planCode: 'PRO_INSTRUCTOR_MONTHLY',
+      amount: decimal(19.99),
+      currency: 'USD',
+      status: InstructorSubscriptionStatus.ACTIVE,
+      paymentStatus: InstructorSubscriptionPaymentStatus.SUCCEEDED,
+    },
+  });
+
+  await prisma.instructorSubscription.create({
+    data: {
+      userId: han.id,
+      planCode: 'PRO_INSTRUCTOR_MONTHLY',
+      amount: decimal(19.99),
+      currency: 'USD',
+      status: InstructorSubscriptionStatus.ACTIVE,
+      paymentStatus: InstructorSubscriptionPaymentStatus.SUCCEEDED,
+    },
+  });
+}
+
+async function seedCoupons(userMap) {
+  const coupons = [
+    {
+      code: 'WELCOME10',
+      discountPercent: 10,
+      description: 'Platform welcome coupon',
+      scope: CouponScope.PLATFORM,
+      instructorId: null,
+      maxUses: 500,
+    },
+    {
+      code: 'REACT20',
+      discountPercent: 20,
+      description: 'React course promo by Khoa',
+      scope: CouponScope.INSTRUCTOR,
+      instructorId: userMap.get('khoa@skillforge.dev').id,
+      maxUses: 100,
+    },
+    {
+      code: 'BACKEND30',
+      discountPercent: 30,
+      description: 'Backend bundle promo by Han',
+      scope: CouponScope.INSTRUCTOR,
+      instructorId: userMap.get('han@skillforge.dev').id,
+      maxUses: 80,
+    },
   ];
 
-  const reviewContents = [
-    'Extremely well structured - I completed this in a weekend and could immediately apply it.',
-    'Clear explanations with just the right level of depth. Highly recommend.',
-    'Great content. Some sections could use more exercises but overall fantastic.',
-    'This course accelerated my learning significantly. Worth every cent.',
-    'Best resource I have found on this topic. The instructor explains things simply.',
+  const couponMap = new Map();
+  for (const coupon of coupons) {
+    const created = await prisma.coupon.create({
+      data: {
+        code: coupon.code,
+        discountPercent: coupon.discountPercent,
+        description: coupon.description,
+        scope: coupon.scope,
+        instructorId: coupon.instructorId,
+        maxUses: coupon.maxUses,
+        expiresAt: dateDaysAgo(-60),
+        isActive: true,
+      },
+    });
+    couponMap.set(created.code, created);
+  }
+
+  return couponMap;
+}
+
+function allLessons(course) {
+  return course.chapters.flatMap((chapter) => chapter.lessons);
+}
+
+function allQuizzes(course) {
+  return course.chapters.flatMap((chapter) => chapter.quizzes);
+}
+
+async function createCompletedOrder({ student, course, coupon = null, daysAgo = 1 }) {
+  const createdAt = dateDaysAgo(daysAgo);
+  const snapshot = snapshotData(Number(course.price), coupon, createdAt);
+
+  const order = await prisma.order.create({
+    data: {
+      userId: student.id,
+      courseId: course.id,
+      amount: snapshot.customerPaidAmount,
+      status: OrderStatus.COMPLETED,
+      couponId: coupon?.id ?? null,
+      createdAt,
+      updatedAt: createdAt,
+      transaction: {
+        create: {
+          gateway: PaymentGateway.MOMO,
+          externalTransactionId: `MOMO-${student.id.slice(0, 8)}-${course.id.slice(0, 8)}`,
+          amount: snapshot.customerPaidAmount,
+          createdAt,
+        },
+      },
+      financialSnapshot: {
+        create: snapshot,
+      },
+    },
+  });
+
+  return order;
+}
+
+async function seedLearningActivity(courses, userMap, couponMap) {
+  const plans = [
+    {
+      email: 'nam@skillforge.dev',
+      courseIndexes: [0, 1, 2],
+      completedLessons: [4, 3, 1],
+    },
+    {
+      email: 'anh@skillforge.dev',
+      courseIndexes: [0, 2, 5],
+      completedLessons: [2, 4, 1],
+    },
+    {
+      email: 'tung@skillforge.dev',
+      courseIndexes: [3, 4, 7],
+      completedLessons: [3, 2, 1],
+    },
+    {
+      email: 'linh@skillforge.dev',
+      courseIndexes: [5, 6],
+      completedLessons: [4, 2],
+    },
   ];
 
-  for (const [ci, course] of courses.entries()) {
-    const lessons = flattenLessons(course);
-    const enrollments = [];
+  const reviewText = [
+    'Clear structure and immediately useful exercises.',
+    'The examples helped me connect the concepts quickly.',
+    'Good pacing, practical projects, and helpful explanations.',
+    'I would recommend this course to anyone starting this topic.',
+  ];
 
-    for (const [si, plan] of students.entries()) {
-      const completed = plan.completions[ci] ?? 0;
-      if (completed === 0) continue;
+  for (const plan of plans) {
+    const student = userMap.get(plan.email);
+    for (const [index, courseIndex] of plan.courseIndexes.entries()) {
+      const course = courses[courseIndex];
+      const lessons = allLessons(course);
+      const quizzes = allQuizzes(course);
+      const completedCount = Math.min(plan.completedLessons[index], lessons.length);
+      const progressPercent = lessons.length === 0 ? 0 : Math.round((completedCount / lessons.length) * 100);
+      const coupon = index === 1 ? couponMap.get('WELCOME10') : null;
 
-      const progress = lessons.length === 0 ? 0 : Math.round((completed / lessons.length) * 100);
-      const enrollment = await prisma.enrollment.create({
-        data: { userId: plan.user.id, courseId: course.id, status: EnrollmentStatus.ACTIVE, progress },
+      await prisma.enrollment.create({
+        data: {
+          userId: student.id,
+          courseId: course.id,
+          status: EnrollmentStatus.ACTIVE,
+          progress: progressPercent,
+          enrolledAt: dateDaysAgo(16 - index * 3),
+        },
       });
-      enrollments.push(enrollment);
 
-      for (let li = 0; li < completed && li < lessons.length; li++) {
+      await createCompletedOrder({
+        student,
+        course,
+        coupon,
+        daysAgo: 16 - index * 3,
+      });
+
+      await prisma.courseProgress.create({
+        data: {
+          userId: student.id,
+          courseId: course.id,
+          progress: progressPercent / 100,
+          isCompleted: progressPercent === 100,
+          lastAccessed: dateDaysAgo(index),
+        },
+      });
+
+      for (let lessonIndex = 0; lessonIndex < completedCount; lessonIndex += 1) {
         await prisma.lessonProgress.create({
-          data: { userId: plan.user.id, lessonId: lessons[li].id, isCompleted: true, lastWatchedPosition: 300 + li * 60 },
+          data: {
+            userId: student.id,
+            lessonId: lessons[lessonIndex].id,
+            isCompleted: true,
+            lastWatchedPosition: 300 + lessonIndex * 90,
+            timeSpentSeconds: 900 + lessonIndex * 120,
+          },
         });
       }
 
-      await prisma.courseProgress.create({
-        data: { userId: plan.user.id, courseId: course.id,
-          progress: lessons.length === 0 ? 0 : completed / lessons.length,
-          isCompleted: completed >= lessons.length },
-      });
+      if (quizzes[0]) {
+        const quiz = quizzes[0];
+        const attempt = await prisma.quizAttempt.create({
+          data: {
+            studentId: student.id,
+            quizId: quiz.id,
+            startTime: dateDaysAgo(index + 2),
+            endTime: dateDaysAgo(index + 2),
+            score: progressPercent >= 50 ? 85 : 55,
+            isPassed: progressPercent >= 50,
+            status: AttemptStatus.GRADED,
+            instructorFeedback:
+              progressPercent >= 50 ? 'Strong work. Keep practicing.' : 'Review the first chapter and try again.',
+          },
+        });
 
-      // Review for enrolled students
-      if (completed >= 2) {
+        for (const question of quiz.questions) {
+          const correctChoice = question.choices.find((choice) => choice.isCorrect);
+          await prisma.studentAnswer.create({
+            data: {
+              attemptId: attempt.id,
+              questionId: question.id,
+              selectedChoiceId: correctChoice?.id ?? null,
+              pointsAwarded: progressPercent >= 50 ? question.points : 0,
+            },
+          });
+        }
+      }
+
+      if (completedCount >= 2) {
         await prisma.review.create({
           data: {
-            studentId: plan.user.id, courseId: course.id,
-            rating: [5,5,4,4,5][si % 5],
-            content: reviewContents[(si + ci) % reviewContents.length],
+            studentId: student.id,
+            courseId: course.id,
+            rating: progressPercent === 100 ? 5 : 4,
+            content: reviewText[(courseIndex + index) % reviewText.length],
+            instructorReply: progressPercent === 100 ? 'Thank you for completing the course.' : null,
+          },
+        });
+      }
+
+      if (progressPercent === 100) {
+        await prisma.certificate.create({
+          data: {
+            studentId: student.id,
+            courseId: course.id,
+            certificateCode: `SF-${student.email.split('@')[0].toUpperCase()}-${courseIndex + 1}`,
+            pdfUrl: `https://example.com/certificates/${student.id}-${course.id}.pdf`,
+            imageUrl: `https://example.com/certificates/${student.id}-${course.id}.png`,
           },
         });
       }
     }
+  }
 
-    if (enrollments.length > 0) {
-      const revenue = enrollments.length * Number(course.price);
-      const avgProgress = enrollments.reduce((s, e) => s + e.progress, 0) / enrollments.length;
-      await prisma.courseStatistic.create({
-        data: { courseId: course.id, date: new Date(), revenue: new Prisma.Decimal(String(revenue)), enrollmentCount: enrollments.length, avgCompletionRate: avgProgress / 100 },
-      });
-    }
+  for (const course of courses) {
+    const [enrollmentCount, reviews] = await Promise.all([
+      prisma.enrollment.count({ where: { courseId: course.id, status: EnrollmentStatus.ACTIVE } }),
+      prisma.review.findMany({ where: { courseId: course.id } }),
+    ]);
+    const averageRating =
+      reviews.length === 0 ? 0 : reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length;
+
+    await prisma.course.update({
+      where: { id: course.id },
+      data: {
+        studentCount: enrollmentCount,
+        averageRating: Number(averageRating.toFixed(1)),
+      },
+    });
+
+    await prisma.courseStatistic.create({
+      data: {
+        courseId: course.id,
+        date: new Date(new Date().toISOString().slice(0, 10)),
+        revenue: decimal(enrollmentCount * Number(course.price)),
+        enrollmentCount,
+        avgCompletionRate: enrollmentCount === 0 ? 0 : 0.52,
+      },
+    });
   }
 }
 
-// === COUPONS ==================================================================
-
-async function seedCoupons(userMap) {
-  const khoa = userMap.get('khoa@skillforge.dev');
-  const han = userMap.get('han@skillforge.dev');
-  const coupons = [
-    { code: 'WELCOME10', discountPercent: 10, instructorId: khoa.id },
-    { code: 'REACT20', discountPercent: 20, instructorId: khoa.id },
-    { code: 'SUMMER15', discountPercent: 15, instructorId: han.id },
-    { code: 'BACKEND30', discountPercent: 30, instructorId: han.id },
-    { code: 'FREESHIP5', discountPercent: 5, instructorId: khoa.id, isActive: false },
+async function seedFavorites(courses, userMap) {
+  const favorites = [
+    ['nam@skillforge.dev', 4],
+    ['nam@skillforge.dev', 5],
+    ['anh@skillforge.dev', 1],
+    ['anh@skillforge.dev', 7],
+    ['tung@skillforge.dev', 0],
+    ['linh@skillforge.dev', 2],
+    ['linh@skillforge.dev', 7],
   ];
-  for (const c of coupons) {
-    await prisma.coupon.create({ data: { code: c.code, discountPercent: c.discountPercent, instructorId: c.instructorId, isActive: c.isActive ?? true } });
+
+  for (const [email, courseIndex] of favorites) {
+    const student = userMap.get(email);
+    const course = courses[courseIndex];
+    const existingEnrollment = await prisma.enrollment.findUnique({
+      where: {
+        userId_courseId: {
+          userId: student.id,
+          courseId: course.id,
+        },
+      },
+    });
+
+    if (existingEnrollment) continue;
+
+    await prisma.favorite.create({
+      data: {
+        userId: student.id,
+        courseId: course.id,
+      },
+    });
   }
 }
 
-// === MAIN =====================================================================
+async function seedDiscussions(courses, userMap) {
+  const nam = userMap.get('nam@skillforge.dev');
+  const han = userMap.get('han@skillforge.dev');
+  const lesson = courses[0].chapters[0].lessons[0];
+
+  const parent = await prisma.discussion.create({
+    data: {
+      lessonId: lesson.id,
+      userId: nam.id,
+      content: 'How should I decide between flexbox and grid for this layout?',
+      timestampTag: 120,
+      isPinned: true,
+    },
+  });
+
+  await prisma.discussion.create({
+    data: {
+      lessonId: lesson.id,
+      userId: han.id,
+      parentId: parent.id,
+      content: 'Use flexbox for one-dimensional alignment and grid for two-dimensional page structure.',
+      timestampTag: 150,
+    },
+  });
+}
+
+async function seedReportsAndAudit(userMap, courses) {
+  const admin = userMap.get('admin@skillforge.dev');
+  const nam = userMap.get('nam@skillforge.dev');
+
+  await prisma.report.create({
+    data: {
+      reporterId: nam.id,
+      targetId: courses[1].id,
+      type: ReportType.COURSE,
+      reason: 'Demo report for moderation workflow.',
+      status: ReportStatus.PENDING,
+    },
+  });
+
+  await prisma.auditLog.create({
+    data: {
+      adminId: admin.id,
+      action: ActionType.UPDATE,
+      entityType: 'Course',
+      entityId: courses[0].id,
+      details: {
+        note: 'Seeded audit event for admin dashboard testing.',
+      },
+    },
+  });
+}
+
+async function seedNotifications(userMap, courses) {
+  const nam = userMap.get('nam@skillforge.dev');
+  const khoa = userMap.get('khoa@skillforge.dev');
+
+  await prisma.notification.createMany({
+    data: [
+      {
+        recipientId: nam.id,
+        type: NotificationType.ORDER_CREATED,
+        title: 'Enrollment successful',
+        message: `You are now enrolled in ${courses[0].title}.`,
+        metadata: { courseId: courses[0].id, courseTitle: courses[0].title },
+      },
+      {
+        recipientId: khoa.id,
+        actorId: nam.id,
+        type: NotificationType.COURSE_ENROLLMENT_CREATED,
+        title: 'New course enrollment',
+        message: `A student enrolled in ${courses[0].title}.`,
+        metadata: { courseId: courses[0].id, courseTitle: courses[0].title },
+      },
+      {
+        recipientId: nam.id,
+        actorId: khoa.id,
+        type: NotificationType.DISCUSSION_REPLY_CREATED,
+        title: 'New discussion reply',
+        message: 'Your question received a reply from the instructor.',
+        metadata: { courseId: courses[0].id },
+        readAt: new Date(),
+      },
+    ],
+  });
+}
 
 async function main() {
   const passwordHash = await bcrypt.hash(PASSWORD, 10);
-  applyMockPdfMaterials();
-  applyProcessedVideoMaterials();
-  console.log(`[seed] Using ${processedVideoMaterials.length} processed video material URLs`);
 
+  console.log('[seed] Clearing database');
   await clearAll();
-  console.log('[seed] DB cleared');
 
-  const { categoryMap, tagMap } = await seedLookup();
-  console.log(`[seed] ${allCategories.length} categories, ${allTags.length} tags`);
-
+  console.log('[seed] Users and profiles');
   const userMap = await seedUsers(passwordHash);
-  console.log(`[seed] ${baseUsers.length} users`);
 
+  console.log('[seed] Categories and tags');
+  const { categoryMap, tagMap } = await seedLookups();
+
+  console.log('[seed] Instructor wallets and subscriptions');
+  await seedInstructorCommerce(userMap);
+
+  console.log('[seed] Coupons');
+  const couponMap = await seedCoupons(userMap);
+
+  console.log('[seed] Courses, chapters, lessons, materials, quizzes');
   const courses = await seedCourses(categoryMap, tagMap, userMap);
-  console.log(`[seed] ${courses.length} courses`);
 
-  await seedActivity(courses, userMap);
-  console.log('[seed] Enrollments, progress, reviews, statistics');
+  console.log('[seed] Orders, transactions, enrollments, progress, reviews, certificates');
+  await seedLearningActivity(courses, userMap, couponMap);
 
-  await seedCoupons(userMap);
-  console.log('[seed] Coupons: WELCOME10 (10%), REACT20 (20%), SUMMER15 (15%), BACKEND30 (30%)');
+  console.log('[seed] Favorites');
+  await seedFavorites(courses, userMap);
 
-  console.log(`\n${'-'.repeat(60)}`);
-  console.log('SEEDED ACCOUNTS (password: ' + PASSWORD + ')');
-  console.log('='.repeat(60));
-  console.log('INSTRUCTORS:');
-  console.log('  khoa@skillforge.dev  ->  Nguyen Minh Khoa  (INSTRUCTOR)');
-  console.log('  han@skillforge.dev   ->  Tran Gia Han       (INSTRUCTOR)');
-  console.log('STUDENTS:');
-  console.log('  nam@skillforge.dev   ->  Le Hoang Nam       (STUDENT)  - enrolled in courses 1-4');
-  console.log('  anh@skillforge.dev   ->  Ngo Minh Anh       (STUDENT)  - enrolled in courses 1-4,7,8,10');
-  console.log('  tung@skillforge.dev  ->  Vu Thanh Tung      (STUDENT)  - enrolled in courses 2,4,6,9');
-  console.log('  linh@skillforge.dev  ->  Pham Thanh Linh    (STUDENT)  - enrolled in courses 7,8');
-  console.log('  duc@skillforge.dev   ->  Nguyen Hoang Duc   (STUDENT)  - enrolled in courses 1,3,10');
-  console.log('ADMIN:');
-  console.log('  admin@skillforge.dev ->  SkillForge Admin   (ADMIN)');
-  console.log('COUPONS:');
-  console.log('  WELCOME10  -> 10% off  (khoa)');
-  console.log('  REACT20    -> 20% off  (khoa)');
-  console.log('  A15   -> 15% off  (han)');
-  console.log('  BACKEND30  -> 30% off  (han)');
-  console.log('-'.repeat(60));
+  console.log('[seed] Discussions, reports, audit logs, notifications');
+  await seedDiscussions(courses, userMap);
+  await seedReportsAndAudit(userMap, courses);
+  await seedNotifications(userMap, courses);
+
+  console.log('\nSeed complete.');
+  console.log(`Password for all accounts: ${PASSWORD}`);
+  console.table(
+    users.map((user) => ({
+      email: user.email,
+      role: user.role,
+      name: user.fullName,
+    })),
+  );
+  console.log('Coupons: WELCOME10, REACT20, BACKEND30');
 }
 
 main()
-  .catch((e) => { console.error('Seed failed:', e); process.exitCode = 1; })
-  .finally(async () => { await prisma.$disconnect(); });
+  .catch((error) => {
+    console.error('Seed failed:', error);
+    process.exitCode = 1;
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

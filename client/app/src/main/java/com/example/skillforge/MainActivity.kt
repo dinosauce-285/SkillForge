@@ -1,6 +1,9 @@
 package com.example.skillforge
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -15,6 +18,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.skillforge.core.designsystem.SkillforgeTheme
 import com.example.skillforge.core.navigation.AppRoute
@@ -77,6 +82,10 @@ import io.github.jan.supabase.auth.handleDeeplinks
 
 class MainActivity : ComponentActivity() {
 
+    companion object {
+        private const val NOTIFICATION_PERMISSION_REQUEST_CODE = 1001
+    }
+
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         val appContainer = (applicationContext as SkillforgeApplication).container
@@ -87,6 +96,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         val appContainerForDeepLink = (applicationContext as SkillforgeApplication).container
         appContainerForDeepLink.supabase.handleDeeplinks(intent)
+        requestNotificationPermission()
         
         setContent {
             SkillforgeTheme(dynamicColor = false) {
@@ -316,6 +326,8 @@ class MainActivity : ComponentActivity() {
                                             mainViewModel.navigateTo(AppRoute.Home(route.session))
                                         },
                                         onPaymentSuccess = {
+                                            favoriteViewModel.loadFavorites(route.session.accessToken)
+                                            studentCoursesViewModel.refreshCatalog()
                                             mainViewModel.navigateTo(AppRoute.MyCourses(route.session))
                                         }
                                     )
@@ -866,6 +878,23 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
+        }
+    }
+
+    private fun requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+
+        val isGranted = ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.POST_NOTIFICATIONS
+        ) == PackageManager.PERMISSION_GRANTED
+
+        if (!isGranted) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                NOTIFICATION_PERMISSION_REQUEST_CODE
+            )
         }
     }
 }
