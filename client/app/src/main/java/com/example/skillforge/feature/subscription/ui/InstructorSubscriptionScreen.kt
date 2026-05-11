@@ -1,7 +1,10 @@
 package com.example.skillforge.feature.subscription.ui
 
+import android.content.ActivityNotFoundException
+import android.content.Context
 import android.content.Intent
-import android.provider.Settings
+import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -135,8 +138,7 @@ fun InstructorSubscriptionScreen(
                     Button(
                         onClick = {
                             onDismissError()
-                            val intent = Intent(Settings.ACTION_SETTINGS)
-                            context.startActivity(intent)
+                            openMomoPaymentMock(context)
                             onConfirmClick()
                         },
                         modifier = Modifier
@@ -254,7 +256,7 @@ private fun DemoPaymentNotice() {
             Icon(Icons.Default.Payments, contentDescription = null, tint = PrimaryOrange)
             Spacer(modifier = Modifier.width(12.dp))
             Text(
-                text = "Demo payment processing. Opens device settings for verification.",
+                text = "Demo payment processing. Opens MoMo app for verification.",
                 color = TextPrimaryColor,
                 style = MaterialTheme.typography.bodyMedium,
             )
@@ -274,5 +276,26 @@ private fun SubscriptionBenefit(text: String) {
         Icon(Icons.Default.CheckCircle, contentDescription = null, tint = PrimaryOrange)
         Spacer(modifier = Modifier.width(10.dp))
         Text(text = text, color = TextPrimaryColor)
+    }
+}
+
+private fun openMomoPaymentMock(context: Context) {
+    val momoPackageName = "com.mservice.momotransfer"
+    val launchIntent = context.packageManager.getLaunchIntentForPackage(momoPackageName)
+
+    if (launchIntent != null) {
+        context.startActivity(launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        return
+    }
+
+    try {
+        context.startActivity(
+            Intent(
+                Intent.ACTION_VIEW,
+                Uri.parse("market://details?id=$momoPackageName")
+            ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        )
+    } catch (_: ActivityNotFoundException) {
+        Toast.makeText(context, "MoMo app is not installed on this device.", Toast.LENGTH_SHORT).show()
     }
 }

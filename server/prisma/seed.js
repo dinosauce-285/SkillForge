@@ -58,6 +58,7 @@ const INSTRUCTOR_SHARE_RATE = 70;
 const PENDING_RELEASE_DAYS = 30;
 const ADMIN_EMAIL = 'admin@skillforge.dev';
 const KHOA_EMAIL = 'khoa@skillforge.dev';
+const EMMA_EMAIL = 'emma@skillforge.dev';
 const NAM_EMAIL = 'nam@skillforge.dev';
 
 const videos = [
@@ -118,11 +119,88 @@ const users = [
     learningGoals: null,
   },
   {
+    email: EMMA_EMAIL,
+    fullName: 'Emma Watson',
+    role: Role.INSTRUCTOR,
+    skills: ['UI/UX', 'Figma', 'Prototyping'],
+    learningGoals: null,
+  },
+  {
     email: NAM_EMAIL,
     fullName: 'Le Hoang Nam',
     role: Role.STUDENT,
     skills: ['Frontend', 'JavaScript'],
     learningGoals: 'Become a full-stack developer.',
+  },
+  {
+    email: 'alice@skillforge.dev',
+    fullName: 'Alice Smith',
+    role: Role.STUDENT,
+    skills: ['Python', 'Data Analysis'],
+    learningGoals: 'Become a data scientist.',
+  },
+  {
+    email: 'bob@skillforge.dev',
+    fullName: 'Bob Johnson',
+    role: Role.STUDENT,
+    skills: ['HTML', 'CSS'],
+    learningGoals: 'Learn basic web development.',
+  },
+  {
+    email: 'charlie@skillforge.dev',
+    fullName: 'Charlie Brown',
+    role: Role.STUDENT,
+    skills: ['DevOps', 'Linux'],
+    learningGoals: 'Master Kubernetes.',
+  },
+  {
+    email: 'diana@skillforge.dev',
+    fullName: 'Diana Prince',
+    role: Role.STUDENT,
+    skills: ['UI/UX', 'Figma'],
+    learningGoals: 'Transition to Frontend Engineering.',
+  },
+  {
+    email: 'evan@skillforge.dev',
+    fullName: 'Evan Wright',
+    role: Role.STUDENT,
+    skills: ['JavaScript', 'React'],
+    learningGoals: 'Build MERN stack apps.',
+  },
+  {
+    email: 'frank@skillforge.dev',
+    fullName: 'Frank Castle',
+    role: Role.STUDENT,
+    skills: ['Cybersecurity', 'Docker'],
+    learningGoals: 'Understand container orchestration.',
+  },
+  {
+    email: 'grace@skillforge.dev',
+    fullName: 'Grace Hopper',
+    role: Role.STUDENT,
+    skills: ['C++', 'Python'],
+    learningGoals: 'Learn machine learning.',
+  },
+  {
+    email: 'helen@skillforge.dev',
+    fullName: 'Helen Keller',
+    role: Role.STUDENT,
+    skills: ['SQL', 'PostgreSQL'],
+    learningGoals: 'Database administration.',
+  },
+  {
+    email: 'ian@skillforge.dev',
+    fullName: 'Ian Malcolm',
+    role: Role.STUDENT,
+    skills: ['Data Science'],
+    learningGoals: 'Advanced AI and Mathematics.',
+  },
+  {
+    email: 'julia@skillforge.dev',
+    fullName: 'Julia Child',
+    role: Role.STUDENT,
+    skills: ['HTML', 'CSS', 'JavaScript'],
+    learningGoals: 'Frontend master.',
   },
 ];
 
@@ -238,6 +316,34 @@ const courseBlueprints = [
     tags: ['Docker', 'Kubernetes', 'DevOps'],
     thumbnailUrl:
       'https://images.unsplash.com/photo-1667372393119-3d4c48d07fc9?auto=format&fit=crop&w=1200&q=80',
+  },
+  {
+    title: 'Figma UI/UX Masterclass',
+    subtitle: 'Design beautiful interfaces from scratch.',
+    summary:
+      'Learn design theory, color, typography, and advanced Figma prototyping to create stunning user experiences.',
+    category: 'Frontend Engineering',
+    instructor: EMMA_EMAIL,
+    level: CourseLevel.BEGINNER,
+    price: 29.99,
+    isFree: false,
+    tags: ['UI', 'Responsive Design'],
+    thumbnailUrl:
+      'https://images.unsplash.com/photo-1541462608143-67571c6738dd?auto=format&fit=crop&w=1200&q=80',
+  },
+  {
+    title: 'Advanced Prototyping Workshop',
+    subtitle: 'Bring your designs to life with interactive prototypes.',
+    summary:
+      'Master animations, micro-interactions, and component variants to build high-fidelity interactive mockups.',
+    category: 'Frontend Engineering',
+    instructor: EMMA_EMAIL,
+    level: CourseLevel.INTERMEDIATE,
+    price: 34.99,
+    isFree: false,
+    tags: ['UI', 'React'],
+    thumbnailUrl:
+      'https://images.unsplash.com/photo-1561070791-2526d30994b5?auto=format&fit=crop&w=1200&q=80',
   },
 ];
 
@@ -561,6 +667,7 @@ async function seedCourses(categoryMap, tagMap, userMap) {
 
 async function seedInstructorCommerce(userMap) {
   const khoa = userMap.get(KHOA_EMAIL);
+  const emma = userMap.get(EMMA_EMAIL);
 
   const khoaWallet = await prisma.wallet.create({
     data: {
@@ -583,6 +690,24 @@ async function seedInstructorCommerce(userMap) {
   await prisma.instructorSubscription.create({
     data: {
       userId: khoa.id,
+      planCode: 'PRO_INSTRUCTOR_MONTHLY',
+      amount: decimal(19.99),
+      currency: 'USD',
+      status: InstructorSubscriptionStatus.ACTIVE,
+      paymentStatus: InstructorSubscriptionPaymentStatus.SUCCEEDED,
+    },
+  });
+  const emmaWallet = await prisma.wallet.create({
+    data: {
+      userId: emma.id,
+      availableBalance: decimal(150),
+      pendingBalance: decimal(50),
+    },
+  });
+
+  await prisma.instructorSubscription.create({
+    data: {
+      userId: emma.id,
       planCode: 'PRO_INSTRUCTOR_MONTHLY',
       amount: decimal(19.99),
       currency: 'USD',
@@ -682,8 +807,58 @@ async function seedLearningActivity(courses, userMap, couponMap) {
   const plans = [
     {
       email: NAM_EMAIL,
-      courseIndexes: [0, 1, 2, 3],
-      completedLessons: [4, 3, 2, 1],
+      courseIndexes: [0, 1, 2, 3, 8],
+      completedLessons: [4, 3, 2, 1, 4],
+    },
+    {
+      email: 'alice@skillforge.dev',
+      courseIndexes: [5, 6],
+      completedLessons: [4, 2],
+    },
+    {
+      email: 'bob@skillforge.dev',
+      courseIndexes: [0, 1],
+      completedLessons: [2, 1],
+    },
+    {
+      email: 'charlie@skillforge.dev',
+      courseIndexes: [7, 3, 4],
+      completedLessons: [4, 4, 3],
+    },
+    {
+      email: 'diana@skillforge.dev',
+      courseIndexes: [0, 2],
+      completedLessons: [4, 3],
+    },
+    {
+      email: 'evan@skillforge.dev',
+      courseIndexes: [1, 2, 3, 4],
+      completedLessons: [4, 4, 2, 0],
+    },
+    {
+      email: 'frank@skillforge.dev',
+      courseIndexes: [7, 0, 1],
+      completedLessons: [4, 4, 3],
+    },
+    {
+      email: 'grace@skillforge.dev',
+      courseIndexes: [5, 6, 2],
+      completedLessons: [4, 4, 4],
+    },
+    {
+      email: 'helen@skillforge.dev',
+      courseIndexes: [4, 0, 3],
+      completedLessons: [4, 4, 4],
+    },
+    {
+      email: 'ian@skillforge.dev',
+      courseIndexes: [5, 6, 4, 7],
+      completedLessons: [4, 4, 3, 4],
+    },
+    {
+      email: 'julia@skillforge.dev',
+      courseIndexes: [0, 1, 2],
+      completedLessons: [4, 4, 4],
     },
   ];
 
@@ -692,6 +867,17 @@ async function seedLearningActivity(courses, userMap, couponMap) {
     'The examples helped me connect the concepts quickly.',
     'Good pacing, practical projects, and helpful explanations.',
     'I would recommend this course to anyone starting this topic.',
+    'Thoroughly enjoyed the material, very practical.',
+    'A bit fast-paced, but great content overall.',
+    'Excellent course, the instructor knows their stuff!',
+    'Changed my perspective on coding. Highly recommended.',
+    'This was exactly what I needed to pass my interviews!',
+    'A bit too basic for my taste, but well explained.',
+    '10/10 would learn again, fantastic resources.',
+    'The exercises really helped solidify the knowledge.',
+    'Instructor Khoa explains complex things in a very simple way.',
+    'Best course on this topic hands down.',
+    'Incredible depth, but easy to follow for beginners.',
   ];
 
   for (const plan of plans) {
@@ -743,59 +929,60 @@ async function seedLearningActivity(courses, userMap, couponMap) {
         });
       }
 
-      if (quizzes[0]) {
-        const quiz = quizzes[0];
-        const attempt = await prisma.quizAttempt.create({
-          data: {
-            studentId: student.id,
-            quizId: quiz.id,
-            startTime: dateDaysAgo(index + 2),
-            endTime: dateDaysAgo(index + 2),
-            score: progressPercent >= 50 ? 85 : 55,
-            isPassed: progressPercent >= 50,
-            status: AttemptStatus.GRADED,
-            instructorFeedback:
-              progressPercent >= 50 ? 'Strong work. Keep practicing.' : 'Review the first chapter and try again.',
-          },
-        });
+      const completedQuizCount = Math.min(plan.completedLessons[index], quizzes.length);
+      for (let qIndex = 0; qIndex < completedQuizCount; qIndex += 1) {
+        const quiz = quizzes[qIndex];
+        const isPassed = progressPercent >= 50;
 
-        for (const question of quiz.questions) {
-          const correctChoice = question.choices.find((choice) => choice.isCorrect);
-          await prisma.studentAnswer.create({
+        if (quiz.isEssay) {
+          const essayAttempt = await prisma.quizAttempt.create({
             data: {
-              attemptId: attempt.id,
-              questionId: question.id,
-              selectedChoiceId: correctChoice?.id ?? null,
-              pointsAwarded: progressPercent >= 50 ? question.points : 0,
+              studentId: student.id,
+              quizId: quiz.id,
+              startTime: dateDaysAgo(index + 1),
+              endTime: dateDaysAgo(index + 1),
+              score: isPassed ? 85 : 55,
+              isPassed: isPassed,
+              status: AttemptStatus.GRADED,
+              instructorFeedback: isPassed ? 'Great reflection.' : 'Needs more detail.',
             },
           });
-        }
-      }
 
-      if (quizzes[1]) {
-        const essayQuiz = quizzes[1];
-        const essayAttempt = await prisma.quizAttempt.create({
-          data: {
-            studentId: student.id,
-            quizId: essayQuiz.id,
-            startTime: dateDaysAgo(index + 1),
-            endTime: dateDaysAgo(index + 1),
-            score: null,
-            isPassed: null,
-            status: AttemptStatus.SUBMITTED,
-            instructorFeedback: null,
-          },
-        });
-
-        for (const question of essayQuiz.questions) {
-          await prisma.studentAnswer.create({
+          for (const question of quiz.questions) {
+            await prisma.studentAnswer.create({
+              data: {
+                attemptId: essayAttempt.id,
+                questionId: question.id,
+                essayAnswer: `I would apply ${course.title} by building a small real project, documenting each decision, asking for feedback, and improving the solution after testing it with realistic requirements.`,
+                pointsAwarded: isPassed ? question.points : 0,
+              },
+            });
+          }
+        } else {
+          const attempt = await prisma.quizAttempt.create({
             data: {
-              attemptId: essayAttempt.id,
-              questionId: question.id,
-              essayAnswer: `I would apply ${course.title} by building a small real project, documenting each decision, asking for feedback, and improving the solution after testing it with realistic requirements.`,
-              pointsAwarded: null,
+              studentId: student.id,
+              quizId: quiz.id,
+              startTime: dateDaysAgo(index + 2),
+              endTime: dateDaysAgo(index + 2),
+              score: isPassed ? 85 : 55,
+              isPassed: isPassed,
+              status: AttemptStatus.GRADED,
+              instructorFeedback: isPassed ? 'Strong work. Keep practicing.' : 'Review the first chapter and try again.',
             },
           });
+
+          for (const question of quiz.questions) {
+            const correctChoice = question.choices.find((choice) => choice.isCorrect);
+            await prisma.studentAnswer.create({
+              data: {
+                attemptId: attempt.id,
+                questionId: question.id,
+                selectedChoiceId: correctChoice?.id ?? null,
+                pointsAwarded: isPassed ? question.points : 0,
+              },
+            });
+          }
         }
       }
 
@@ -859,6 +1046,18 @@ async function seedFavorites(courses, userMap) {
     [NAM_EMAIL, 5],
     [NAM_EMAIL, 6],
     [NAM_EMAIL, 7],
+    [NAM_EMAIL, 8],
+    [NAM_EMAIL, 9],
+    ['alice@skillforge.dev', 6],
+    ['bob@skillforge.dev', 2],
+    ['charlie@skillforge.dev', 7],
+    ['diana@skillforge.dev', 3],
+    ['evan@skillforge.dev', 0],
+    ['frank@skillforge.dev', 1],
+    ['grace@skillforge.dev', 2],
+    ['helen@skillforge.dev', 0],
+    ['ian@skillforge.dev', 5],
+    ['julia@skillforge.dev', 1],
   ];
 
   for (const [email, courseIndex] of favorites) {
@@ -877,9 +1076,14 @@ async function seedFavorites(courses, userMap) {
 async function seedDiscussions(courses, userMap) {
   const nam = userMap.get(NAM_EMAIL);
   const khoa = userMap.get(KHOA_EMAIL);
+  const alice = userMap.get('alice@skillforge.dev');
+  const charlie = userMap.get('charlie@skillforge.dev');
+
   const htmlLesson = courses[0].chapters[0].lessons[0];
   const jsLesson = courses[1].chapters[0].lessons[1];
   const reactLesson = courses[2].chapters[1].lessons[0];
+  const pythonLesson = courses[5].chapters[0].lessons[0];
+  const dockerLesson = courses[7].chapters[0].lessons[0];
 
   const answeredParent = await prisma.discussion.create({
     data: {
@@ -918,6 +1122,26 @@ async function seedDiscussions(courses, userMap) {
       content: 'For the project checklist, should state live in the parent component or inside each reusable child?',
       timestampTag: 90,
       isPinned: false,
+    },
+  });
+
+  await prisma.discussion.create({
+    data: {
+      lessonId: pythonLesson.id,
+      userId: alice.id,
+      content: 'Is there any difference between a list and a numpy array in performance?',
+      timestampTag: 180,
+      isPinned: false,
+    },
+  });
+
+  await prisma.discussion.create({
+    data: {
+      lessonId: dockerLesson.id,
+      userId: charlie.id,
+      content: 'Can I run a local k8s cluster using Docker Desktop?',
+      timestampTag: 300,
+      isPinned: true,
     },
   });
 }
