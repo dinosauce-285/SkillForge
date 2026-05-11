@@ -1,5 +1,9 @@
 package com.example.skillforge.feature.auth.ui
 
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
+import com.example.skillforge.R
+
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -114,20 +118,16 @@ fun LoginScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
+                    Image(
+                        painter = painterResource(id = R.mipmap.ic_launcher_foreground),
+                        contentDescription = "App Logo",
                         modifier = Modifier
                             .size(36.dp)
-                            .background(
-                                MaterialTheme.colorScheme.primary,
-                                shape = RoundedCornerShape(8.dp)
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text("L", color = Color.White)
-                    }
+                            .background(Color.White, shape = RoundedCornerShape(8.dp))
+                    )
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
-                        text = "LMS Learning",
+                        text = "SkillForge",
                         style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                         color = MaterialTheme.colorScheme.onSurface
                     )
