@@ -87,6 +87,10 @@ fun MyCoursesScreen(
     val reviewState by reviewViewModel.uiState.collectAsState()
     var courseToReview by remember { mutableStateOf<ActiveCourse?>(null) }
 
+    LaunchedEffect(token) {
+        homeViewModel.fetchDashboard(token)
+    }
+
     LaunchedEffect(reviewState) {
         if (reviewState is ReviewState.Success) {
             Toast.makeText(context, "Review submitted successfully!", Toast.LENGTH_SHORT).show()

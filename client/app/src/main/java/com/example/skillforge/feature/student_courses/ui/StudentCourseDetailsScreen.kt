@@ -142,83 +142,53 @@ fun StudentCourseDetailsScreen(
                     // Hero section is always visible
                     CourseDetailsHero(course = course, onBack = onBack)
 
-                    if (!uiState.isEnrolled) {
-                        // Tabs for non-enrolled users
-                        TabRow(
-                            selectedTabIndex = selectedTab.ordinal,
-                            containerColor = MaterialTheme.colorScheme.background,
-                            contentColor = PrimaryOrange,
-                            indicator = { tabPositions ->
-                                TabRowDefaults.SecondaryIndicator(
-                                    Modifier.tabIndicatorOffset(tabPositions[selectedTab.ordinal]),
-                                    color = PrimaryOrange
-                                )
-                            },
-                            divider = {}
-                        ) {
-                            DetailTab.entries.forEach { tab ->
-                                Tab(
-                                    selected = selectedTab == tab,
-                                    onClick = { selectedTab = tab },
-                                    text = { 
-                                        Text(
-                                            text = tab.title,
-                                            style = MaterialTheme.typography.titleSmall,
-                                            fontWeight = if (selectedTab == tab) FontWeight.Bold else FontWeight.Normal
-                                        ) 
-                                    },
-                                    selectedContentColor = PrimaryOrange,
-                                    unselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
+                    TabRow(
+                        selectedTabIndex = selectedTab.ordinal,
+                        containerColor = MaterialTheme.colorScheme.background,
+                        contentColor = PrimaryOrange,
+                        indicator = { tabPositions ->
+                            TabRowDefaults.SecondaryIndicator(
+                                Modifier.tabIndicatorOffset(tabPositions[selectedTab.ordinal]),
+                                color = PrimaryOrange
+                            )
+                        },
+                        divider = {}
+                    ) {
+                        DetailTab.entries.forEach { tab ->
+                            Tab(
+                                selected = selectedTab == tab,
+                                onClick = { selectedTab = tab },
+                                text = {
+                                    Text(
+                                        text = tab.title,
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = if (selectedTab == tab) FontWeight.Bold else FontWeight.Normal
+                                    )
+                                },
+                                selectedContentColor = PrimaryOrange,
+                                unselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
+                    }
 
-                        // Tab Content
-                        Box(modifier = Modifier.weight(1f)) {
-                            when (selectedTab) {
-                                DetailTab.Overview -> OverviewTabContent(
-                                    course = course,
-                                    displayRating = displayRating,
-                                    displayReviewCount = displayReviewCount,
-                                    isFavorite = uiState.isFavorite,
-                                    onCheckoutSelected = onCheckoutSelected,
-                                    onToggleFavorite = onToggleFavorite
-                                )
-                                DetailTab.Curriculum -> CurriculumTabContent(course = course)
-                                DetailTab.Instructor -> InstructorTabContent(course = course)
-                                DetailTab.Review -> ReviewTabContent(
-                                    averageRating = displayRating,
-                                    reviews = reviews
-                                )
-                            }
-                        }
-                    } else {
-                        // Original layout for enrolled users
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(
-                                horizontal = SkillforgeLayout.screenHorizontalPadding,
-                                vertical = SkillforgeLayout.screenVerticalPadding,
-                            ),
-                            verticalArrangement = Arrangement.spacedBy(SkillforgeLayout.sectionGap),
-                        ) {
-                            item {
-                                CourseOverviewCard(
-                                    course = course,
-                                    isEnrolled = uiState.isEnrolled,
-                                    onOpenCurriculum = onOpenCurriculum,
-                                    onCheckoutSelected = onCheckoutSelected,
-                                )
-                            }
-                            if (course.tags.isNotEmpty()) {
-                                item { CourseTagsCard(tags = course.tags) }
-                            }
-                            item { InstructorCard(course = course) }
-                            if (reviews.isNotEmpty()) {
-                                item {
-                                    ReviewsSection(reviews = reviews)
-                                }
-                            }
+                    Box(modifier = Modifier.weight(1f)) {
+                        when (selectedTab) {
+                            DetailTab.Overview -> OverviewTabContent(
+                                course = course,
+                                displayRating = displayRating,
+                                displayReviewCount = displayReviewCount,
+                                isEnrolled = uiState.isEnrolled,
+                                isFavorite = uiState.isFavorite,
+                                onOpenCurriculum = onOpenCurriculum,
+                                onCheckoutSelected = onCheckoutSelected,
+                                onToggleFavorite = onToggleFavorite
+                            )
+                            DetailTab.Curriculum -> CurriculumTabContent(course = course)
+                            DetailTab.Instructor -> InstructorTabContent(course = course)
+                            DetailTab.Review -> ReviewTabContent(
+                                averageRating = displayRating,
+                                reviews = reviews
+                            )
                         }
                     }
                 }
@@ -232,7 +202,9 @@ private fun OverviewTabContent(
     course: CourseDetails,
     displayRating: Float,
     displayReviewCount: Int,
+    isEnrolled: Boolean,
     isFavorite: Boolean,
+    onOpenCurriculum: (String) -> Unit,
     onCheckoutSelected: (String) -> Unit,
     onToggleFavorite: () -> Unit
 ) {
@@ -306,13 +278,23 @@ private fun OverviewTabContent(
         }
 
         item {
+            val canOpenCurriculum = isEnrolled || course.isFree
             Button(
-                onClick = { onCheckoutSelected(course.id) },
+                onClick = {
+                    if (canOpenCurriculum) {
+                        onOpenCurriculum(course.id)
+                    } else {
+                        onCheckoutSelected(course.id)
+                    }
+                },
                 colors = skillforgePrimaryButtonColors(),
                 modifier = Modifier.fillMaxWidth(),
                 shape = SkillforgeShapes.button
             ) {
-                Text("Buy Now", modifier = Modifier.padding(vertical = 8.dp))
+                Text(
+                    text = if (canOpenCurriculum) "Open curriculum" else "Checkout",
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
             }
             
             Spacer(modifier = Modifier.height(SkillforgeSpacing.medium))
@@ -710,68 +692,6 @@ private fun CourseDetailsHero(
 }
 
 @Composable
-private fun CourseOverviewCard(
-    course: CourseDetails,
-    isEnrolled: Boolean,
-    onOpenCurriculum: (String) -> Unit,
-    onCheckoutSelected: (String) -> Unit,
-) {
-    ElevatedCard(shape = SkillforgeShapes.card, colors = skillforgeElevatedCardColors()) {
-        Column(
-            modifier = Modifier.padding(SkillforgeLayout.cardContentPadding),
-            verticalArrangement = Arrangement.spacedBy(SkillforgeSpacing.medium),
-        ) {
-            Text(text = "Overview", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-            Text(
-                text = course.summary ?: "No summary has been added for this course yet.",
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                DetailsStat(title = "Students", value = course.studentCount.toString())
-                DetailsStat(title = "Reviews", value = course.reviewCount.toString())
-                DetailsStat(title = "Chapters", value = course.chapterCount.toString())
-            }
-            Button(
-                onClick = {
-                    if (isEnrolled || course.isFree) {
-                        onOpenCurriculum(course.id)
-                    } else {
-                        onCheckoutSelected(course.id)
-                    }
-                },
-                colors = skillforgePrimaryButtonColors(),
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text(text = if (isEnrolled || course.isFree) "Open curriculum" else "Enroll now")
-            }
-        }
-    }
-}
-
-@Composable
-private fun CourseTagsCard(tags: List<String>) {
-    ElevatedCard(shape = SkillforgeShapes.card, colors = skillforgeElevatedCardColors()) {
-        Column(
-            modifier = Modifier.padding(SkillforgeLayout.cardContentPadding),
-            verticalArrangement = Arrangement.spacedBy(SkillforgeSpacing.medium),
-        ) {
-            Text(text = "Skills you will touch", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(SkillforgeSpacing.small)) {
-                items(tags) { tag ->
-                    AssistChip(
-                        onClick = {},
-                        label = { Text(text = tag) },
-                        colors = AssistChipDefaults.assistChipColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                        ),
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
 private fun InstructorCard(course: CourseDetails) {
     ElevatedCard(shape = SkillforgeShapes.card, colors = skillforgeElevatedCardColors()) {
         Column(
@@ -820,39 +740,6 @@ private fun InstructorCard(course: CourseDetails) {
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun ReviewsSection(reviews: List<com.example.skillforge.data.remote.ReviewResponse>) {
-    ElevatedCard(shape = SkillforgeShapes.card, colors = skillforgeElevatedCardColors()) {
-        Column(
-            modifier = Modifier.padding(SkillforgeLayout.cardContentPadding),
-            verticalArrangement = Arrangement.spacedBy(SkillforgeSpacing.medium),
-        ) {
-            Text(text = "Student Reviews", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-            Column(verticalArrangement = Arrangement.spacedBy(SkillforgeSpacing.medium)) {
-                for (review in reviews.take(5)) {
-                    ReviewItem(review = review)
-                }
-                if (reviews.size > 5) {
-                    TextButton(
-                        onClick = { /* Could navigate to a full reviews screen */ },
-                        modifier = Modifier.align(Alignment.CenterHorizontally)
-                    ) {
-                        Text("See all ${reviews.size} reviews", color = PrimaryOrange)
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun DetailsStat(title: String, value: String) {
-    Column {
-        Text(text = value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = PrimaryOrange)
-        Text(text = title, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
