@@ -46,6 +46,7 @@ fun AdminScaffold(
     onLogout: (() -> Unit)? = null,
     onBack: (() -> Unit)? = null,
     actions: @Composable RowScope.() -> Unit = {},
+    floatingActionButton: @Composable () -> Unit = {},
     content: @Composable (PaddingValues) -> Unit
 ) {
     Scaffold(
@@ -68,6 +69,7 @@ fun AdminScaffold(
                 onNavigateToFinance = onNavigateToFinance
             )
         },
+        floatingActionButton = floatingActionButton,
         content = content
     )
 }

@@ -74,9 +74,10 @@ data class AdminLessonDto(
 
 data class AdminMaterialDto(
     val id: String,
-    val title: String,
     val type: String? = null,
-    val url: String? = null
+    val fileUrl: String? = null,
+    val fileSize: Int? = null,
+    val status: String? = null
 )
 
 data class AdminQuizDto(

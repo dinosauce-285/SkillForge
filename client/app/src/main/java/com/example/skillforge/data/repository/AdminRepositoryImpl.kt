@@ -66,7 +66,21 @@ class AdminRepositoryImpl(
             CourseChapter(
                 id = ch.id,
                 title = ch.title,
-                lessons = ch.lessons?.map { l -> CourseLesson(id = l.id, title = l.title) } ?: emptyList(),
+                lessons = ch.lessons?.map { l -> 
+                    CourseLesson(
+                        id = l.id, 
+                        title = l.title,
+                        materials = l.materials?.map { m -> 
+                            com.example.skillforge.domain.model.CourseMaterial(
+                                id = m.id, 
+                                type = m.type, 
+                                fileUrl = m.fileUrl,
+                                fileSize = m.fileSize,
+                                status = m.status
+                            )
+                        } ?: emptyList()
+                    ) 
+                } ?: emptyList(),
                 quizzes = ch.quizzes?.map { q -> CourseQuiz(id = q.id, title = q.title) } ?: emptyList()
             )
         }

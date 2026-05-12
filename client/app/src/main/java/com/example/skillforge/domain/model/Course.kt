@@ -32,9 +32,25 @@ data class CourseChapter(
     val quizzes: List<CourseQuiz> = emptyList(),
 )
 
+data class CourseMaterial(
+    val id: String,
+    val type: String?,
+    val fileUrl: String?,
+    val fileSize: Int?,
+    val status: String?
+) {
+    val displayTitle: String
+        get() {
+            if (fileUrl == null) return "Unnamed material"
+            val parts = fileUrl.split("/")
+            return parts.lastOrNull()?.substringBefore("?") ?: "Unnamed material"
+        }
+}
+
 data class CourseLesson(
     val id: String,
     val title: String,
+    val materials: List<CourseMaterial> = emptyList(),
 )
 
 data class CourseQuiz(

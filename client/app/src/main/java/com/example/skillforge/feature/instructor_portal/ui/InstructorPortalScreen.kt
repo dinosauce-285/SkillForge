@@ -659,30 +659,7 @@ fun AnalyticsTabContent(dashboardData: InstructorDashboardDto?, isLoading: Boole
             }
         }
 
-        item {
-            Card(
-                colors = CardDefaults.cardColors(containerColor = SurfaceColor),
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
-            ) {
-                Column(modifier = Modifier.padding(20.dp)) {
-                    Text("Pass vs Fail Ratio", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = TextPrimaryColor)
-                    Text("Student success metrics (Simulated)", fontSize = 12.sp, color = TextSecondaryColor)
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("Pass: ${stats.passRate}%", color = Color(0xFF4CAF50), fontWeight = FontWeight.Bold)
-                        Text("Fail: ${stats.failRate}%", color = Color(0xFFF44336), fontWeight = FontWeight.Bold)
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    LinearProgressIndicator(
-                        progress = { stats.passRate / 100f },
-                        modifier = Modifier.fillMaxWidth().height(12.dp).clip(RoundedCornerShape(8.dp)),
-                        color = Color(0xFF4CAF50),
-                        trackColor = Color(0xFFF44336)
-                    )
-                }
-            }
-        }
+
     }
 }
 
