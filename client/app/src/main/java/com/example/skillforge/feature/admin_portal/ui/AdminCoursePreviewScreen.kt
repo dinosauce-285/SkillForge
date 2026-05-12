@@ -26,6 +26,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
+import androidx.compose.foundation.clickable
+import com.example.skillforge.domain.model.CourseLesson
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -61,6 +65,7 @@ fun AdminCoursePreviewScreen(
 
     var selectedLevel by remember { mutableStateOf<String?>(null) }
     var showLevelDropdown by remember { mutableStateOf(false) }
+    var selectedLesson by remember { mutableStateOf<CourseLesson?>(null) }
 
     LaunchedEffect(courseId) {
         viewModel.fetchCoursePreview(token, courseId)
@@ -152,7 +157,7 @@ fun AdminCoursePreviewScreen(
                                 }
                             } else {
                                 items(chapters, key = { it.id }) { chapter ->
-                                    CourseChapterPreviewCard(chapter = chapter)
+                                    CourseChapterPreviewCard(chapter = chapter, onLessonClick = { selectedLesson = it })
                                 }
                             }
 
@@ -188,6 +193,13 @@ fun AdminCoursePreviewScreen(
                 }
             }
         }
+    }
+
+    if (selectedLesson != null) {
+        LessonDetailsDialog(
+            lesson = selectedLesson!!,
+            onDismiss = { selectedLesson = null }
+        )
     }
 }
 
@@ -311,7 +323,7 @@ private fun CourseLevelOverrideCard(
 }
 
 @Composable
-private fun CourseChapterPreviewCard(chapter: CourseChapter) {
+private fun CourseChapterPreviewCard(chapter: CourseChapter, onLessonClick: (CourseLesson) -> Unit) {
     SkillforgeCard(modifier = Modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier
@@ -336,7 +348,7 @@ private fun CourseChapterPreviewCard(chapter: CourseChapter) {
             }
 
             chapter.lessons.forEach { lesson ->
-                CourseContentRow(label = "Lesson", title = lesson.title)
+                CourseContentRow(label = "Lesson", title = lesson.title, onClick = { onLessonClick(lesson) })
             }
 
             chapter.quizzes.forEach { quiz ->
@@ -347,9 +359,9 @@ private fun CourseChapterPreviewCard(chapter: CourseChapter) {
 }
 
 @Composable
-private fun CourseContentRow(label: String, title: String) {
+private fun CourseContentRow(label: String, title: String, onClick: () -> Unit = {}) {
     Surface(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
         shape = SkillforgeShapes.medium,
         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.28f)
     ) {
@@ -564,4 +576,43 @@ private fun String.toDisplayLabel(): String {
         .joinToString(" ") { part ->
             part.replaceFirstChar { char -> char.uppercase() }
         }
+}
+
+@Composable
+fun LessonDetailsDialog(lesson: CourseLesson, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(text = "Lesson Details")
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(text = lesson.title, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                if (lesson.materials.isEmpty()) {
+                    Text(text = "No materials available for this lesson.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                } else {
+                    lesson.materials.forEach { material ->
+                        Surface(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = SkillforgeShapes.small,
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                        ) {
+                            Column(modifier = Modifier.padding(12.dp)) {
+                                Text(text = material.displayTitle, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
+                                Text(text = "Type: ${material.type ?: "Unknown"}", style = MaterialTheme.typography.bodySmall)
+                                if (!material.fileUrl.isNullOrBlank()) {
+                                    Text(text = "URL: ${material.fileUrl}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Close")
+            }
+        }
+    )
 }
